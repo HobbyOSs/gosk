@@ -1,0 +1,51 @@
+     1 00000000 37                              AAA ;; 0x37
+     2 00000001 3F                              AAS ;; 0x3f
+     3 00000002 98                              CBW ;; 0x98
+     4 00000003                                 CDQ ;; 0x99
+     5 00000003 F8                              CLC ;; 0xf8
+     6 00000004 FC                              CLD ;; 0xfc
+     7 00000005 FA                              CLI ;; 0xfa
+     8 00000006                                 CLTS ;; []byte{0x0f, 0x06}
+     9 00000006 F5                              CMC ;; 0xf5
+    10 00000007                                 CPUID ;; 0xf8
+    11 00000007 99                              CWD ;; 0x99
+    12 00000008                                 CWDE ;; 0x98
+    13 00000008 27                              DAA ;; 0x27
+    14 00000009 2F                              DAS ;; 0x2f
+    15 0000000A 9B                              WAIT ;; 0x9b
+    16 0000000B F4                              HLT ;; 0xf4
+    17 0000000C                                 INCO ;; 0xce
+    18 0000000C 6C                              INSB ;; 0x6c
+    19 0000000D                                 INSD ;; 0x6d
+    20 0000000D 6D                              INSW ;; 0x6d
+    21 0000000E                                 INVD ;; []byte{0x0f, 0x08}
+    22 0000000E CF                              IRET ;; 0xcf
+    23 0000000F                                 IRETD ;; 0xcf
+    24 0000000F 9F                              LAHF ;; 0x9f
+    25 00000010                                 LEAVE ;; 0xc9
+    26 00000010 F0                              LOCK ;; 0xf0
+    27 00000011 90                              NOP ;; 0x90
+    28 00000012 6E                              OUTSB ;; 0x6e
+    29 00000013                                 OUTSD ;; 0x6f
+    30 00000013 6F                              OUTSW ;; 0x6f
+    31 00000014                                 POPA ;; 0x61
+    32 00000014                                 POPAD ;; 0x61
+    33 00000014 9D                              POPF ;; 0x9d
+    34 00000015                                 POPFD ;; 0x9d
+    35 00000015                                 PUSHA ;; 0x60
+    36 00000015                                 PUSHD ;; 0x60
+    37 00000015 9C                              PUSHF ;; 0x9c
+    38 00000016 C3                              RET ;; 0xc3
+    39 00000017 CB                              RETF ;; 0xcb
+    40 00000018                                 RSM ;; []byte{0x0f, 0xaa}
+    41 00000018 9E                              SAHF ;; 0x9e
+    42 00000019 F9                              STC ;; 0xf9
+    43 0000001A FD                              STD ;; 0xfd
+    44 0000001B FB                              STI ;; 0xfb
+    45 0000001C                                 UD2 ;; []byte{0x0f, 0x0b}
+    46 0000001C 9B                              WAIT ;; 0x9b
+    47 0000001D                                 RDMSR ;; []byte{0x0f, 0x32}
+    48 0000001D                                 RDPMC ;; []byte{0x0f, 0x33}
+    49 0000001D                                 RDTSC ;; []byte{0x0f, 0x31}
+    50 0000001D                                 WBINVD ;; []byte{0x0f, 0x09}
+    51 0000001D                                 WRMSR ;; []byte{0x0f, 0x30}
