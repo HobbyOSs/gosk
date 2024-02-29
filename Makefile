@@ -28,7 +28,7 @@ run: build
 
 
 gen:
-	pigeon -o=gen/nask.go peg/nask.peg
+	go generate ./...
 
 fmt:
 	go fmt ./...
