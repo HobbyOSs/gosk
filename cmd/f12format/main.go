@@ -11,12 +11,12 @@ import (
 // https://www.gnu.org/software/mtools/manual/mtools.html#mformat
 // --------------------------------------------------------------
 // mformat -f 1440                    [-f size]
-//         -l HARIBOTEOS              [-v volume_label]
-//         -N 0xffffffff              [-N serial_number]
-//         -C                         [   creates the disk image file to install the MS-DOS file system on it.]
-//         -B ${03_day_harib00g_IPLB} [-B boot_sector]
-//         -i ${03_day_harib00g_OS}   [-i output image name]
 //
+//	-l HARIBOTEOS              [-v volume_label]
+//	-N 0xffffffff              [-N serial_number]
+//	-C                         [   creates the disk image file to install the MS-DOS file system on it.]
+//	-B ${03_day_harib00g_IPLB} [-B boot_sector]
+//	-i ${03_day_harib00g_OS}   [-i output image name]
 func main() {
 
 	var (

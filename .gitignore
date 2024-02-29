@@ -30,6 +30,6 @@ _testmain.go
 *.img
 
 .idea/
-cmd/gosk/gosk
-cmd/f12copy/f12copy
-cmd/f12format/f12format
+gosk
+f12copy
+f12format
