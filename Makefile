@@ -5,7 +5,7 @@ GOTEST=gotest
 BIN=gosk
 NASK=wine nask.exe
 
-.PHONY: all testdata
+.PHONY: all testdata gen
 
 all: dep build test
 
@@ -16,7 +16,8 @@ build: dep
 	cd ..
 	go install -v ./...
 
-test: tool
+test:
+	go install -v github.com/rakyll/gotest@latest
 	$(GOTEST) -v ./...
 
 clean:
@@ -24,6 +25,10 @@ clean:
 
 run: build
 	./$(BIN)
+
+
+gen:
+	pigeon -o=gen/nask.go peg/nask.peg
 
 fmt:
 	go fmt ./...
@@ -38,7 +43,8 @@ tool:
 	go install -v golang.org/x/lint/golint@latest
 	go install -v github.com/kisielk/errcheck@latest
 	go install -v github.com/go-delve/delve/cmd/dlv@latest
-	go install -v github.com/rakyll/gotest@latest
+	go install -v golang.org/x/tools/gopls@latest
+	go install -v github.com/mna/pigeon@latest
 
 testdata:
 	$(NASK) testdata/byte-opcode.nas testdata/byte-opcode.obj testdata/byte-opcode.list
