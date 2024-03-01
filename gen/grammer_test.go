@@ -1,60 +1,35 @@
 package gen
 
-import "testing"
+import (
+	"reflect"
+	"testing"
 
-var validCases = map[string]int{
-	"0":   0,
-	"1":   1,
-	"-1":  -1,
-	"10":  10,
-	"-10": -10,
+	"github.com/stretchr/testify/assert"
+)
 
-	"(0)":   0,
-	"(1)":   1,
-	"(-1)":  -1,
-	"(10)":  10,
-	"(-10)": -10,
+func TestParse(t *testing.T) {
+	tests := []struct {
+		name       string
+		entryPoint string
+		text       string
+		want       interface{}
+	}{
+		{"+int", "Integer", "30", 30},
+		{"-int", "Integer", "-30", -30},
+		{"letter", "Letter", "a", []rune{'a'}},
+		{"hex", "Hex", "0x0ff0", "0x0ff0"},
+		{"charseq", "CharSeq", "'0x0ff0'", "0x0ff0"},
+	}
 
-	"1+1":   2,
-	"1-1":   0,
-	"1*1":   1,
-	"1/1":   1,
-	"1 + 1": 2,
-	"1 - 1": 0,
-	"1 * 1": 1,
-	"1 / 1": 1,
-
-	"1+0":   1,
-	"1-0":   1,
-	"1*0":   0,
-	"1 + 0": 1,
-	"1 - 0": 1,
-	"1 * 0": 0,
-
-	"1\n+\t2\r\n +\n3\n": 6,
-	"(2) * 3":            6,
-
-	" 1 + 2 - 3 * 4 / 5 ":       1,
-	" 1 + (2 - 3) * 4 / 5 ":     1,
-	" (1 + 2 - 3) * 4 / 5 ":     0,
-	" 1 + 2 - (3 * 4) / 5 ":     1,
-	" 18 + 3 - 27 * (-18 / -3)": -141,
-}
-
-func TestValidCases(t *testing.T) {
-	for tc, exp := range validCases {
-		got, err := Parse("", []byte(tc))
-		if err != nil {
-			t.Errorf("%q: want no error, got %v", tc, err)
-			continue
-		}
-		goti, ok := got.(int)
-		if !ok {
-			t.Errorf("%q: want type %T, got %T", tc, exp, got)
-			continue
-		}
-		if exp != goti {
-			t.Errorf("%q: want %d, got %d", tc, exp, goti)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := Parse("", []byte(tt.text), Entrypoint(tt.entryPoint))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parse(%v) = %v, want %v", tt.text, got, tt.want)
+			}
+		})
 	}
 }
