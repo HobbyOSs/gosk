@@ -19,6 +19,7 @@ func TestParse(t *testing.T) {
 		{"letter", "Letter", "a", []rune{'a'}},
 		{"hex", "Hex", "0x0ff0", "0x0ff0"},
 		{"charseq", "CharSeq", "'0x0ff0'", "0x0ff0"},
+		{"stringseq", "StringSeq", "\"0x0ff0\"", "0x0ff0"},
 		{"ident", "Ident", "_testZ009$", "_testZ009$"},
 		{"label", "Label", "_test:\n", "_test:"},
 		{"line comment1", "Comment", "# sample \n", ""},

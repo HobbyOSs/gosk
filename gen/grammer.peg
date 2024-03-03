@@ -20,12 +20,20 @@ Hex <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
     return string(c.text), nil
 }
 
-CharSeq <- '\'' (NormalChar / EscapedChar)* '\'' {
+StringSeq ← '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+    c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
+    return strconv.Unquote(string(c.text))
+}
+
+EscapedChar ← [\x00-\x1f"\\]
+EscapeSequence ← SingleCharEscape / UnicodeEscape
+
+CharSeq <- '\'' (NormalChar / SingleCharEscape)* '\'' {
     charSeq := string(c.text)
     return charSeq[1 : len(charSeq) - 1], nil
 }
 NormalChar <- [^'\\]  // シングルクォートとバックスラッシュ以外の任意の文字
-EscapedChar <- '\\' [''\\ntr']  // エスケープされた文字
+SingleCharEscape <- '\\' [''\\/bfnrt']  // エスケープされた文字
 
 Letter <- [a-zA-Z] {
     return []rune(string(c.text)), nil
