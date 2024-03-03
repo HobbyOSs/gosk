@@ -8,6 +8,14 @@ package gen
 //
 //}
 
+Ident <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
+    return string(c.text), nil
+}
+
+Label <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &(_) {
+    return string(c.text), nil
+}
+
 Hex <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
     return string(c.text), nil
 }
