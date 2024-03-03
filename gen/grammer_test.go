@@ -19,6 +19,10 @@ func TestParse(t *testing.T) {
 		{"letter", "Letter", "a", []rune{'a'}},
 		{"hex", "Hex", "0x0ff0", "0x0ff0"},
 		{"charseq", "CharSeq", "'0x0ff0'", "0x0ff0"},
+		{"line comment1", "Comment", "# sample \n", ""},
+		{"line comment2", "Comment", "; sample \n", ""},
+		{"line comment1", "Comment", "# sample", ""},
+		{"line comment2", "Comment", "; sample", ""},
 	}
 
 	for _, tt := range tests {

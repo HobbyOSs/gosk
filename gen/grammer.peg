@@ -4,7 +4,9 @@ package gen
 // part of the initializer code block omitted for brevity
 }
 
-//Factor <- Integer / Letter
+//Program <- _ ( Statement / Comment )* _ EOF {
+//
+//}
 
 Hex <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
     return string(c.text), nil
@@ -26,5 +28,13 @@ Integer <- '-'? [0-9]+ {
 }
 
 _ "whitespace" <- [ \n\t\r]*
+
+Comment <- ('#' / ';') Char* (EOL / EOF) {
+    return "", nil
+}
+
+Char <- [^\n\r]
+
+EOL <- '\n' / '\r' / "\r\n"
 
 EOF <- !.
