@@ -1,36 +1,41 @@
 {
 package gen
 
+
+import (
+	"github.com/hangingman/gosk/ast"
+)
+
 // part of the initializer code block omitted for brevity
 }
 
-//Program <- _ ( Statement / Comment )* _ EOF {
-//
-//}
-
-Ident <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
-    return string(c.text), nil
+IdentFactor <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
+    return ast.NewIdentFactor(ast.BaseFactor{}, string(c.text)), nil
 }
 
 Label <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &(_) {
     return string(c.text), nil
 }
 
-Hex <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
-    return string(c.text), nil
+HexFactor <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
+    return ast.NewHexFactor(ast.BaseFactor{}, string(c.text)), nil
 }
 
-StringSeq ← '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
+StringFactor <- '"' ( !EscapedChar . / '\\' EscapeSequence )* '"' {
     c.text = bytes.Replace(c.text, []byte(`\/`), []byte(`/`), -1)
-    return strconv.Unquote(string(c.text))
+    text, err := strconv.Unquote(string(c.text))
+    if err != nil {
+        return nil, nil
+    }
+    return ast.NewStringFactor(ast.BaseFactor{}, text), nil
 }
 
 EscapedChar ← [\x00-\x1f"\\]
 EscapeSequence ← SingleCharEscape / UnicodeEscape
 
-CharSeq <- '\'' (NormalChar / SingleCharEscape)* '\'' {
+CharFactor <- '\'' (NormalChar / SingleCharEscape)* '\'' {
     charSeq := string(c.text)
-    return charSeq[1 : len(charSeq) - 1], nil
+    return ast.NewCharFactor(ast.BaseFactor{}, charSeq[1 : len(charSeq) - 1]), nil
 }
 NormalChar <- [^'\\]  // シングルクォートとバックスラッシュ以外の任意の文字
 SingleCharEscape <- '\\' [''\\/bfnrt']  // エスケープされた文字
@@ -39,8 +44,12 @@ Letter <- [a-zA-Z] {
     return []rune(string(c.text)), nil
 }
 
-Integer <- '-'? [0-9]+ {
-    return strconv.Atoi(string(c.text))
+NumberFactor <- '-'? [0-9]+ {
+    val, err := strconv.Atoi(string(c.text))
+    if err != nil {
+        return nil, nil
+    }
+    return ast.NewNumberFactor(ast.BaseFactor{}, val), nil
 }
 
 _ "whitespace" <- [ \n\t\r]*
