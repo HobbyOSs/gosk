@@ -9,6 +9,8 @@ import (
 // part of the initializer code block omitted for brevity
 }
 
+Factor <- IntegerFactor / HexFactor / IdentFactor / StringFactor / CharFactor
+
 IdentFactor <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
     return ast.NewIdentFactor(ast.BaseFactor{}, string(c.text)), nil
 }
