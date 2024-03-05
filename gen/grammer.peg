@@ -9,6 +9,12 @@ import (
 // part of the initializer code block omitted for brevity
 }
 
+Exp <- PlusExp / MinusExp / MulExp / DivExp / ImmExp
+
+PlusExp <- expr:Expr '+' expr:Expr {
+
+}
+
 Factor <- IntegerFactor / HexFactor / IdentFactor / StringFactor / CharFactor
 
 IdentFactor <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {

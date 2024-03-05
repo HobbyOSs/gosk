@@ -11,8 +11,6 @@ all: dep build test
 
 build: dep
 	cd cmd/gosk && $(GOBUILD) -v
-	cd cmd/f12copy && $(GOBUILD) -v
-	cd cmd/f12format && $(GOBUILD) -v
 	cd ..
 	go install -v ./...
 
@@ -38,12 +36,8 @@ dep:
 	go mod tidy
 
 tool:
-	go install -v github.com/rogpeppe/godef@latest
-	go install -v github.com/nsf/gocode@latest
-	go install -v golang.org/x/lint/golint@latest
-	go install -v github.com/kisielk/errcheck@latest
-	go install -v github.com/go-delve/delve/cmd/dlv@latest
 	go install -v golang.org/x/tools/gopls@latest
+	go install -v github.com/go-delve/delve/cmd/dlv@latest
 	go install -v github.com/mna/pigeon@latest
 
 testdata:
