@@ -1,51 +1,53 @@
 package ast
 
+import "fmt"
+
 //go:generate newc
 type NumberFactor struct {
 	BaseFactor
-	value int
+	Value int
 }
 
-func (n *NumberFactor) Value() int {
-	return n.value
+func (n NumberFactor) String() string {
+	return fmt.Sprintf("%d", n.Value)
 }
 
 //go:generate newc
 type StringFactor struct {
 	BaseFactor
-	value string
+	Value string
 }
 
-func (s *StringFactor) Value() string {
-	return s.value
+func (s StringFactor) String() string {
+	return s.Value
 }
 
 //go:generate newc
 type HexFactor struct {
 	BaseFactor
-	value string
+	Value string
 }
 
-func (h *HexFactor) Value() string {
-	return h.value
+func (h HexFactor) String() string {
+	return h.Value
 }
 
 //go:generate newc
 type IdentFactor struct {
 	BaseFactor
-	value string
+	Value string
 }
 
-func (i *IdentFactor) Value() string {
-	return i.value
+func (i IdentFactor) String() string {
+	return fmt.Sprintf("%s", i.Value)
 }
 
 //go:generate newc
 type CharFactor struct {
 	BaseFactor
-	value string
+	Value string
 }
 
-func (c *CharFactor) Value() string {
-	return c.value
+func (c CharFactor) String() string {
+	return fmt.Sprintf("%s", c.Value)
 }

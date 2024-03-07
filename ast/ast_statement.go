@@ -2,13 +2,13 @@ package ast
 
 import "reflect"
 
-type Exp interface {
+type Statement interface {
 	Type() string
 	String() string
 }
 
-type BaseExp struct{}
+type BaseStatement struct{}
 
-func (b BaseExp) Type() string {
+func (b BaseStatement) Type() string {
 	return reflect.TypeOf(b).Elem().Name()
 }

@@ -1,14 +1,16 @@
 package ast
 
-import "reflect"
+import (
+	"reflect"
+)
 
-type Factor[T any] interface {
-    Type() string
-    Value() T
+type Factor interface {
+	Type() string
+	String() string
 }
 
 type BaseFactor struct{}
 
 func (b BaseFactor) Type() string {
-    return reflect.TypeOf(b).Elem().Name()
+	return reflect.TypeOf(b).Elem().Name()
 }

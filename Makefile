@@ -39,6 +39,7 @@ tool:
 	go install -v golang.org/x/tools/gopls@latest
 	go install -v github.com/go-delve/delve/cmd/dlv@latest
 	go install -v github.com/mna/pigeon@latest
+	go install -v github.com/awalterschulze/goderive@latest
 
 testdata:
 	$(NASK) testdata/byte-opcode.nas testdata/byte-opcode.obj testdata/byte-opcode.list

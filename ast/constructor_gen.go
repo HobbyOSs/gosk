@@ -2,11 +2,28 @@
 
 package ast
 
+// NewPlusExp Create a new PlusExp
+func NewPlusExp(baseExp BaseExp, exp1 Exp, exp2 Exp) *PlusExp {
+	return &PlusExp{
+		BaseExp: baseExp,
+		Exp1:    exp1,
+		Exp2:    exp2,
+	}
+}
+
+// NewImmExp Create a new ImmExp
+func NewImmExp(baseExp BaseExp, factor Factor) *ImmExp {
+	return &ImmExp{
+		BaseExp: baseExp,
+		Factor:  factor,
+	}
+}
+
 // NewNumberFactor Create a new NumberFactor
 func NewNumberFactor(baseFactor BaseFactor, value int) *NumberFactor {
 	return &NumberFactor{
 		BaseFactor: baseFactor,
-		value:      value,
+		Value:      value,
 	}
 }
 
@@ -14,7 +31,7 @@ func NewNumberFactor(baseFactor BaseFactor, value int) *NumberFactor {
 func NewStringFactor(baseFactor BaseFactor, value string) *StringFactor {
 	return &StringFactor{
 		BaseFactor: baseFactor,
-		value:      value,
+		Value:      value,
 	}
 }
 
@@ -22,7 +39,7 @@ func NewStringFactor(baseFactor BaseFactor, value string) *StringFactor {
 func NewHexFactor(baseFactor BaseFactor, value string) *HexFactor {
 	return &HexFactor{
 		BaseFactor: baseFactor,
-		value:      value,
+		Value:      value,
 	}
 }
 
@@ -30,7 +47,7 @@ func NewHexFactor(baseFactor BaseFactor, value string) *HexFactor {
 func NewIdentFactor(baseFactor BaseFactor, value string) *IdentFactor {
 	return &IdentFactor{
 		BaseFactor: baseFactor,
-		value:      value,
+		Value:      value,
 	}
 }
 
@@ -38,6 +55,23 @@ func NewIdentFactor(baseFactor BaseFactor, value string) *IdentFactor {
 func NewCharFactor(baseFactor BaseFactor, value string) *CharFactor {
 	return &CharFactor{
 		BaseFactor: baseFactor,
-		value:      value,
+		Value:      value,
+	}
+}
+
+// NewDeclareStmt Create a new DeclareStmt
+func NewDeclareStmt(baseStatement BaseStatement, identFactor *IdentFactor, exp Exp) *DeclareStmt {
+	return &DeclareStmt{
+		BaseStatement: baseStatement,
+		IdentFactor:   identFactor,
+		Exp:           exp,
+	}
+}
+
+// NewLabelStmt Create a new LabelStmt
+func NewLabelStmt(baseStatement BaseStatement, identFactor *IdentFactor) *LabelStmt {
+	return &LabelStmt{
+		BaseStatement: baseStatement,
+		IdentFactor:   identFactor,
 	}
 }

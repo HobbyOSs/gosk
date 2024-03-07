@@ -6,22 +6,68 @@ import (
 	"github.com/hangingman/gosk/ast"
 )
 
-// part of the initializer code block omitted for brevity
+func toAnySlice(v any) []any {
+	if v == nil {
+		return nil
+	}
+	return v.([]any)
 }
 
-Exp <- PlusExp / MinusExp / MulExp / DivExp / ImmExp
-
-PlusExp <- expr:Expr '+' expr:Expr {
-
 }
 
-Factor <- IntegerFactor / HexFactor / IdentFactor / StringFactor / CharFactor
+Program <- _ list:(Statement)* _ {
+    statements := make([]*ast.Statement, 0)
+    for _, s := range toAnySlice(list) {
+        stmt, ok := s.(*ast.Statement)
+        if ! ok {
+            return nil, nil
+        }
+        statements = append(statements, stmt)
+    }
+    return statements, nil
+}
 
-IdentFactor <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
+Statement <- LabelStmt / DeclareStmt / ExportSymStmt / ExternSymStmt / ConfigStmt / MnemonicStmt / OpcodeStmt
+
+LabelStmt <- l:Label {
+    label, ok := l.(string)
+    if !ok {
+        return nil, nil
+    }
+    return ast.NewLabelStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, label)), nil
+}
+
+DeclareStmt <- f:IdentFactor _ "EQU" _ e:Exp {
+    factor, ok := f.(*ast.IdentFactor)
+    if !ok {
+        return nil, nil
+    }
+    exp, ok := e.(ast.Exp)
+    if !ok {
+        return nil, nil
+    }
+    return ast.NewDeclareStmt(ast.BaseStatement{}, factor, exp), nil
+}
+
+Exp <- ImmExp
+
+ImmExp <- f:Factor {
+    factor, ok := f.(ast.Factor)
+    if !ok {
+        return nil, nil
+    }
+    return ast.NewImmExp(ast.BaseExp{}, factor), nil
+}
+
+Factor <- HexFactor / NumberFactor / IdentFactor / StringFactor / CharFactor
+
+ReservedWord = "EQU" ;
+
+IdentFactor <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
     return ast.NewIdentFactor(ast.BaseFactor{}, string(c.text)), nil
 }
 
-Label <- [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &(_) {
+Label <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &(_) {
     return string(c.text), nil
 }
 
@@ -47,10 +93,6 @@ CharFactor <- '\'' (NormalChar / SingleCharEscape)* '\'' {
 }
 NormalChar <- [^'\\]  // シングルクォートとバックスラッシュ以外の任意の文字
 SingleCharEscape <- '\\' [''\\/bfnrt']  // エスケープされた文字
-
-Letter <- [a-zA-Z] {
-    return []rune(string(c.text)), nil
-}
 
 NumberFactor <- '-'? [0-9]+ {
     val, err := strconv.Atoi(string(c.text))
