@@ -60,18 +60,52 @@ func NewCharFactor(baseFactor BaseFactor, value string) *CharFactor {
 }
 
 // NewDeclareStmt Create a new DeclareStmt
-func NewDeclareStmt(baseStatement BaseStatement, identFactor *IdentFactor, exp Exp) *DeclareStmt {
+func NewDeclareStmt(baseStatement BaseStatement, id *IdentFactor, value Exp) *DeclareStmt {
 	return &DeclareStmt{
 		BaseStatement: baseStatement,
-		IdentFactor:   identFactor,
-		Exp:           exp,
+		Id:            id,
+		Value:         value,
 	}
 }
 
 // NewLabelStmt Create a new LabelStmt
-func NewLabelStmt(baseStatement BaseStatement, identFactor *IdentFactor) *LabelStmt {
+func NewLabelStmt(baseStatement BaseStatement, label *IdentFactor) *LabelStmt {
 	return &LabelStmt{
 		BaseStatement: baseStatement,
-		IdentFactor:   identFactor,
+		Label:         label,
+	}
+}
+
+// NewExportSymStmt Create a new ExportSymStmt
+func NewExportSymStmt(baseStatement BaseStatement, symbols []*IdentFactor) *ExportSymStmt {
+	return &ExportSymStmt{
+		BaseStatement: baseStatement,
+		Symbols:       symbols,
+	}
+}
+
+// NewExternSymStmt Create a new ExternSymStmt
+func NewExternSymStmt(baseStatement BaseStatement, symbols []*IdentFactor) *ExternSymStmt {
+	return &ExternSymStmt{
+		BaseStatement: baseStatement,
+		Symbols:       symbols,
+	}
+}
+
+// NewConfigStmt Create a new ConfigStmt
+func NewConfigStmt(baseStatement BaseStatement, configType ConfigType, factor Factor) *ConfigStmt {
+	return &ConfigStmt{
+		BaseStatement: baseStatement,
+		ConfigType:    configType,
+		Factor:        factor,
+	}
+}
+
+// NewMnemonicStmt Create a new MnemonicStmt
+func NewMnemonicStmt(baseStatement BaseStatement, opcode *IdentFactor, mnemonicArgs []Exp) *MnemonicStmt {
+	return &MnemonicStmt{
+		BaseStatement: baseStatement,
+		Opcode:        opcode,
+		MnemonicArgs:  mnemonicArgs,
 	}
 }

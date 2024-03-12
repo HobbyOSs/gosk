@@ -3,14 +3,15 @@ package gen
 
 
 import (
-	"github.com/hangingman/gosk/ast"
+    "github.com/hangingman/gosk/ast"
+    "github.com/harakeishi/gats"
 )
 
 func toAnySlice(v any) []any {
-	if v == nil {
-		return nil
-	}
-	return v.([]any)
+    if v == nil {
+        return nil
+    }
+    return v.([]any)
 }
 
 }
@@ -27,7 +28,13 @@ Program <- _ list:(Statement)* _ {
     return statements, nil
 }
 
-Statement <- LabelStmt / DeclareStmt / ExportSymStmt / ExternSymStmt / ConfigStmt / MnemonicStmt / OpcodeStmt
+Statement <- (LabelStmt /
+              DeclareStmt /
+              ExportSymStmt /
+              ExternSymStmt /
+              ConfigStmt /
+              MnemonicStmt /
+              OpcodeStmt) TrailingWsEOL
 
 LabelStmt <- l:Label {
     label, ok := l.(string)
@@ -35,6 +42,10 @@ LabelStmt <- l:Label {
         return nil, nil
     }
     return ast.NewLabelStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, label)), nil
+}
+
+Label <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &( TrailingWsEOL ) {
+    return string(c.text), nil
 }
 
 DeclareStmt <- f:IdentFactor _ "EQU" _ e:Exp {
@@ -49,6 +60,150 @@ DeclareStmt <- f:IdentFactor _ "EQU" _ e:Exp {
     return ast.NewDeclareStmt(ast.BaseStatement{}, factor, exp), nil
 }
 
+ExportSymStmt <- "GLOBAL" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
+    factors := make([]*ast.IdentFactor, 0)
+    f, ok := head.(*ast.IdentFactor)
+    if !ok {
+        return nil, nil
+    }
+    factors = append(factors, f)
+
+    for _, anySlice := range toAnySlice(tail) {
+        tuple := toAnySlice(anySlice)
+        if tuple == nil {
+            return nil, nil
+        }
+        f, ok := tuple[3].(*ast.IdentFactor)
+        if ! ok {
+            return nil, nil
+        }
+        factors = append(factors, f)
+    }
+
+    return ast.NewExportSymStmt(ast.BaseStatement{}, factors), nil
+}
+
+ExternSymStmt <- "EXTERN" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
+    factors := make([]*ast.IdentFactor, 0)
+    f, ok := head.(*ast.IdentFactor)
+    if !ok {
+        return nil, nil
+    }
+    factors = append(factors, f)
+
+    for _, anySlice := range toAnySlice(tail) {
+        tuple := toAnySlice(anySlice)
+        if tuple == nil {
+            return nil, nil
+        }
+        f, ok := tuple[3].(*ast.IdentFactor)
+        if ! ok {
+            return nil, nil
+        }
+        factors = append(factors, f)
+    }
+
+    return ast.NewExternSymStmt(ast.BaseStatement{}, factors), nil
+}
+
+ConfigStmt <- config:ConfigType _ f:Factor ']' {
+    configType, ok := config.(ast.ConfigType)
+    if !ok {
+        return nil, nil
+    }
+    factor, ok := f.(ast.Factor)
+    if !ok {
+        return nil, nil
+    }
+    return ast.NewConfigStmt(ast.BaseStatement{}, configType, factor), nil
+}
+
+ConfigType <- '[' conf:Conf &(_ Factor ']') {
+    config, err := gats.ToString(conf)
+    if err != nil {
+        return nil, nil
+    }
+    configType, ok := ast.NewConfigType(config)
+    if !ok {
+        return nil, nil
+    }
+
+    return configType, nil
+}
+
+Conf = "BITS" / "INSTRSET" / "OPTIMIZE" / "FORMAT" / "PADDING" / "PADSET" / "SECTION" / "ABSOLUTE" / "FILE" ;
+
+MnemonicStmt <- o:Opcode _ head:MnemonicArg _ tail:(',' MnemonicArg)+ {
+    opcodeStr, err := gats.ToString(o)
+    if err != nil {
+        return nil, nil
+    }
+    opcode := ast.NewIdentFactor(ast.BaseFactor{}, opcodeStr)
+
+    args := make([]ast.Exp, 0)
+    e, ok := head.(ast.Exp)
+    if !ok {
+        return nil, nil
+    }
+    args = append(args, e)
+
+    for _, anySlice := range toAnySlice(tail) {
+        tuple := toAnySlice(anySlice)
+        if tuple == nil {
+            return nil, nil
+        }
+        exp, ok := tuple[1].(ast.Exp)
+        if !ok {
+            return nil, nil
+        }
+        args = append(args, exp)
+    }
+
+    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, args), nil
+}
+
+MnemonicArg <- Exp
+
+Opcode = "AAA" / "AAD" / "AAS" / "AAM" / "ADC" / "ADD" / "AND" / "ALIGN" / "ALIGNB" /
+    "ARPL" / "BOUND" / "BSF" / "BSR" / "BSWAP" / "BT" / "BTC" / "BTR" / "BTS" /
+    "CALL" / "CBW" / "CDQ" / "CLC" / "CLD" / "CLI" / "CLTS" / "CMC" / "CMP" /
+    "CMPSB" / "CMPSD" / "CMPSW" / "CMPXCHG" / "CPUID" / "CWD" / "CWDE" / "DAA" /
+    "DAS" / "DB" / "DD" / "DEC" / "DIV" / "DQ" / "DT" / "DW" / "END" / "ENTER" /
+    "F2XM1" / "FABS" / "FADD" / "FADDP" / "FBLD" / "FBSTP" / "FCHS" / "FCLEX" /
+    "FCOM" / "FCOMP" / "FCOMPP" / "FCOS" / "FDECSTP" / "FDISI" / "FDIV" / "FDIVP" /
+    "FDIVR" / "FDIVRP" / "FENI" / "FFREE" / "FIADD" / "FICOM" / "FICOMP" / "FIDIV" /
+    "FIDIVR" / "FILD" / "FIMUL" / "FINCSTP" / "FINIT" / "FIST" / "FISTP" / "FISUB" /
+    "FISUBR" / "FLD" / "FLD1" / "FLDCW" / "FLDENV" / "FLDL2E" / "FLDL2T" / "FLDLG2" /
+    "FLDLN2" / "FLDPI" / "FLDZ" / "FMUL" / "FMULP" / "FNCLEX" / "FNDISI" / "FNENI" /
+    "FNINIT" / "FNOP" / "FNSAVE" / "FNSTCW" / "FNSTENV" / "FNSTSW" / "FPATAN" /
+    "FPTAN" / "FPREM" / "FPREM1" / "FRNDINT" / "FRSTOR" / "FSAVE" / "FSCALE" /
+    "FSETPM" / "FSIN" / "FSINCOS" / "FSQRT" / "FST" / "FSTCW" / "FSTENV" / "FSTP" /
+    "FSTSW" / "FSUB" / "FSUBP" / "FSUBR" / "FSUBRP" / "FTST" / "FUCOM" / "FUCOMP" /
+    "FUCOMPP" / "FXAM" / "FXCH" / "FXTRACT" / "FYL2X" / "FYL2XP1" / "HLT" / "IDIV" /
+    "IMUL" / "IN" / "INC" / "INCO" / "INSB" / "INSD" / "INSW" / "INT" / "INT3" /
+    "INTO" / "INVD" / "INVLPG" / "IRET" / "IRETD" / "IRETW" / "JA" / "JAE" / "JB" /
+    "JBE" / "JC" / "JCXZ" / "JE" / "JECXZ" / "JG" / "JGE" / "JL" / "JLE" / "JMP" /
+    "JNA" / "JNAE" / "JNB" / "JNBE" / "JNC" / "JNE" / "JNG" / "JNGE" / "JNL" /
+    "JNLE" / "JNO" / "JNP" / "JNS" / "JNZ" / "JO" / "JP" / "JPE" / "JPO" / "JS" /
+    "JZ" / "LAHF" / "LAR" / "LDS" / "LEA" / "LEAVE" / "LES" / "LFS" / "LGDT" / "LGS" /
+    "LIDT" / "LLDT" / "LMSW" / "LOCK" / "LODSB" / "LODSD" / "LODSW" / "LOOP" /
+    "LOOPE" / "LOOPNE" / "LOOPNZ" / "LOOPZ" / "LSL" / "LSS" / "LTR" / "MOV" /
+    "MOVSB" / "MOVSD" / "MOVSW" / "MOVSX" / "MOVZX" / "MUL" / "NEG" / "NOP" / "NOT" /
+    "OR" / "ORG" / "OUT" / "OUTSB" / "OUTSD" / "OUTSW" / "POP" / "POPA" / "POPAD" /
+    "POPAW" / "POPF" / "POPFD" / "POPFW" / "PUSH" / "PUSHA" / "PUSHD" / "PUSHAD" /
+    "PUSHAW" / "PUSHF" / "PUSHFD" / "PUSHFW" / "RCL" / "RCR" / "RDMSR" / "RDPMC" /
+    "REP" / "REPE" / "REPNE" / "REPNZ" / "REPZ" / "RESB" / "RESD" / "RESQ" / "REST" /
+    "RESW" / "RET" / "RETF" / "RETN" / "ROL" / "ROR" / "RSM" / "SAHF" / "SAL" /
+    "SAR" / "SBB" / "SCASB" / "SCASD" / "SCASW" / "SETA" / "SETAE" / "SETB" /
+    "SETBE" / "SETC" / "SETE" / "SETG" / "SETGE" / "SETL" / "SETLE" / "SETNA" /
+    "SETNAE" / "SETNB" / "SETNBE" / "SETNC" / "SETNE" / "SETNG" / "SETNGE" / "SETNL" /
+    "SETNLE" / "SETNO" / "SETNP" / "SETNS" / "SETNZ" / "SETO" / "SETP" / "SETPE" /
+    "SETPO" / "SETS" / "SETZ" / "SGDT" / "SHL" / "SHLD" / "SHR" / "SHRD" / "SIDT" /
+    "SLDT" / "SMSW" / "STC" / "STD" / "STI" / "STOSB" / "STOSD" / "STOSW" / "STR" /
+    "SUB" / "TEST" / "TIMES" / "UD2" / "VERR" / "VERW" / "WAIT" / "WBINVD" / "WRMSR" /
+    "XADD" / "XCHG" / "XLATB" / "XOR" ;
+
+
 Exp <- ImmExp
 
 ImmExp <- f:Factor {
@@ -59,16 +214,17 @@ ImmExp <- f:Factor {
     return ast.NewImmExp(ast.BaseExp{}, factor), nil
 }
 
-Factor <- HexFactor / NumberFactor / IdentFactor / StringFactor / CharFactor
+Factor <- ConfigType /
+    HexFactor /
+    NumberFactor /
+    IdentFactor /
+    StringFactor /
+    CharFactor
 
-ReservedWord = "EQU" ;
+ReservedWord = "EQU" / "GLOBAL" / "EXTERN" ;
 
 IdentFactor <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
     return ast.NewIdentFactor(ast.BaseFactor{}, string(c.text)), nil
-}
-
-Label <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &(_) {
-    return string(c.text), nil
 }
 
 HexFactor <- '0' ('x' / 'X') ([0-9] / ["abcdef"] / ["ABCDEF"])+ {
@@ -102,13 +258,18 @@ NumberFactor <- '-'? [0-9]+ {
     return ast.NewNumberFactor(ast.BaseFactor{}, val), nil
 }
 
-_ "whitespace" <- [ \n\t\r]*
-
-Comment <- ('#' / ';') Char* (EOL / EOF) {
+Comment <- ('#' / ';') Char* END {
     return "", nil
 }
 
 Char <- [^\n\r]
+
+_ <- [ \n\t\r]*
+__ <- [ \n\t\r]+
+
+TrailingWsEOL <- [ \t]* EOL+
+
+END <- EOL / EOF
 
 EOL <- '\n' / '\r' / "\r\n"
 

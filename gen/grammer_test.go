@@ -30,6 +30,7 @@ func TestParse(t *testing.T) {
 		{"string", "Factor", "\"0x0ff0\"", ast.NewStringFactor(ast.BaseFactor{}, "0x0ff0")},
 		{"ident", "Factor", "_testZ009$", ast.NewIdentFactor(ast.BaseFactor{}, "_testZ009$")},
 		{"label", "Label", "_test:\n", "_test:"},
+		{"label with space", "Label", "_test:   \n", "_test:"},
 		{"line comment1", "Comment", "# sample \n", ""},
 		{"line comment2", "Comment", "; sample \n", ""},
 		{"line comment1", "Comment", "# sample", ""},
@@ -42,10 +43,55 @@ func TestParse(t *testing.T) {
 				ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 10)),
 			),
 		},
-		{"label1", "LabelStmt", "_test:\n",
+		{"label", "LabelStmt", "_test:\n",
 			ast.NewLabelStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "_test:"),
+			),
+		},
+		{"single symtable", "ExportSymStmt", "GLOBAL _io_hlt",
+			ast.NewExportSymStmt(
+				ast.BaseStatement{},
+				[]*ast.IdentFactor{
+					ast.NewIdentFactor(ast.BaseFactor{}, "_io_hlt"),
+				},
+			),
+		},
+		{"single export", "ExternSymStmt", "EXTERN _inthandler21",
+			ast.NewExternSymStmt(
+				ast.BaseStatement{},
+				[]*ast.IdentFactor{
+					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler21"),
+				},
+			),
+		},
+		{"multiple export", "ExternSymStmt", "EXTERN _inthandler21, _inthandler27, _inthandler2c",
+			ast.NewExternSymStmt(
+				ast.BaseStatement{},
+				[]*ast.IdentFactor{
+					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler21"),
+					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler27"),
+					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler2c"),
+				},
+			),
+		},
+		{"config1", "ConfigStmt", "[BITS 32]",
+			ast.NewConfigStmt(
+				ast.BaseStatement{},
+				ast.Bits,
+				&ast.NumberFactor{ast.BaseFactor{}, 32},
+			),
+		},
+
+		{"opcode simple mnemonic", "MnemonicStmt", "DB 10,20,30",
+			ast.NewMnemonicStmt(
+				ast.BaseStatement{},
+				ast.NewIdentFactor(ast.BaseFactor{}, "DB"),
+				[]ast.Exp{
+					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 10)),
+					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 20)),
+					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 30)),
+				},
 			),
 		},
 	}
