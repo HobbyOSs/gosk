@@ -203,8 +203,65 @@ Opcode = "AAA" / "AAD" / "AAS" / "AAM" / "ADC" / "ADD" / "AND" / "ALIGN" / "ALIG
     "SUB" / "TEST" / "TIMES" / "UD2" / "VERR" / "VERW" / "WAIT" / "WBINVD" / "WRMSR" /
     "XADD" / "XCHG" / "XLATB" / "XOR" ;
 
+Exp <- AddExp
 
-Exp <- ImmExp
+AddExp <- head:MultExp tail:(('+' / '-') MultExp)* {
+    mult, ok := head.(*ast.MultExp)
+    if !ok {
+        return nil, nil
+    }
+
+    ops := make([]string, 0)
+    exps := make([]*ast.MultExp, 0)
+
+    for _, anySlice := range toAnySlice(tail) {
+        tuple := toAnySlice(anySlice)
+        if tuple == nil {
+            return nil, nil
+        }
+        op, err := gats.ToString(tuple[0])
+        if err != nil {
+            return nil, nil
+        }
+        ops = append(ops, op)
+
+        exp, ok := tuple[1].(*ast.MultExp)
+        if !ok {
+            return nil, nil
+        }
+        exps = append(exps, exp)
+    }
+    return ast.NewAddExp(ast.BaseExp{}, mult, ops, exps), nil
+}
+
+MultExp <- head:ImmExp tail:(('*' / '/' / '%') ImmExp)* {
+    imm, ok := head.(*ast.ImmExp)
+    if !ok {
+        return nil, nil
+    }
+
+    ops := make([]string, 0)
+    exps := make([]*ast.ImmExp, 0)
+
+    for _, anySlice := range toAnySlice(tail) {
+        tuple := toAnySlice(anySlice)
+        if tuple == nil {
+            return nil, nil
+        }
+        op, err := gats.ToString(tuple[0])
+        if err != nil {
+            return nil, nil
+        }
+        ops = append(ops, op)
+
+        exp, ok := tuple[1].(*ast.ImmExp)
+        if !ok {
+            return nil, nil
+        }
+        exps = append(exps, exp)
+    }
+    return ast.NewMultExp(ast.BaseExp{}, imm, ops, exps), nil
+}
 
 ImmExp <- f:Factor {
     factor, ok := f.(ast.Factor)

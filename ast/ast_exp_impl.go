@@ -1,14 +1,27 @@
 package ast
 
 //go:generate newc
-type PlusExp struct {
+type AddExp struct {
 	BaseExp
-	Exp1 Exp
-	Exp2 Exp
+	HeadExp   *MultExp
+	Operators []string
+	TailExps  []*MultExp
 }
 
-func (plus PlusExp) String() string {
-	return plus.Exp1.String() + " + " + plus.Exp2.String()
+func (a AddExp) String() string {
+	return a.HeadExp.String()
+}
+
+//go:generate newc
+type MultExp struct {
+	BaseExp
+	HeadExp   *ImmExp
+	Operators []string
+	TailExps  []*ImmExp
+}
+
+func (m MultExp) String() string {
+	return m.HeadExp.String()
 }
 
 //go:generate newc

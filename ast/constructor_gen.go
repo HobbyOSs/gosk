@@ -2,12 +2,23 @@
 
 package ast
 
-// NewPlusExp Create a new PlusExp
-func NewPlusExp(baseExp BaseExp, exp1 Exp, exp2 Exp) *PlusExp {
-	return &PlusExp{
-		BaseExp: baseExp,
-		Exp1:    exp1,
-		Exp2:    exp2,
+// NewAddExp Create a new AddExp
+func NewAddExp(baseExp BaseExp, headExp *MultExp, operators []string, tailExps []*MultExp) *AddExp {
+	return &AddExp{
+		BaseExp:   baseExp,
+		HeadExp:   headExp,
+		Operators: operators,
+		TailExps:  tailExps,
+	}
+}
+
+// NewMultExp Create a new MultExp
+func NewMultExp(baseExp BaseExp, headExp *ImmExp, operators []string, tailExps []*ImmExp) *MultExp {
+	return &MultExp{
+		BaseExp:   baseExp,
+		HeadExp:   headExp,
+		Operators: operators,
+		TailExps:  tailExps,
 	}
 }
 
@@ -56,6 +67,13 @@ func NewCharFactor(baseFactor BaseFactor, value string) *CharFactor {
 	return &CharFactor{
 		BaseFactor: baseFactor,
 		Value:      value,
+	}
+}
+
+// NewProgram Create a new Program
+func NewProgram(statements []Statement) *Program {
+	return &Program{
+		Statements: statements,
 	}
 }
 

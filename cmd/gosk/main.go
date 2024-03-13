@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 
+	"github.com/hangingman/gosk/frontend"
 	"github.com/hangingman/gosk/gen"
 )
 
@@ -70,24 +70,19 @@ Thank you osask project !`)
 		fmt.Printf("GOSK : can't open %s", assemblySrc)
 		os.Exit(17)
 	}
-	bytes, err := ioutil.ReadFile(assemblySrc)
+	bytes, err := os.ReadFile(assemblySrc)
 	if err != nil {
 		fmt.Printf("GOSK : can't read %s", assemblySrc)
 		os.Exit(17)
 	}
-	// 読み書き可能, 新規作成, ファイル内容あっても切り詰め
-	dstFile, err := os.OpenFile(assemblyDst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		fmt.Printf("GOSK : can't open %s", assemblyDst)
-		os.Exit(17)
-	}
-	defer dstFile.Close()
 
-	_, err = gen.Parse("", bytes)
+	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Program"))
 	if err != nil {
 		fmt.Printf("GOSK : failed to parse %s", assemblySrc) // TODO: エラーメッセージ
 		os.Exit(-1)
 	}
+
+	frontend.Exec(parseTree, assemblyDst)
 
 	os.Exit(0)
 }

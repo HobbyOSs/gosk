@@ -8,6 +8,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func buildImmExpFromValue(value any) *ast.ImmExp {
+
+	var factor ast.Factor
+	switch v := value.(type) {
+	case int:
+		factor = &ast.NumberFactor{ast.BaseFactor{}, v}
+	case string:
+		factor = &ast.IdentFactor{ast.BaseFactor{}, v}
+	}
+
+	return &ast.ImmExp{Factor: factor}
+}
+
+func buildMultExpFromValue(value any) *ast.MultExp {
+	return &ast.MultExp{
+		HeadExp:   buildImmExpFromValue(value),
+		Operators: []string{},
+		TailExps:  []*ast.ImmExp{},
+	}
+}
+
+func buildAddExpFromValue(value any) *ast.AddExp {
+	return &ast.AddExp{
+		HeadExp:   buildMultExpFromValue(value),
+		Operators: []string{},
+		TailExps:  []*ast.MultExp{},
+	}
+}
+
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -35,12 +64,13 @@ func TestParse(t *testing.T) {
 		{"line comment2", "Comment", "; sample \n", ""},
 		{"line comment1", "Comment", "# sample", ""},
 		{"line comment2", "Comment", "; sample", ""},
+		// exp
 		// stmt
 		{"equ macro", "DeclareStmt", "CYLS EQU 10",
 			ast.NewDeclareStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "CYLS"),
-				ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 10)),
+				buildAddExpFromValue(10),
 			),
 		},
 		{"label", "LabelStmt", "_test:\n",
@@ -88,9 +118,9 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "DB"),
 				[]ast.Exp{
-					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 10)),
-					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 20)),
-					ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, 30)),
+					buildAddExpFromValue(10),
+					buildAddExpFromValue(20),
+					buildAddExpFromValue(30),
 				},
 			),
 		},
