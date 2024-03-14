@@ -133,19 +133,19 @@ ConfigType <- '[' conf:Conf &(_ Factor ']') {
 
 Conf = "BITS" / "INSTRSET" / "OPTIMIZE" / "FORMAT" / "PADDING" / "PADSET" / "SECTION" / "ABSOLUTE" / "FILE" ;
 
-MnemonicStmt <- o:Opcode _ head:MnemonicArg _ tail:(',' MnemonicArg)+ {
+MnemonicStmt <- o:Opcode _ head:Operand _ tail:(',' Operand)+ {
     opcodeStr, err := gats.ToString(o)
     if err != nil {
         return nil, nil
     }
     opcode := ast.NewIdentFactor(ast.BaseFactor{}, opcodeStr)
 
-    args := make([]ast.Exp, 0)
+    operands := make([]ast.Exp, 0)
     e, ok := head.(ast.Exp)
     if !ok {
         return nil, nil
     }
-    args = append(args, e)
+    operands = append(operands, e)
 
     for _, anySlice := range toAnySlice(tail) {
         tuple := toAnySlice(anySlice)
@@ -156,13 +156,13 @@ MnemonicStmt <- o:Opcode _ head:MnemonicArg _ tail:(',' MnemonicArg)+ {
         if !ok {
             return nil, nil
         }
-        args = append(args, exp)
+        operands = append(operands, exp)
     }
 
-    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, args), nil
+    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, operands), nil
 }
 
-MnemonicArg <- Exp
+Operand <- Exp
 
 Opcode = "AAA" / "AAD" / "AAS" / "AAM" / "ADC" / "ADD" / "AND" / "ALIGN" / "ALIGNB" /
     "ARPL" / "BOUND" / "BSF" / "BSR" / "BSWAP" / "BT" / "BTC" / "BTR" / "BTS" /
@@ -203,7 +203,51 @@ Opcode = "AAA" / "AAD" / "AAS" / "AAM" / "ADC" / "ADD" / "AND" / "ALIGN" / "ALIG
     "SUB" / "TEST" / "TIMES" / "UD2" / "VERR" / "VERW" / "WAIT" / "WBINVD" / "WRMSR" /
     "XADD" / "XCHG" / "XLATB" / "XOR" ;
 
-Exp <- AddExp
+DataType = "BYTE" / "WORD" / "DWORD" ;
+
+Exp <- MemoryAddrExp / SegmentExp
+
+MemoryAddrExp <- _ d:DataType? _ '[' _ l:AddExp r:(':' AddExp)? ']' {
+    var dt ast.DataType
+    if dts, err := gats.ToString(d); err == nil {
+        dt, _ = ast.NewDataType(dts)
+    }
+    left, ok := l.(*ast.AddExp)
+    if !ok {
+        return nil, nil
+    }
+    tuple := toAnySlice(r)
+    if tuple == nil || tuple[1] == nil {
+        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, left, nil), nil
+    }
+    right, ok := tuple[1].(*ast.AddExp)
+    if !ok {
+        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt,left, nil), nil
+    }
+
+    return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, left, right), nil
+}
+
+SegmentExp <- _ d:DataType? _ l:AddExp r:(':' AddExp)? {
+    var dt ast.DataType
+    if dts, err := gats.ToString(d); err == nil {
+        dt, _ = ast.NewDataType(dts)
+    }
+    left, ok := l.(*ast.AddExp)
+    if !ok {
+        return nil, nil
+    }
+    tuple := toAnySlice(r)
+    if tuple == nil || tuple[1] == nil {
+        return ast.NewSegmentExp(ast.BaseExp{}, dt, left, nil), nil
+    }
+    right, ok := tuple[1].(*ast.AddExp)
+    if !ok {
+        return ast.NewSegmentExp(ast.BaseExp{}, dt,left, nil), nil
+    }
+
+    return ast.NewSegmentExp(ast.BaseExp{}, dt, left, right), nil
+}
 
 AddExp <- head:MultExp tail:(('+' / '-') MultExp)* {
     mult, ok := head.(*ast.MultExp)

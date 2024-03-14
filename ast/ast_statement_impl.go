@@ -99,13 +99,13 @@ func NewConfigType(s string) (ConfigType, bool) {
 //go:generate newc
 type MnemonicStmt struct {
 	BaseStatement
-	Opcode       *IdentFactor
-	MnemonicArgs []Exp
+	Opcode   *IdentFactor
+	Operands []Exp
 }
 
 func (ms MnemonicStmt) String() string {
-	args := lo.Map(ms.MnemonicArgs, func(f Exp, _ int) string {
+	operands := lo.Map(ms.Operands, func(f Exp, _ int) string {
 		return f.String()
 	})
-	return ms.Opcode.String() + " " + strings.Join(args, ",")
+	return ms.Opcode.String() + " " + strings.Join(operands, ",")
 }

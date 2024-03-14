@@ -2,6 +2,26 @@
 
 package ast
 
+// NewSegmentExp Create a new SegmentExp
+func NewSegmentExp(baseExp BaseExp, dataType DataType, left *AddExp, right *AddExp) *SegmentExp {
+	return &SegmentExp{
+		BaseExp:  baseExp,
+		DataType: dataType,
+		Left:     left,
+		Right:    right,
+	}
+}
+
+// NewMemoryAddrExp Create a new MemoryAddrExp
+func NewMemoryAddrExp(baseExp BaseExp, dataType DataType, left *AddExp, right *AddExp) *MemoryAddrExp {
+	return &MemoryAddrExp{
+		BaseExp:  baseExp,
+		DataType: dataType,
+		Left:     left,
+		Right:    right,
+	}
+}
+
 // NewAddExp Create a new AddExp
 func NewAddExp(baseExp BaseExp, headExp *MultExp, operators []string, tailExps []*MultExp) *AddExp {
 	return &AddExp{
@@ -120,10 +140,10 @@ func NewConfigStmt(baseStatement BaseStatement, configType ConfigType, factor Fa
 }
 
 // NewMnemonicStmt Create a new MnemonicStmt
-func NewMnemonicStmt(baseStatement BaseStatement, opcode *IdentFactor, mnemonicArgs []Exp) *MnemonicStmt {
+func NewMnemonicStmt(baseStatement BaseStatement, opcode *IdentFactor, operands []Exp) *MnemonicStmt {
 	return &MnemonicStmt{
 		BaseStatement: baseStatement,
 		Opcode:        opcode,
-		MnemonicArgs:  mnemonicArgs,
+		Operands:      operands,
 	}
 }

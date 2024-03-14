@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -9,13 +10,16 @@ import (
 )
 
 func buildImmExpFromValue(value any) *ast.ImmExp {
-
 	var factor ast.Factor
 	switch v := value.(type) {
 	case int:
 		factor = &ast.NumberFactor{ast.BaseFactor{}, v}
 	case string:
-		factor = &ast.IdentFactor{ast.BaseFactor{}, v}
+		if strings.HasPrefix(v, "0x") {
+			factor = &ast.HexFactor{ast.BaseFactor{}, v}
+		} else {
+			factor = &ast.IdentFactor{ast.BaseFactor{}, v}
+		}
 	}
 
 	return &ast.ImmExp{Factor: factor}
@@ -34,6 +38,14 @@ func buildAddExpFromValue(value any) *ast.AddExp {
 		HeadExp:   buildMultExpFromValue(value),
 		Operators: []string{},
 		TailExps:  []*ast.MultExp{},
+	}
+}
+
+func buildSegmentExpFromValue(value any) *ast.SegmentExp {
+	return &ast.SegmentExp{
+		DataType: "",
+		Left:     buildAddExpFromValue(value),
+		Right:    nil,
 	}
 }
 
@@ -65,12 +77,93 @@ func TestParse(t *testing.T) {
 		{"line comment1", "Comment", "# sample", ""},
 		{"line comment2", "Comment", "; sample", ""},
 		// exp
+		{"simple exp1", "Exp", "10",
+			buildSegmentExpFromValue(10),
+		},
+		{"simple exp2", "Exp", "CYLS",
+			buildSegmentExpFromValue("CYLS"),
+		},
+		{"complex exp1", "Exp", "DWORD 2*8:0x0000001b",
+			&ast.SegmentExp{
+				DataType: ast.Dword,
+				Left: &ast.AddExp{
+					HeadExp: &ast.MultExp{
+						HeadExp:   buildImmExpFromValue(2),
+						Operators: []string{"*"},
+						TailExps:  []*ast.ImmExp{buildImmExpFromValue(8)},
+					},
+					Operators: []string{},
+					TailExps:  []*ast.MultExp{},
+				},
+				Right: buildAddExpFromValue("0x0000001b"),
+			},
+		},
+		{"complex exp2", "Exp", "512*18*2/4",
+			&ast.SegmentExp{
+				BaseExp:  ast.BaseExp{},
+				DataType: ast.None,
+				Left:     &ast.AddExp{
+					HeadExp: &ast.MultExp{
+						HeadExp: buildImmExpFromValue(512),
+						Operators: []string{"*", "*", "/"},
+						TailExps: []*ast.ImmExp{
+							buildImmExpFromValue(18),
+							buildImmExpFromValue(2),
+							buildImmExpFromValue(4),
+						},
+					},
+					Operators: []string{},
+					TailExps: []*ast.MultExp{},
+				},
+				Right:    nil,
+			},
+		},
+		{"memory address direct", "Exp", "[100]",
+			&ast.MemoryAddrExp{
+				DataType: ast.None,
+				Left:     buildAddExpFromValue(100),
+				Right:    nil,
+			},
+		},
+		{"memory address direct (complex)", "Exp", "[CS:0x0020]",
+			&ast.MemoryAddrExp{
+				DataType: ast.None,
+				Left:     buildAddExpFromValue("CS"),
+				Right:    buildAddExpFromValue("0x0020"),
+			},
+		},
+		{"memory address register indirect", "Exp", "[BX]",
+			&ast.MemoryAddrExp{
+				DataType: ast.None,
+				Left:     buildAddExpFromValue("BX"),
+				Right:    nil,
+			},
+		},
+		{"memory address register indirect (complex)", "Exp", "[CS:ECX]",
+			&ast.MemoryAddrExp{
+				DataType: ast.None,
+				Left:     buildAddExpFromValue("CS"),
+				Right:    buildAddExpFromValue("ECX"),
+			},
+		},
+		{"memory address based", "Exp", "[ESP+12]",
+			&ast.MemoryAddrExp{
+				DataType: ast.None,
+				Left: &ast.AddExp{
+					HeadExp:   buildMultExpFromValue("ESP"),
+					Operators: []string{"+"},
+					TailExps:  []*ast.MultExp{buildMultExpFromValue(12)},
+				},
+				Right: nil,
+			},
+		},
+
 		// stmt
 		{"equ macro", "DeclareStmt", "CYLS EQU 10",
 			ast.NewDeclareStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "CYLS"),
-				buildAddExpFromValue(10),
+				buildSegmentExpFromValue(10),
 			),
 		},
 		{"label", "LabelStmt", "_test:\n",
@@ -118,9 +211,9 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "DB"),
 				[]ast.Exp{
-					buildAddExpFromValue(10),
-					buildAddExpFromValue(20),
-					buildAddExpFromValue(30),
+					buildSegmentExpFromValue(10),
+					buildSegmentExpFromValue(20),
+					buildSegmentExpFromValue(30),
 				},
 			),
 		},
