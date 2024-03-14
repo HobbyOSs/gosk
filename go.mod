@@ -6,6 +6,7 @@ require (
 	github.com/go-ext/variant v1.2.4
 	github.com/google/go-cmp v0.6.0
 	github.com/harakeishi/gats v0.0.0-20230219034858-055bc915842a
+	github.com/morikuni/failure v1.1.2
 	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.7.0
 )

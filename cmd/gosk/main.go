@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/user"
 
 	"github.com/hangingman/gosk/frontend"
 	"github.com/hangingman/gosk/gen"
@@ -25,6 +24,7 @@ func fileIsWritable(fileName string) bool {
 func main() {
 	var (
 		version = flag.Bool("v", false, "バージョンとライセンス情報を表示する")
+		debug   = flag.Bool("d", false, "デバッグログを出力する")
 	)
 	// -hオプション用文言
 	flag.Usage = func() {
@@ -42,17 +42,6 @@ There is NO WARRANTY, to the extent permitted by law.
 
 Thank you osask project !`)
 		os.Exit(0)
-	}
-
-	if len(flag.Args()) == 0 {
-		// 引数が無ければREPLモードへ移行
-		user, err := user.Current()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Hello %s! This is yet another assembly gosk!\n", user.Username)
-		fmt.Printf("Feel free to type in commands\n")
-		//repl.Start(os.Stdin, os.Stdout)
 	}
 
 	if len(flag.Args()) < 2 {
@@ -76,9 +65,9 @@ Thank you osask project !`)
 		os.Exit(17)
 	}
 
-	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Program"))
+	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Statement"), gen.Debug(*debug))
 	if err != nil {
-		fmt.Printf("GOSK : failed to parse %s", assemblySrc) // TODO: エラーメッセージ
+		fmt.Printf("GOSK : failed to parse %s\n%+v", assemblySrc, err)
 		os.Exit(-1)
 	}
 
