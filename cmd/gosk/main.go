@@ -65,7 +65,7 @@ Thank you osask project !`)
 		os.Exit(17)
 	}
 
-	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Statement"), gen.Debug(*debug))
+	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Program"), gen.Debug(*debug))
 	if err != nil {
 		fmt.Printf("GOSK : failed to parse %s\n%+v", assemblySrc, err)
 		os.Exit(-1)
