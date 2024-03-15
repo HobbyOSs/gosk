@@ -11,10 +11,13 @@ require (
 	github.com/stretchr/testify v1.7.0
 )
 
+require golang.org/x/net v0.22.0
+
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/ffjson v0.0.0-20190930134022-aa0246cd15f7 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
+	golang.org/x/text v0.14.0
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

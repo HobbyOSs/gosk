@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
 
 	"github.com/hangingman/gosk/frontend"
 	"github.com/hangingman/gosk/gen"
+	"golang.org/x/net/html/charset"
+	"golang.org/x/text/transform"
 )
 
 const Version = "2.0.0"
@@ -19,6 +22,37 @@ func fileIsWritable(fileName string) bool {
 		return true
 	}
 	return false
+}
+
+func readAssets(str string) (string, error) {
+	body, err := os.ReadFile(str)
+	if err != nil {
+		return "", err
+	}
+
+	var f []byte
+	encodings := []string{"sjis", "utf-8"}
+	for _, enc := range encodings {
+		if enc != "" {
+			ee, _ := charset.Lookup(enc)
+			if ee == nil {
+				continue
+			}
+			var buf bytes.Buffer
+			ic := transform.NewWriter(&buf, ee.NewDecoder())
+			_, err := ic.Write(body)
+			if err != nil {
+				continue
+			}
+			err = ic.Close()
+			if err != nil {
+				continue
+			}
+			f = buf.Bytes()
+			break
+		}
+	}
+	return string(f), nil
 }
 
 func main() {
@@ -59,13 +93,13 @@ Thank you osask project !`)
 		fmt.Printf("GOSK : can't open %s", assemblySrc)
 		os.Exit(17)
 	}
-	bytes, err := os.ReadFile(assemblySrc)
+	src, err := readAssets(assemblySrc)
 	if err != nil {
 		fmt.Printf("GOSK : can't read %s", assemblySrc)
 		os.Exit(17)
 	}
 
-	parseTree, err := gen.Parse("", bytes, gen.Entrypoint("Program"), gen.Debug(*debug))
+	parseTree, err := gen.Parse("", []byte(src), gen.Entrypoint("Program"), gen.Debug(*debug))
 	if err != nil {
 		fmt.Printf("GOSK : failed to parse %s\n%+v", assemblySrc, err)
 		os.Exit(-1)
