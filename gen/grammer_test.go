@@ -49,6 +49,14 @@ func buildSegmentExpFromValue(value any) *ast.SegmentExp {
 	}
 }
 
+func buildMemoryAddrExpFromValue(left any, right any) *ast.MemoryAddrExp {
+	return &ast.MemoryAddrExp{
+		DataType: "",
+		Left:     buildAddExpFromValue(left),
+		Right:    buildAddExpFromValue(right),
+	}
+}
+
 func TestParse(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -72,10 +80,10 @@ func TestParse(t *testing.T) {
 		{"ident", "Factor", "_testZ009$", ast.NewIdentFactor(ast.BaseFactor{}, "_testZ009$")},
 		{"label", "Label", "_test:\n", "_test:"},
 		{"label with space", "Label", "_test:   \n", "_test:"},
-		{"line comment1", "Comment", "# sample \n", ""},
-		{"line comment2", "Comment", "; sample \n", ""},
-		{"line comment1", "Comment", "# sample", ""},
-		{"line comment2", "Comment", "; sample", ""},
+		{"line comment1", "Comment", "# sample \n", "# sample \n"},
+		{"line comment2", "Comment", "; sample \n", "; sample \n"},
+		{"line comment1", "Comment", "# sample", "# sample"},
+		{"line comment2", "Comment", "; sample", "; sample"},
 		// exp
 		{"simple exp1", "Exp", "10",
 			buildSegmentExpFromValue(10),
@@ -102,9 +110,9 @@ func TestParse(t *testing.T) {
 			&ast.SegmentExp{
 				BaseExp:  ast.BaseExp{},
 				DataType: ast.None,
-				Left:     &ast.AddExp{
+				Left: &ast.AddExp{
 					HeadExp: &ast.MultExp{
-						HeadExp: buildImmExpFromValue(512),
+						HeadExp:   buildImmExpFromValue(512),
 						Operators: []string{"*", "*", "/"},
 						TailExps: []*ast.ImmExp{
 							buildImmExpFromValue(18),
@@ -113,9 +121,9 @@ func TestParse(t *testing.T) {
 						},
 					},
 					Operators: []string{},
-					TailExps: []*ast.MultExp{},
+					TailExps:  []*ast.MultExp{},
 				},
-				Right:    nil,
+				Right: nil,
 			},
 		},
 		{"memory address direct", "Exp", "[100]",
@@ -205,7 +213,31 @@ func TestParse(t *testing.T) {
 				&ast.NumberFactor{ast.BaseFactor{}, 32},
 			),
 		},
-
+		{"opcode only", "OpcodeStmt", "HLT",
+			ast.NewMnemonicStmt(
+				ast.BaseStatement{},
+				ast.NewIdentFactor(ast.BaseFactor{}, "HLT"),
+				[]ast.Exp{},
+			),
+		},
+		{"1 operand", "MnemonicStmt", " ORG 0x7c00 ; comment",
+			ast.NewMnemonicStmt(
+				ast.BaseStatement{},
+				ast.NewIdentFactor(ast.BaseFactor{}, "ORG"),
+				[]ast.Exp{
+					buildSegmentExpFromValue("0x7c00"),
+				},
+			),
+		},
+		{"1 operand", "MnemonicStmt", " JMP fin ; comment",
+			ast.NewMnemonicStmt(
+				ast.BaseStatement{},
+				ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
+				[]ast.Exp{
+					buildSegmentExpFromValue("fin"),
+				},
+			),
+		},
 		{"opcode simple mnemonic", "MnemonicStmt", "DB 10,20,30",
 			ast.NewMnemonicStmt(
 				ast.BaseStatement{},
@@ -216,6 +248,70 @@ func TestParse(t *testing.T) {
 					buildSegmentExpFromValue(30),
 				},
 			),
+		},
+		// program
+		{"1 operand program", "Program", "ORG 0x7c00 ; comment",
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "ORG"),
+						[]ast.Exp{
+							buildSegmentExpFromValue("0x7c00"),
+						},
+					),
+				},
+			},
+		},
+		{"cfg program1", "Program", "MOV [CS:DS],8 ; comment",
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "MOV"),
+						[]ast.Exp{
+							buildMemoryAddrExpFromValue("CS", "DS"),
+							buildSegmentExpFromValue(8),
+						},
+					),
+				},
+			},
+		},
+		{"cfg program2", "Program", "MOV DWORD [VRAM],0x000a0000 ; comment",
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "MOV"),
+						[]ast.Exp{
+							&ast.MemoryAddrExp{
+								DataType: ast.Dword,
+								Left:     buildAddExpFromValue("VRAM"),
+								Right:    nil,
+							},
+							buildSegmentExpFromValue("0x000a0000"),
+						},
+					),
+				},
+			},
+		},
+		{"cfg program3", "Program", "HLT ;\n JMP fin",
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "HLT"),
+						[]ast.Exp{},
+					),
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
+						[]ast.Exp{
+							buildSegmentExpFromValue("fin"),
+						},
+					),
+				},
+			},
 		},
 	}
 

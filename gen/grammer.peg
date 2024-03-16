@@ -2,6 +2,7 @@
 package gen
 
 import (
+    "strings"
     "github.com/morikuni/failure"
     "github.com/hangingman/gosk/ast"
     "github.com/harakeishi/gats"
@@ -21,20 +22,38 @@ func parseError(message string) error {
 	)
 }
 
+func convertAnyToString(value any) string {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Slice, reflect.Array:
+		// 特別な処理: []byte型を検出した場合は文字列として変換
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			return string(value.([]byte))
+		}
+
+		var result []string // 文字列のスライスとして結果を保持
+		for i := 0; i < v.Len(); i++ {
+			// スライスまたは配列の各要素に対して再帰的にこの関数を適用
+			elementStr := convertAnyToString(v.Index(i).Interface())
+			result = append(result, elementStr)
+		}
+		return "[" + strings.Join(result, ", ") + "]"
+	default:
+		// スライスまたは配列でない場合は、fmt.Sprintfを使用して文字列に変換
+		return fmt.Sprintf("%v", value)
+	}
+}
+
 const (
 	ParseError failure.StringCode = "ParseError"
 )
 
 }
 
-Program <- list:(Statement TrailingWsEOL)* END {
+Program <- list:Statement* END {
     statements := make([]ast.Statement, 0)
     for _, anySlice := range toAnySlice(list) {
-        tuple := toAnySlice(anySlice)
-        if tuple == nil {
-            return nil, parseError("statement")
-        }
-        stmt, ok := tuple[0].(ast.Statement)
+        stmt, ok := anySlice.(ast.Statement)
         if !ok {
             return nil, parseError("statement")
         }
@@ -49,9 +68,9 @@ Statement <- LabelStmt /
     ExternSymStmt /
     ConfigStmt /
     MnemonicStmt /
-    _ Comment
+    OpcodeStmt
 
-LabelStmt <- l:Label {
+LabelStmt <- l:Label _ {
     label, ok := l.(string)
     if !ok {
         return nil, parseError("label")
@@ -59,11 +78,11 @@ LabelStmt <- l:Label {
     return ast.NewLabelStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, label)), nil
 }
 
-Label <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* ':' &( TrailingWsEOL ) {
-    return string(c.text), nil
+Label <- !ReservedWord !Opcode l:([a-zA-Z$_.] [a-zA-Z$_.0-9]* ':') TrailingWsEOL {
+    return strings.TrimSpace(string(c.text)), nil
 }
 
-DeclareStmt <- f:IdentFactor _ "EQU" _ e:Exp {
+DeclareStmt <- _ f:IdentFactor _ "EQU" _ e:Exp _ {
     factor, ok := f.(*ast.IdentFactor)
     if !ok {
         return nil, parseError("declareStmt ident")
@@ -75,7 +94,7 @@ DeclareStmt <- f:IdentFactor _ "EQU" _ e:Exp {
     return ast.NewDeclareStmt(ast.BaseStatement{}, factor, exp), nil
 }
 
-ExportSymStmt <- "GLOBAL" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
+ExportSymStmt <- _ "GLOBAL" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)* _ {
     factors := make([]*ast.IdentFactor, 0)
     f, ok := head.(*ast.IdentFactor)
     if !ok {
@@ -98,7 +117,7 @@ ExportSymStmt <- "GLOBAL" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
     return ast.NewExportSymStmt(ast.BaseStatement{}, factors), nil
 }
 
-ExternSymStmt <- "EXTERN" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
+ExternSymStmt <- _ "EXTERN" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)* _ {
     factors := make([]*ast.IdentFactor, 0)
     f, ok := head.(*ast.IdentFactor)
     if !ok {
@@ -121,7 +140,7 @@ ExternSymStmt <- "EXTERN" _ head:IdentFactor _ tail:(_ ',' _ IdentFactor)*  {
     return ast.NewExternSymStmt(ast.BaseStatement{}, factors), nil
 }
 
-ConfigStmt <- config:ConfigType _ f:Factor ']' {
+ConfigStmt <- _ config:ConfigType _ f:Factor ']' _ {
     configType, ok := config.(ast.ConfigType)
     if !ok {
         return nil, parseError("configStmt config")
@@ -148,22 +167,28 @@ ConfigType <- '[' conf:Conf &(_ Factor ']') {
 
 Conf = "BITS" / "INSTRSET" / "OPTIMIZE" / "FORMAT" / "PADDING" / "PADSET" / "SECTION" / "ABSOLUTE" / "FILE" ;
 
-MnemonicStmt <- _ o:Opcode _ head:Operand tail:(_ ',' _ Operand)* {
+MnemonicStmt <- _ o:Opcode WS tail:OperandList _ {
     opcodeStr, err := gats.ToString(o)
     if err != nil {
         return nil, failure.Wrap(err)
     }
     opcode := ast.NewIdentFactor(ast.BaseFactor{}, opcodeStr)
-
-    operands := make([]ast.Exp, 0)
-    e, ok := head.(ast.Exp)
+    operands, ok := tail.([]ast.Exp)
     if !ok {
-        return nil, parseError("mnemonicStmt head")
+        return nil, parseError("mnemonicStmt tail")
     }
+
+    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, operands), nil
+}
+
+OperandList <- head:Operand tail:(WS ',' WS Operand)* {
+    operands := make([]ast.Exp, 0)
+
+    e, _ := head.(ast.Exp)
     operands = append(operands, e)
 
-    for _, anySlice := range toAnySlice(tail) {
-        tuple := toAnySlice(anySlice)
+    for _, s := range toAnySlice(tail) {
+        tuple := toAnySlice(s)
         if tuple == nil {
             return nil, parseError("mnemonicStmt tail")
         }
@@ -174,55 +199,61 @@ MnemonicStmt <- _ o:Opcode _ head:Operand tail:(_ ',' _ Operand)* {
         operands = append(operands, exp)
     }
 
-    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, operands), nil
+    return operands, nil
+}
+
+OpcodeStmt <- _ o:Opcode _ {
+    opcodeStr, err := gats.ToString(o)
+    if err != nil {
+        return nil, failure.Wrap(err)
+    }
+    opcode := ast.NewIdentFactor(ast.BaseFactor{}, opcodeStr)
+    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, []ast.Exp{}), nil
 }
 
 Operand <- Exp
 
-Opcode = "AAA" / "AAD" / "AAS" / "AAM" / "ADC" / "ADD" / "AND" / "ALIGN" / "ALIGNB" /
-    "ARPL" / "BOUND" / "BSF" / "BSR" / "BSWAP" / "BT" / "BTC" / "BTR" / "BTS" /
-    "CALL" / "CBW" / "CDQ" / "CLC" / "CLD" / "CLI" / "CLTS" / "CMC" / "CMP" /
-    "CMPSB" / "CMPSD" / "CMPSW" / "CMPXCHG" / "CPUID" / "CWD" / "CWDE" / "DAA" /
-    "DAS" / "DB" / "DD" / "DEC" / "DIV" / "DQ" / "DT" / "DW" / "END" / "ENTER" /
-    "F2XM1" / "FABS" / "FADD" / "FADDP" / "FBLD" / "FBSTP" / "FCHS" / "FCLEX" /
-    "FCOM" / "FCOMP" / "FCOMPP" / "FCOS" / "FDECSTP" / "FDISI" / "FDIV" / "FDIVP" /
-    "FDIVR" / "FDIVRP" / "FENI" / "FFREE" / "FIADD" / "FICOM" / "FICOMP" / "FIDIV" /
-    "FIDIVR" / "FILD" / "FIMUL" / "FINCSTP" / "FINIT" / "FIST" / "FISTP" / "FISUB" /
-    "FISUBR" / "FLD" / "FLD1" / "FLDCW" / "FLDENV" / "FLDL2E" / "FLDL2T" / "FLDLG2" /
-    "FLDLN2" / "FLDPI" / "FLDZ" / "FMUL" / "FMULP" / "FNCLEX" / "FNDISI" / "FNENI" /
-    "FNINIT" / "FNOP" / "FNSAVE" / "FNSTCW" / "FNSTENV" / "FNSTSW" / "FPATAN" /
-    "FPTAN" / "FPREM" / "FPREM1" / "FRNDINT" / "FRSTOR" / "FSAVE" / "FSCALE" /
-    "FSETPM" / "FSIN" / "FSINCOS" / "FSQRT" / "FST" / "FSTCW" / "FSTENV" / "FSTP" /
-    "FSTSW" / "FSUB" / "FSUBP" / "FSUBR" / "FSUBRP" / "FTST" / "FUCOM" / "FUCOMP" /
-    "FUCOMPP" / "FXAM" / "FXCH" / "FXTRACT" / "FYL2X" / "FYL2XP1" / "HLT" / "IDIV" /
-    "IMUL" / "IN" / "INC" / "INCO" / "INSB" / "INSD" / "INSW" / "INT" / "INT3" /
-    "INTO" / "INVD" / "INVLPG" / "IRET" / "IRETD" / "IRETW" / "JA" / "JAE" / "JB" /
-    "JBE" / "JC" / "JCXZ" / "JE" / "JECXZ" / "JG" / "JGE" / "JL" / "JLE" / "JMP" /
-    "JNA" / "JNAE" / "JNB" / "JNBE" / "JNC" / "JNE" / "JNG" / "JNGE" / "JNL" /
-    "JNLE" / "JNO" / "JNP" / "JNS" / "JNZ" / "JO" / "JP" / "JPE" / "JPO" / "JS" /
-    "JZ" / "LAHF" / "LAR" / "LDS" / "LEA" / "LEAVE" / "LES" / "LFS" / "LGDT" / "LGS" /
-    "LIDT" / "LLDT" / "LMSW" / "LOCK" / "LODSB" / "LODSD" / "LODSW" / "LOOP" /
-    "LOOPE" / "LOOPNE" / "LOOPNZ" / "LOOPZ" / "LSL" / "LSS" / "LTR" / "MOV" /
-    "MOVSB" / "MOVSD" / "MOVSW" / "MOVSX" / "MOVZX" / "MUL" / "NEG" / "NOP" / "NOT" /
-    "OR" / "ORG" / "OUT" / "OUTSB" / "OUTSD" / "OUTSW" / "POP" / "POPA" / "POPAD" /
-    "POPAW" / "POPF" / "POPFD" / "POPFW" / "PUSH" / "PUSHA" / "PUSHD" / "PUSHAD" /
-    "PUSHAW" / "PUSHF" / "PUSHFD" / "PUSHFW" / "RCL" / "RCR" / "RDMSR" / "RDPMC" /
-    "REP" / "REPE" / "REPNE" / "REPNZ" / "REPZ" / "RESB" / "RESD" / "RESQ" / "REST" /
-    "RESW" / "RET" / "RETF" / "RETN" / "ROL" / "ROR" / "RSM" / "SAHF" / "SAL" /
-    "SAR" / "SBB" / "SCASB" / "SCASD" / "SCASW" / "SETA" / "SETAE" / "SETB" /
-    "SETBE" / "SETC" / "SETE" / "SETG" / "SETGE" / "SETL" / "SETLE" / "SETNA" /
-    "SETNAE" / "SETNB" / "SETNBE" / "SETNC" / "SETNE" / "SETNG" / "SETNGE" / "SETNL" /
-    "SETNLE" / "SETNO" / "SETNP" / "SETNS" / "SETNZ" / "SETO" / "SETP" / "SETPE" /
-    "SETPO" / "SETS" / "SETZ" / "SGDT" / "SHL" / "SHLD" / "SHR" / "SHRD" / "SIDT" /
-    "SLDT" / "SMSW" / "STC" / "STD" / "STI" / "STOSB" / "STOSD" / "STOSW" / "STR" /
-    "SUB" / "TEST" / "TIMES" / "UD2" / "VERR" / "VERW" / "WAIT" / "WBINVD" / "WRMSR" /
-    "XADD" / "XCHG" / "XLATB" / "XOR" ;
+Exp <- MemoryAddrExp / SegmentExp
+
+// オペコードを最も長いパターンにマッチさせるために、辞書順ではなく文字列長でソートしている
+Opcode = "FYL2XP1" / "FXTRACT" / "FUCOMPP" / "FSINCOS" / "FRNDINT" / "FNSTENV" / "FINCSTP" /
+    "FDECSTP" / "CMPXCHG" / "WBINVD" / "SETNLE" / "SETNGE" / "SETNBE" / "SETNAE" /
+    "PUSHFW" / "PUSHFD" / "PUSHAW" / "PUSHAD" / "LOOPNZ" / "LOOPNE" / "INVLPG" / "FUCOMP" /
+    "FSUBRP" / "FSTENV" / "FSETPM" / "FSCALE" / "FRSTOR" / "FPREM1" / "FPATAN" / "FNSTSW" /
+    "FNSTCW" / "FNSAVE" / "FNINIT" / "FNDISI" / "FNCLEX" / "FLDLN2" / "FLDLG2" / "FLDL2T" /
+    "FLDL2E" / "FLDENV" / "FISUBR" / "FIDIVR" / "FICOMP" / "FDIVRP" / "FCOMPP" / "ALIGNB" /
+    "XLATB" / "WRMSR" / "TIMES" / "STOSW" / "STOSD" / "STOSB" / "SETPO" / "SETPE" / "SETNZ" /
+    "SETNS" / "SETNP" / "SETNO" / "SETNL" / "SETNG" / "SETNE" / "SETNC" / "SETNB" / "SETNA" /
+    "SETLE" / "SETGE" / "SETBE" / "SETAE" / "SCASW" / "SCASD" / "SCASB" / "REPNZ" / "REPNE" /
+    "RDPMC" / "RDMSR" / "PUSHF" / "PUSHD" / "PUSHA" / "POPFW" / "POPFD" / "POPAW" / "POPAD" /
+    "OUTSW" / "OUTSD" / "OUTSB" / "MOVZX" / "MOVSX" / "MOVSW" / "MOVSD" / "MOVSB" / "LOOPZ" /
+    "LOOPE" / "LODSW" / "LODSD" / "LODSB" / "LEAVE" / "JECXZ" / "IRETW" / "IRETD" / "FYL2X" /
+    "FUCOM" / "FSUBR" / "FSUBP" / "FSTSW" / "FSTCW" / "FSQRT" / "FSAVE" / "FPTAN" / "FPREM" /
+    "FNENI" / "FMULP" / "FLDPI" / "FLDCW" / "FISUB" / "FISTP" / "FINIT" / "FIMUL" / "FIDIV" /
+    "FICOM" / "FIADD" / "FFREE" / "FDIVR" / "FDIVP" / "FDISI" / "FCOMP" / "FCLEX" / "FBSTP" /
+    "FADDP" / "F2XM1" / "ENTER" / "CPUID" / "CMPSW" / "CMPSD" / "CMPSB" / "BSWAP" / "BOUND" /
+    "ALIGN" / "XCHG" / "XADD" / "WAIT" / "VERW" / "VERR" / "TEST" / "SMSW" / "SLDT" / "SIDT" /
+    "SHRD" / "SHLD" / "SGDT" / "SETZ" / "SETS" / "SETP" / "SETO" / "SETL" / "SETG" / "SETE" /
+    "SETC" / "SETB" / "SETA" / "SAHF" / "RETN" / "RETF" / "RESW" / "REST" / "RESQ" / "RESD" /
+    "RESB" / "REPZ" / "REPE" / "PUSH" / "POPF" / "POPA" / "LOOP" / "LOCK" / "LMSW" / "LLDT" /
+    "LIDT" / "LGDT" / "LAHF" / "JNLE" / "JNGE" / "JNBE" / "JNAE" / "JCXZ" / "IRET" / "INVD" /
+    "INTO" / "INT3" / "INSW" / "INSD" / "INSB" / "INCO" / "IMUL" / "IDIV" / "FXCH" / "FXAM" /
+    "FTST" / "FSUB" / "FSTP" / "FSIN" / "FNOP" / "FMUL" / "FLDZ" / "FLD1" / "FIST" / "FILD" /
+    "FENI" / "FDIV" / "FCOS" / "FCOM" / "FCHS" / "FBLD" / "FADD" / "FABS" / "CWDE" / "CLTS" /
+    "CALL" / "ARPL" / "XOR" / "UD2" / "SUB" / "STR" / "STI" / "STD" / "STC" / "SHR" / "SHL" /
+    "SBB" / "SAR" / "SAL" / "RSM" / "ROR" / "ROL" / "RET" / "REP" / "RCR" / "RCL" / "POP" /
+    "OUT" / "ORG" / "NOT" / "NOP" / "NEG" / "MUL" / "MOV" / "LTR" / "LSS" / "LSL" / "LGS" /
+    "LFS" / "LES" / "LEA" / "LDS" / "LAR" / "JPO" / "JPE" / "JNZ" / "JNS" / "JNP" / "JNO" /
+    "JNL" / "JNG" / "JNE" / "JNC" / "JNB" / "JNA" / "JMP" / "JLE" / "JGE" / "JBE" / "JAE" /
+    "INT" / "INC" / "HLT" / "FST" / "FLD" / "END" / "DIV" / "DEC" / "DAS" / "DAA" / "CWD" /
+    "CMP" / "CMC" / "CLI" / "CLD" / "CLC" / "CDQ" / "CBW" / "BTS" / "BTR" / "BTC" / "BSR" /
+    "BSF" / "AND" / "ADD" / "ADC" / "AAS" / "AAM" / "AAD" / "AAA" / "OR" / "JZ" / "JS" / "JP" /
+    "JO" / "JL" / "JG" / "JE" / "JC" / "JB" / "JA" / "IN" / "DW" / "DT" / "DQ" / "DD" / "DB" /
+    "BT" ;
 
 DataType = "BYTE" / "WORD" / "DWORD" ;
 
-Exp <- MemoryAddrExp / SegmentExp
-
-MemoryAddrExp <- _ d:DataType? _ '[' _ l:AddExp r:(':' AddExp)? ']' {
+MemoryAddrExp <- WS d:DataType? WS '[' WS l:AddExp r:(':' AddExp)? ']' {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
         dt, _ = ast.NewDataType(dts)
@@ -243,7 +274,7 @@ MemoryAddrExp <- _ d:DataType? _ '[' _ l:AddExp r:(':' AddExp)? ']' {
     return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, left, right), nil
 }
 
-SegmentExp <- _ d:DataType? _ l:AddExp r:(':' AddExp)? {
+SegmentExp <- WS d:DataType? WS l:AddExp r:(':' AddExp)? {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
         dt, _ = ast.NewDataType(dts)
@@ -330,14 +361,13 @@ ImmExp <- f:Factor {
     return ast.NewImmExp(ast.BaseExp{}, factor), nil
 }
 
-Factor <- ConfigType /
-    HexFactor /
+Factor <- HexFactor /
     NumberFactor /
     IdentFactor /
     StringFactor /
     CharFactor
 
-ReservedWord = "EQU" / "GLOBAL" / "EXTERN" ;
+ReservedWord = "EQU" / "GLOBAL" / "EXTERN" / DataType ;
 
 IdentFactor <- !ReservedWord [a-zA-Z$_.] ([a-zA-Z$_.0-9])* {
     return ast.NewIdentFactor(ast.BaseFactor{}, string(c.text)), nil
@@ -375,14 +405,14 @@ NumberFactor <- '-'? [0-9]+ {
 }
 
 Comment <- ('#' / ';') Char* END {
-    return "", nil
+    return string(c.text), nil
 }
 
 Char <- [^\n\r]
 
-_ <- [ \n\t\r]*
-__ <- [ \n\t\r]+
-
+_ <- ([ \n\t\r] / Comment)*
+__ <- ([ \n\t\r] / Comment)+
+WS <- [ \t]*
 TrailingWsEOL <- [ \t]* EOL+
 
 END <- EOL / EOF
