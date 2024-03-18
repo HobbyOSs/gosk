@@ -261,7 +261,7 @@ Opcode = "FYL2XP1" / "FXTRACT" / "FUCOMPP" / "FSINCOS" / "FRNDINT" / "FNSTENV" /
 DataType = "BYTE" / "WORD" / "DWORD" ;
 JumpType = "SHORT" / "NEAR" / "FAR" ;
 
-MemoryAddrExp <- WS d:DataType? WS j:JumpType? WS '[' WS l:AddExp r:(':' AddExp)? ']' {
+MemoryAddrExp <- WS d:DataType? WS j:JumpType? WS '[' WS l:AddExp r:(':' AddExp)? WS ']' {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
         dt, _ = ast.NewDataType(dts)
@@ -308,7 +308,7 @@ SegmentExp <- WS d:DataType? WS l:AddExp r:(':' AddExp)? {
     return ast.NewSegmentExp(ast.BaseExp{}, dt, left, right), nil
 }
 
-AddExp <- head:MultExp tail:(('+' / '-') MultExp)* {
+AddExp <- head:MultExp tail:(WS ('+' / '-') WS MultExp)* {
     mult, ok := head.(*ast.MultExp)
     if !ok {
         return nil, parseError("addExp head")
@@ -322,13 +322,13 @@ AddExp <- head:MultExp tail:(('+' / '-') MultExp)* {
         if tuple == nil {
             return nil, parseError("addExp tail")
         }
-        op, err := gats.ToString(tuple[0])
+        op, err := gats.ToString(tuple[1])
         if err != nil {
             return nil, failure.Wrap(err)
         }
         ops = append(ops, op)
 
-        exp, ok := tuple[1].(*ast.MultExp)
+        exp, ok := tuple[3].(*ast.MultExp)
         if !ok {
             return nil, parseError("addExp tail")
         }
@@ -337,7 +337,7 @@ AddExp <- head:MultExp tail:(('+' / '-') MultExp)* {
     return ast.NewAddExp(ast.BaseExp{}, mult, ops, exps), nil
 }
 
-MultExp <- head:ImmExp tail:(('*' / '/' / '%') ImmExp)* {
+MultExp <- head:ImmExp tail:(WS ('*' / '/' / '%') WS ImmExp)* {
     imm, ok := head.(*ast.ImmExp)
     if !ok {
         return nil, parseError("multExp head")
@@ -351,13 +351,13 @@ MultExp <- head:ImmExp tail:(('*' / '/' / '%') ImmExp)* {
         if tuple == nil {
             return nil, parseError("multExp tail")
         }
-        op, err := gats.ToString(tuple[0])
+        op, err := gats.ToString(tuple[1])
         if err != nil {
             return nil, failure.Wrap(err)
         }
         ops = append(ops, op)
 
-        exp, ok := tuple[1].(*ast.ImmExp)
+        exp, ok := tuple[3].(*ast.ImmExp)
         if !ok {
             return nil, parseError("multExp tail")
         }
