@@ -259,26 +259,32 @@ Opcode = "FYL2XP1" / "FXTRACT" / "FUCOMPP" / "FSINCOS" / "FRNDINT" / "FNSTENV" /
     "BT" ;
 
 DataType = "BYTE" / "WORD" / "DWORD" ;
+JumpType = "SHORT" / "NEAR" / "FAR" ;
 
-MemoryAddrExp <- WS d:DataType? WS '[' WS l:AddExp r:(':' AddExp)? ']' {
+MemoryAddrExp <- WS d:DataType? WS j:JumpType? WS '[' WS l:AddExp r:(':' AddExp)? ']' {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
         dt, _ = ast.NewDataType(dts)
     }
+    var jt ast.JumpType
+    if jts, err := gats.ToString(j); err == nil {
+        jt, _ = ast.NewJumpType(jts)
+    }
+
     left, ok := l.(*ast.AddExp)
     if !ok {
         return nil, parseError("memoryAddrExp left")
     }
     tuple := toAnySlice(r)
     if tuple == nil || tuple[1] == nil {
-        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, left, nil), nil
+        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, jt, left, nil), nil
     }
     right, ok := tuple[1].(*ast.AddExp)
     if !ok {
-        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt,left, nil), nil
+        return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, jt, left, nil), nil
     }
 
-    return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, left, right), nil
+    return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, jt, left, right), nil
 }
 
 SegmentExp <- WS d:DataType? WS l:AddExp r:(':' AddExp)? {

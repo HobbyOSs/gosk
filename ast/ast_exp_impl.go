@@ -22,6 +22,28 @@ func NewDataType(s string) (DataType, bool) {
 	return c, ok
 }
 
+// TODO: go generateで作成できないか
+type JumpType string
+
+const (
+	Short JumpType = "SHORT"
+	Near  JumpType = "NEAR"
+	Far   JumpType = "FAR"
+	Empty JumpType = ""
+)
+
+var stringToJumpType = map[string]JumpType{
+	"SHORT": Short,
+	"NEAR":  Near,
+	"FAR":   Far,
+	"":      Empty,
+}
+
+func NewJumpType(s string) (JumpType, bool) {
+	c, ok := stringToJumpType[s]
+	return c, ok
+}
+
 //go:generate newc
 type SegmentExp struct {
 	BaseExp
@@ -43,6 +65,7 @@ func (s SegmentExp) String() string {
 type MemoryAddrExp struct {
 	BaseExp
 	DataType DataType
+	JumpType JumpType
 	Left     *AddExp
 	Right    *AddExp // nullable
 }

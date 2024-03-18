@@ -13,10 +13,11 @@ func NewSegmentExp(baseExp BaseExp, dataType DataType, left *AddExp, right *AddE
 }
 
 // NewMemoryAddrExp Create a new MemoryAddrExp
-func NewMemoryAddrExp(baseExp BaseExp, dataType DataType, left *AddExp, right *AddExp) *MemoryAddrExp {
+func NewMemoryAddrExp(baseExp BaseExp, dataType DataType, jumpType JumpType, left *AddExp, right *AddExp) *MemoryAddrExp {
 	return &MemoryAddrExp{
 		BaseExp:  baseExp,
 		DataType: dataType,
+		JumpType: jumpType,
 		Left:     left,
 		Right:    right,
 	}

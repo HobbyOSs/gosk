@@ -313,13 +313,39 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
-		//{"cfg program4", "Program", "_io_hlt:	; void io_hlt(void);\n",
 		{"cfg program4", "Program", "_io_hlt:	;\n",
 			&ast.Program{
 				Statements: []ast.Statement{
 					ast.NewLabelStmt(
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "_io_hlt:"),
+					),
+				},
+			},
+		},
+		{"cfg program5", "Program", `_farjmp: ;
+		JMP FAR [ESP+4] ; eip, cs`,
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewLabelStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "_farjmp:"),
+					),
+					ast.NewMnemonicStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
+						[]ast.Exp{
+							&ast.MemoryAddrExp{
+								DataType: "",
+								JumpType: "FAR",
+								Left: &ast.AddExp{
+									HeadExp:   buildMultExpFromValue("ESP"),
+									Operators: []string{"+"},
+									TailExps:  []*ast.MultExp{buildMultExpFromValue(4)},
+								},
+								Right: nil,
+							},
+						},
 					),
 				},
 			},
