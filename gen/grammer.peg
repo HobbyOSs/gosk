@@ -79,7 +79,14 @@ LabelStmt <- l:Label _ {
 }
 
 Label <- !ReservedWord !Opcode l:([a-zA-Z$_.] [a-zA-Z$_.0-9]* ':') TrailingWsEOL {
-    return strings.TrimSpace(string(c.text)), nil
+    label := ""
+    value := toAnySlice(l)
+    label += string(value[0].([]byte))
+    for _, v := range toAnySlice(value[1]) {
+        label += string(v.([]byte))
+    }
+    label += string(value[2].([]byte))
+    return strings.TrimSpace(label), nil
 }
 
 DeclareStmt <- _ f:IdentFactor _ "EQU" _ e:Exp _ {
@@ -413,7 +420,7 @@ Char <- [^\n\r]
 _ <- ([ \n\t\r] / Comment)*
 __ <- ([ \n\t\r] / Comment)+
 WS <- [ \t]*
-TrailingWsEOL <- [ \t]* EOL+
+TrailingWsEOL <- [ \t]* (('#' / ';') Char*)? EOL+
 
 END <- EOL / EOF
 

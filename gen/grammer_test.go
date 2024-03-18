@@ -313,6 +313,17 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		//{"cfg program4", "Program", "_io_hlt:	; void io_hlt(void);\n",
+		{"cfg program4", "Program", "_io_hlt:	;\n",
+			&ast.Program{
+				Statements: []ast.Statement{
+					ast.NewLabelStmt(
+						ast.BaseStatement{},
+						ast.NewIdentFactor(ast.BaseFactor{}, "_io_hlt:"),
+					),
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
