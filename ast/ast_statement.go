@@ -3,8 +3,9 @@ package ast
 import "reflect"
 
 type Statement interface {
+	Node
 	Type() string
-	String() string
+	statementNode()
 }
 
 type BaseStatement struct{}

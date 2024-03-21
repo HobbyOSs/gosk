@@ -52,11 +52,12 @@ type SegmentExp struct {
 	Right    *AddExp // nullable
 }
 
-func (s SegmentExp) String() string {
-	str := s.Left.String()
+func (s SegmentExp) expressionNode() {}
+func (s SegmentExp) TokenLiteral() string {
+	str := s.Left.TokenLiteral()
 	if s.Right != nil {
 		str += " : "
-		str += s.Right.String()
+		str += s.Right.TokenLiteral()
 	}
 	return str
 }
@@ -70,12 +71,13 @@ type MemoryAddrExp struct {
 	Right    *AddExp // nullable
 }
 
-func (m MemoryAddrExp) String() string {
+func (m MemoryAddrExp) expressionNode() {}
+func (m MemoryAddrExp) TokenLiteral() string {
 	str := "[ "
-	str += m.Left.String()
+	str += m.Left.TokenLiteral()
 	if m.Right != nil {
 		str += " : "
-		str += m.Right.String()
+		str += m.Right.TokenLiteral()
 	}
 	str += " ]"
 	return str
@@ -89,8 +91,9 @@ type AddExp struct {
 	TailExps  []*MultExp
 }
 
-func (a AddExp) String() string {
-	return a.HeadExp.String()
+func (a AddExp) expressionNode() {}
+func (a AddExp) TokenLiteral() string {
+	return a.HeadExp.TokenLiteral()
 }
 
 //go:generate newc
@@ -101,8 +104,9 @@ type MultExp struct {
 	TailExps  []*ImmExp
 }
 
-func (m MultExp) String() string {
-	return m.HeadExp.String()
+func (m MultExp) expressionNode() {}
+func (m MultExp) TokenLiteral() string {
+	return m.HeadExp.TokenLiteral()
 }
 
 //go:generate newc
@@ -111,6 +115,7 @@ type ImmExp struct {
 	Factor Factor
 }
 
-func (imm ImmExp) String() string {
-	return imm.Factor.String()
+func (imm ImmExp) expressionNode() {}
+func (imm ImmExp) TokenLiteral() string {
+	return imm.Factor.TokenLiteral()
 }

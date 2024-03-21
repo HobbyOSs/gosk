@@ -3,8 +3,9 @@ package ast
 import "reflect"
 
 type Exp interface {
+	Node
+	expressionNode()
 	Type() string
-	String() string
 }
 
 type BaseExp struct{}

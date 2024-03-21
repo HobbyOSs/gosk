@@ -5,8 +5,9 @@ import (
 )
 
 type Factor interface {
+	Node
 	Type() string
-	String() string
+	factorNode()
 }
 
 type BaseFactor struct{}

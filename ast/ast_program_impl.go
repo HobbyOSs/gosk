@@ -13,11 +13,15 @@ type Program struct {
 
 func (p Program) String() string {
 	stmts := lo.Map(p.Statements, func(s Statement, _ int) string {
-		return s.String()
+		return s.TokenLiteral()
 	})
 	return strings.Join(stmts, "\n")
 }
 
+func (p Program) program() {}
+func (p Program) TokenLiteral() string {
+	return ""
+}
 func (p Program) Type() string {
 	return "Program"
 }

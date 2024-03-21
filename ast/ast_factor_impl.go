@@ -8,7 +8,8 @@ type NumberFactor struct {
 	Value int
 }
 
-func (n NumberFactor) String() string {
+func (n NumberFactor) factorNode() {}
+func (n NumberFactor) TokenLiteral() string {
 	return fmt.Sprintf("%d", n.Value)
 }
 
@@ -18,7 +19,8 @@ type StringFactor struct {
 	Value string
 }
 
-func (s StringFactor) String() string {
+func (s StringFactor) factorNode() {}
+func (s StringFactor) TokenLiteral() string {
 	return s.Value
 }
 
@@ -28,7 +30,8 @@ type HexFactor struct {
 	Value string
 }
 
-func (h HexFactor) String() string {
+func (h HexFactor) factorNode() {}
+func (h HexFactor) TokenLiteral() string {
 	return h.Value
 }
 
@@ -38,7 +41,8 @@ type IdentFactor struct {
 	Value string
 }
 
-func (i IdentFactor) String() string {
+func (i IdentFactor) factorNode() {}
+func (i IdentFactor) TokenLiteral() string {
 	return fmt.Sprintf("%s", i.Value)
 }
 
@@ -48,6 +52,7 @@ type CharFactor struct {
 	Value string
 }
 
-func (c CharFactor) String() string {
+func (c CharFactor) factorNode() {}
+func (c CharFactor) TokenLiteral() string {
 	return fmt.Sprintf("%s", c.Value)
 }

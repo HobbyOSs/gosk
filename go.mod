@@ -1,4 +1,4 @@
-module github.com/hangingman/gosk
+module github.com/HobbyOSs/gosk
 
 go 1.22.0
 
@@ -11,7 +11,10 @@ require (
 	github.com/stretchr/testify v1.7.0
 )
 
-require golang.org/x/net v0.22.0
+require (
+	github.com/hangingman/gosk v0.0.0-20240318141803-a27895528f1e
+	golang.org/x/net v0.22.0
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect

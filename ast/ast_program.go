@@ -1,6 +1,7 @@
 package ast
 
 type Prog interface {
+	Node
 	Type() string
-	String() string
+	program()
 }

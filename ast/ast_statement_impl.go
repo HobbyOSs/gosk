@@ -13,8 +13,9 @@ type DeclareStmt struct {
 	Value Exp // interfaceはポインタにしない
 }
 
-func (d DeclareStmt) String() string {
-	return d.Id.String() + " EQU " + d.Value.String()
+func (d DeclareStmt) statementNode() {}
+func (d DeclareStmt) TokenLiteral() string {
+	return d.Id.TokenLiteral() + " EQU " + d.Value.TokenLiteral()
 }
 
 //go:generate newc
@@ -23,8 +24,9 @@ type LabelStmt struct {
 	Label *IdentFactor
 }
 
-func (l LabelStmt) String() string {
-	return l.Label.String()
+func (l LabelStmt) statementNode() {}
+func (l LabelStmt) TokenLiteral() string {
+	return l.Label.TokenLiteral()
 }
 
 //go:generate newc
@@ -33,9 +35,10 @@ type ExportSymStmt struct {
 	Symbols []*IdentFactor
 }
 
-func (es ExportSymStmt) String() string {
+func (es ExportSymStmt) statementNode() {}
+func (es ExportSymStmt) TokenLiteral() string {
 	symbols := lo.Map(es.Symbols, func(i *IdentFactor, _ int) string {
-		return i.String()
+		return i.TokenLiteral()
 	})
 	return "GLOBAL " + strings.Join(symbols, ",")
 }
@@ -46,9 +49,10 @@ type ExternSymStmt struct {
 	Symbols []*IdentFactor
 }
 
-func (es ExternSymStmt) String() string {
+func (es ExternSymStmt) statementNode() {}
+func (es ExternSymStmt) TokenLiteral() string {
 	symbols := lo.Map(es.Symbols, func(i *IdentFactor, _ int) string {
-		return i.String()
+		return i.TokenLiteral()
 	})
 	return "EXTERN " + strings.Join(symbols, ",")
 }
@@ -60,8 +64,9 @@ type ConfigStmt struct {
 	Factor     Factor
 }
 
-func (c ConfigStmt) String() string {
-	return string(c.ConfigType) + " " + c.Factor.String()
+func (c ConfigStmt) statementNode() {}
+func (c ConfigStmt) TokenLiteral() string {
+	return string(c.ConfigType) + " " + c.Factor.TokenLiteral()
 }
 
 // TODO: go generateで作成できないか
@@ -103,9 +108,10 @@ type MnemonicStmt struct {
 	Operands []Exp
 }
 
-func (ms MnemonicStmt) String() string {
+func (ms MnemonicStmt) statementNode() {}
+func (ms MnemonicStmt) TokenLiteral() string {
 	operands := lo.Map(ms.Operands, func(f Exp, _ int) string {
-		return f.String()
+		return f.TokenLiteral()
 	})
-	return ms.Opcode.String() + " " + strings.Join(operands, ",")
+	return ms.Opcode.TokenLiteral() + " " + strings.Join(operands, ",")
 }
