@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hangingman/gosk/ast"
-	"github.com/hangingman/gosk/pass1"
-	"github.com/hangingman/gosk/pass2"
+	"github.com/HobbyOSs/gosk/pass1"
+	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/pass2"
 )
 
 // pass1, pass2を操作するモジュール
@@ -27,7 +27,14 @@ func Exec(parseTree any, assemblyDst string) {
 	}
 
 	// TODO: pass1のEvalを実行
+	pass1 := pass1.NewPass1(
+		0,
+		make(map[string]uint32),
+		[]string{},
+		[]string{},
+	)
 	pass1.Eval(prog)
+
 	// TODO: pass2のEvalを実行
 	pass2.Eval(prog)
 }

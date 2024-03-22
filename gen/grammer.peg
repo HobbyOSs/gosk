@@ -4,7 +4,7 @@ package gen
 import (
     "strings"
     "github.com/morikuni/failure"
-    "github.com/hangingman/gosk/ast"
+    "github.com/HobbyOSs/gosk/ast"
     "github.com/harakeishi/gats"
 )
 

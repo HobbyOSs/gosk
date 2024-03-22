@@ -7,8 +7,8 @@ This is a yet another assembly interpreter gosk!
 * You need to install Go and Make
 
 ```
-$ go get -u github.com/hangingman/gosk
-$ cd $GO_HOME/src/github.com/hangingman/gosk
+$ go get -u github.com/HobbyOSs/gosk
+$ cd $GO_HOME/src/github.com/HobbyOSs/gosk
 $ make
 ```
 

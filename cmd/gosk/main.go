@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hangingman/gosk/frontend"
-	"github.com/hangingman/gosk/gen"
+	"github.com/HobbyOSs/gosk/frontend"
+	"github.com/HobbyOSs/gosk/gen"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )

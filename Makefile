@@ -5,7 +5,7 @@ GOTEST=gotest
 BIN=gosk
 NASK=wine nask.exe
 
-.PHONY: all testdata gen
+.PHONY: all test gen
 
 all: dep build test
 

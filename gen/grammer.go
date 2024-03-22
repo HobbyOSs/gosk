@@ -17,7 +17,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/hangingman/gosk/ast"
+	"github.com/HobbyOSs/gosk/ast"
 	"github.com/harakeishi/gats"
 	"github.com/morikuni/failure"
 )

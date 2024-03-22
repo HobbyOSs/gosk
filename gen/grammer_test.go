@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/hangingman/gosk/ast"
+	"github.com/HobbyOSs/gosk/ast"
 	"github.com/stretchr/testify/assert"
 )
 
