@@ -15,6 +15,8 @@ require golang.org/x/net v0.22.0
 
 require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
+require github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

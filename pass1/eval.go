@@ -1,10 +1,9 @@
 package pass1
 
 import (
-	"log"
-
-	"github.com/comail/colog"
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/token"
+	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 //go:generate newc
@@ -15,16 +14,10 @@ type Pass1 struct {
 	SymTable         map[string]uint32
 	GlobalSymbolList []string
 	ExternSymbolList []string
-}
-
-func init() {
-	colog.Register()
-	colog.SetDefaultLevel(colog.LInfo)
-	colog.SetMinLevel(colog.LInfo)
-	colog.SetFlags(log.Lshortfile)
-	colog.SetFormatter(&colog.StdFormatter{Colors: false})
+	Ctx              *stack.Stack[*token.ParseToken]
 }
 
 func (p *Pass1) Eval(program ast.Prog) {
-	log.Println("pass1")
+	v := NewVisitor(p)
+	v.Visit(program)
 }

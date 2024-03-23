@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/HobbyOSs/gosk/pass1"
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/pass1"
 	"github.com/HobbyOSs/gosk/pass2"
+	"github.com/HobbyOSs/gosk/token"
+	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 // pass1, pass2を操作するモジュール
@@ -32,6 +34,7 @@ func Exec(parseTree any, assemblyDst string) {
 		make(map[string]uint32),
 		[]string{},
 		[]string{},
+		stack.NewStack[*token.ParseToken](0),
 	)
 	pass1.Eval(prog)
 

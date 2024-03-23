@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/HobbyOSs/gosk/frontend"
 	"github.com/HobbyOSs/gosk/gen"
+	"github.com/comail/colog"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"
 )
@@ -83,8 +85,9 @@ Thank you osask project !`)
 		//flag.PrintDefaults()
 		os.Exit(16)
 	}
-	fmt.Printf("source: %s, object: %s\n", flag.Args()[0], flag.Args()[1])
+	setUpColog(*debug)
 
+	fmt.Printf("source: %s, object: %s\n", flag.Args()[0], flag.Args()[1])
 	assemblySrc := flag.Args()[0]
 	assemblyDst := flag.Args()[1]
 
@@ -108,4 +111,16 @@ Thank you osask project !`)
 	frontend.Exec(parseTree, assemblyDst)
 
 	os.Exit(0)
+}
+
+func setUpColog(debug bool) {
+	colog.Register()
+	colog.SetDefaultLevel(colog.LInfo)
+	if debug {
+		colog.SetMinLevel(colog.LDebug)
+	} else {
+		colog.SetMinLevel(colog.LInfo)
+	}
+	colog.SetFlags(log.Lshortfile)
+	colog.SetFormatter(&colog.StdFormatter{Colors: false})
 }

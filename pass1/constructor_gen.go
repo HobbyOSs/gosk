@@ -2,12 +2,115 @@
 
 package pass1
 
+import (
+	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/token"
+	"github.com/zeroflucs-given/generics/collections/stack"
+)
+
 // NewPass1 Create a new Pass1
-func NewPass1(loc int32, symTable map[string]uint32, globalSymbolList []string, externSymbolList []string) *Pass1 {
+func NewPass1(loc int32, symTable map[string]uint32, globalSymbolList []string, externSymbolList []string, ctx *stack.Stack[*token.ParseToken]) *Pass1 {
 	return &Pass1{
 		LOC:              loc,
 		SymTable:         symTable,
 		GlobalSymbolList: globalSymbolList,
 		ExternSymbolList: externSymbolList,
+		Ctx:              ctx,
+	}
+}
+
+// NewProgramHandlerImpl Create a new ProgramHandlerImpl
+func NewProgramHandlerImpl(visitor *ast.Visitor, env *Pass1) *ProgramHandlerImpl {
+	return &ProgramHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewDeclareStmtHandlerImpl Create a new DeclareStmtHandlerImpl
+func NewDeclareStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *DeclareStmtHandlerImpl {
+	return &DeclareStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewLabelStmtHandlerImpl Create a new LabelStmtHandlerImpl
+func NewLabelStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *LabelStmtHandlerImpl {
+	return &LabelStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewExportSymStmtHandlerImpl Create a new ExportSymStmtHandlerImpl
+func NewExportSymStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *ExportSymStmtHandlerImpl {
+	return &ExportSymStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewExternSymStmtHandlerImpl Create a new ExternSymStmtHandlerImpl
+func NewExternSymStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *ExternSymStmtHandlerImpl {
+	return &ExternSymStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewConfigStmtHandlerImpl Create a new ConfigStmtHandlerImpl
+func NewConfigStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *ConfigStmtHandlerImpl {
+	return &ConfigStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewMnemonicStmtHandlerImpl Create a new MnemonicStmtHandlerImpl
+func NewMnemonicStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *MnemonicStmtHandlerImpl {
+	return &MnemonicStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewNumberFactorHandlerImpl Create a new NumberFactorHandlerImpl
+func NewNumberFactorHandlerImpl(visitor *ast.Visitor, env *Pass1) *NumberFactorHandlerImpl {
+	return &NumberFactorHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewStringFactorHandlerImpl Create a new StringFactorHandlerImpl
+func NewStringFactorHandlerImpl(visitor *ast.Visitor, env *Pass1) *StringFactorHandlerImpl {
+	return &StringFactorHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewHexFactorHandlerImpl Create a new HexFactorHandlerImpl
+func NewHexFactorHandlerImpl(visitor *ast.Visitor, env *Pass1) *HexFactorHandlerImpl {
+	return &HexFactorHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewIdentFactorHandlerImpl Create a new IdentFactorHandlerImpl
+func NewIdentFactorHandlerImpl(visitor *ast.Visitor, env *Pass1) *IdentFactorHandlerImpl {
+	return &IdentFactorHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewCharFactorHandlerImpl Create a new CharFactorHandlerImpl
+func NewCharFactorHandlerImpl(visitor *ast.Visitor, env *Pass1) *CharFactorHandlerImpl {
+	return &CharFactorHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
 	}
 }
