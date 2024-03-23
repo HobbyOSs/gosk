@@ -123,30 +123,30 @@ func (p *MnemonicStmtHandlerImpl) MnemonicStmt(node *ast.MnemonicStmt) bool {
 
 func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
 	log.Println("debug: number factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(node.Value))
+	p.Env.Ctx.Push(token.NewParseToken(token.TTNumber, node.Value))
 	return true
 }
 
 func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
 	log.Println("debug: string factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(node.Value))
+	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
 	return true
 }
 
 func (p *HexFactorHandlerImpl) HexFactor(node *ast.HexFactor) bool {
 	log.Println("debug: hex factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(node.Value))
+	p.Env.Ctx.Push(token.NewParseToken(token.TTHex, node.Value))
 	return true
 }
 
 func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
 	log.Println("debug: ident factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(node.Value))
+	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
 	return true
 }
 
 func (p *CharFactorHandlerImpl) CharFactor(node *ast.CharFactor) bool {
 	log.Println("debug: char factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(node.Value))
+	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
 	return true
 }
