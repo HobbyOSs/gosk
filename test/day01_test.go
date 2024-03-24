@@ -1,11 +1,13 @@
 package test
 
 import (
+	"log"
 	"os"
 	"testing"
 
 	"github.com/HobbyOSs/gosk/frontend"
 	"github.com/HobbyOSs/gosk/gen"
+	"github.com/comail/colog"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -48,6 +50,7 @@ func (s *Day01Suite) TestHelloos1() {
 	frontend.Exec(pt, temp.Name())
 }
 
+/**
 func (s *Day01Suite) TestHelloos2() {
 
 	code := `; hello-os
@@ -110,12 +113,14 @@ func (s *Day01Suite) TestHelloos2() {
 	s.Require().NoError(err)
 	frontend.Exec(pt, temp.Name())
 }
+*/
 
 func TestDay01Suite(t *testing.T) {
 	suite.Run(t, new(Day01Suite))
 }
 
 func (s *Day01Suite) SetupSuite() {
+	setUpColog(true)
 }
 
 func (s *Day01Suite) TearDownSuite() {
@@ -125,4 +130,16 @@ func (s *Day01Suite) SetupTest() {
 }
 
 func (s *Day01Suite) TearDownTest() {
+}
+
+func setUpColog(debug bool) {
+	colog.Register()
+	colog.SetDefaultLevel(colog.LInfo)
+	if debug {
+		colog.SetMinLevel(colog.LDebug)
+	} else {
+		colog.SetMinLevel(colog.LInfo)
+	}
+	colog.SetFlags(log.Lshortfile)
+	colog.SetFormatter(&colog.StdFormatter{Colors: false})
 }

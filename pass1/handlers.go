@@ -50,6 +50,36 @@ type MnemonicStmtHandlerImpl struct {
 }
 
 //go:generate newc
+type MemoryAddrExpHandlerImpl struct {
+	Visitor *ast.Visitor
+	Env     *Pass1
+}
+
+//go:generate newc
+type SegmentExpHandlerImpl struct {
+	Visitor *ast.Visitor
+	Env     *Pass1
+}
+
+//go:generate newc
+type AddExpHandlerImpl struct {
+	Visitor *ast.Visitor
+	Env     *Pass1
+}
+
+//go:generate newc
+type MultExpHandlerImpl struct {
+	Visitor *ast.Visitor
+	Env     *Pass1
+}
+
+//go:generate newc
+type ImmExpHandlerImpl struct {
+	Visitor *ast.Visitor
+	Env     *Pass1
+}
+
+//go:generate newc
 type NumberFactorHandlerImpl struct {
 	Visitor *ast.Visitor
 	Env     *Pass1
@@ -79,8 +109,26 @@ type CharFactorHandlerImpl struct {
 	Env     *Pass1
 }
 
+func popAndPush(env *Pass1) {
+	ok, t := env.Ctx.Pop()
+	if !ok {
+		log.Fatal("error: failed to pop token")
+	}
+	err := env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: failed to push token")
+	}
+}
+
+func pop(env *Pass1) {
+	ok, _ := env.Ctx.Pop()
+	if !ok {
+		log.Fatal("error: failed to pop token")
+	}
+}
+
 func (p *ProgramHandlerImpl) Program(node *ast.Program) bool {
-	log.Println("debug: program handler!!!")
+	log.Println("trace: program handler!!!")
 	for _, stmt := range node.Statements {
 		p.Visitor.Visit(stmt)
 	}
@@ -88,65 +136,175 @@ func (p *ProgramHandlerImpl) Program(node *ast.Program) bool {
 }
 
 func (p *DeclareStmtHandlerImpl) DeclareStmt(node *ast.DeclareStmt) bool {
-	log.Println("debug: declare handler!!!")
+	log.Println("trace: declare handler!!!")
+
+	p.Visitor.Visit(node.Id)
+	ok, key := p.Env.Ctx.Pop()
+	if !ok {
+		log.Fatal("error: EQU failed to pop token key")
+	}
+
+	p.Visitor.Visit(node.Value)
+	ok, value := p.Env.Ctx.Pop()
+	if !ok {
+		log.Fatal("error: EQU failed to pop token value")
+	}
+	p.Env.EquMap[key.Data.ToString()] = value
+
 	return true
 }
 
 func (p *LabelStmtHandlerImpl) LabelStmt(node *ast.LabelStmt) bool {
-	log.Println("debug: label handler!!!")
+	log.Println("trace: label handler!!!")
 	return true
 }
 
 func (p *ExportSymStmtHandlerImpl) ExportSymStmt(node *ast.ExportSymStmt) bool {
-	log.Println("debug: export sym handler!!!")
+	log.Println("trace: export sym handler!!!")
 	return true
 }
 
 func (p *ExternSymStmtHandlerImpl) ExternSymStmt(node *ast.ExternSymStmt) bool {
-	log.Println("debug: extern sym handler!!!")
+	log.Println("trace: extern sym handler!!!")
 	return true
 }
 
 func (p *ConfigStmtHandlerImpl) ConfigStmt(node *ast.ConfigStmt) bool {
-	log.Println("debug: config stmt handler!!!")
+	// 使用するbit_modeは機械語サイズに影響するので読み取って設定する
+	p.Visitor.Visit(node.Factor)
+
+	if node.ConfigType == ast.Bits {
+		ok, token := p.Env.Ctx.Pop()
+		if !ok {
+			log.Fatal("Failed to pop token")
+		}
+		bitMode, ok := NewBitMode(token.Data.ToInt())
+		if !ok {
+			log.Fatal("Failed to parse BITS")
+		}
+		p.Env.BitMode = bitMode
+	}
+
 	return true
 }
 
 func (p *MnemonicStmtHandlerImpl) MnemonicStmt(node *ast.MnemonicStmt) bool {
-	log.Println("debug: mnemonic stmt handler!!!")
+	log.Println("trace: mnemonic stmt handler!!!")
+
+	// TODO: オペコードに応じてLOCを更新する
 	p.Visitor.Visit(node.Opcode)
+	pop(p.Env)
+
 	for _, operand := range node.Operands {
 		p.Visitor.Visit(operand)
+		pop(p.Env)
 	}
 	return true
 }
 
+/**
+ * Handling Exp elements
+ */
+func (p *MemoryAddrExpHandlerImpl) MemoryAddrExp(node *ast.MemoryAddrExp) bool {
+	log.Println("trace: memory_addr exp handler!!!")
+	log.Printf("trace: %+v", node)
+	return true
+}
+
+func (p *SegmentExpHandlerImpl) SegmentExp(node *ast.SegmentExp) bool {
+	log.Println("trace: segment exp handler!!!")
+	p.Visitor.Visit(node.Left)
+	if node.Right != nil {
+		p.Visitor.Visit(node.Right)
+	}
+	popAndPush(p.Env)
+	return true
+}
+
+func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
+	log.Println("trace: add exp handler!!!")
+	p.Visitor.Visit(node.HeadExp)
+	for _, tail := range node.TailExps {
+		p.Visitor.Visit(tail)
+	}
+	popAndPush(p.Env)
+	return true
+}
+
+func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
+	log.Println("trace: mult exp handler!!!")
+	p.Visitor.Visit(node.HeadExp)
+	for _, tail := range node.TailExps {
+		p.Visitor.Visit(tail)
+	}
+	popAndPush(p.Env)
+	return true
+}
+
+func (p *ImmExpHandlerImpl) ImmExp(node *ast.ImmExp) bool {
+	log.Println("trace: imm exp handler!!!")
+	p.Visitor.Visit(node.Factor)
+	popAndPush(p.Env)
+	return true
+}
+
+/**
+ * Handling Factor elements
+ */
 func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
-	log.Println("debug: number factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(token.TTNumber, node.Value))
+	log.Printf("trace: number factor: %+v\n", node)
+
+	t := token.NewParseToken(token.TTNumber, node.Value)
+	err := p.Env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: Failed to push token; ", err)
+	}
 	return true
 }
 
 func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
-	log.Println("debug: string factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
+	log.Printf("trace: string factor: %+v\n", node)
+
+	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	err := p.Env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: Failed to push token; ", err)
+	}
 	return true
+
 }
 
 func (p *HexFactorHandlerImpl) HexFactor(node *ast.HexFactor) bool {
-	log.Println("debug: hex factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(token.TTHex, node.Value))
+	log.Printf("trace: hex factor: %+v\n", node)
+
+	t := token.NewParseToken(token.TTHex, node.Value)
+	err := p.Env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: Failed to push token; ", err)
+	}
 	return true
+
 }
 
 func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
-	log.Println("debug: ident factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
+	log.Printf("trace: ident factor: %+v\n", node)
+
+	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	err := p.Env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: Failed to push token; ", err)
+	}
 	return true
+
 }
 
 func (p *CharFactorHandlerImpl) CharFactor(node *ast.CharFactor) bool {
-	log.Println("debug: char factor handler!!!")
-	p.Env.Ctx.Push(token.NewParseToken(token.TTIdentifier, node.Value))
+	log.Printf("trace: char factor: %+v\n", node)
+
+	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	err := p.Env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal("error: Failed to push token; ", err)
+	}
 	return true
 }

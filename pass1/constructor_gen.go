@@ -4,20 +4,7 @@ package pass1
 
 import (
 	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/token"
-	"github.com/zeroflucs-given/generics/collections/stack"
 )
-
-// NewPass1 Create a new Pass1
-func NewPass1(loc int32, symTable map[string]uint32, globalSymbolList []string, externSymbolList []string, ctx *stack.Stack[*token.ParseToken]) *Pass1 {
-	return &Pass1{
-		LOC:              loc,
-		SymTable:         symTable,
-		GlobalSymbolList: globalSymbolList,
-		ExternSymbolList: externSymbolList,
-		Ctx:              ctx,
-	}
-}
 
 // NewProgramHandlerImpl Create a new ProgramHandlerImpl
 func NewProgramHandlerImpl(visitor *ast.Visitor, env *Pass1) *ProgramHandlerImpl {
@@ -70,6 +57,46 @@ func NewConfigStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *ConfigStmtHandl
 // NewMnemonicStmtHandlerImpl Create a new MnemonicStmtHandlerImpl
 func NewMnemonicStmtHandlerImpl(visitor *ast.Visitor, env *Pass1) *MnemonicStmtHandlerImpl {
 	return &MnemonicStmtHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewMemoryAddrExpHandlerImpl Create a new MemoryAddrExpHandlerImpl
+func NewMemoryAddrExpHandlerImpl(visitor *ast.Visitor, env *Pass1) *MemoryAddrExpHandlerImpl {
+	return &MemoryAddrExpHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewSegmentExpHandlerImpl Create a new SegmentExpHandlerImpl
+func NewSegmentExpHandlerImpl(visitor *ast.Visitor, env *Pass1) *SegmentExpHandlerImpl {
+	return &SegmentExpHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewAddExpHandlerImpl Create a new AddExpHandlerImpl
+func NewAddExpHandlerImpl(visitor *ast.Visitor, env *Pass1) *AddExpHandlerImpl {
+	return &AddExpHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewMultExpHandlerImpl Create a new MultExpHandlerImpl
+func NewMultExpHandlerImpl(visitor *ast.Visitor, env *Pass1) *MultExpHandlerImpl {
+	return &MultExpHandlerImpl{
+		Visitor: visitor,
+		Env:     env,
+	}
+}
+
+// NewImmExpHandlerImpl Create a new ImmExpHandlerImpl
+func NewImmExpHandlerImpl(visitor *ast.Visitor, env *Pass1) *ImmExpHandlerImpl {
+	return &ImmExpHandlerImpl{
 		Visitor: visitor,
 		Env:     env,
 	}

@@ -28,14 +28,16 @@ func Exec(parseTree any, assemblyDst string) {
 		os.Exit(-1)
 	}
 
-	// TODO: pass1のEvalを実行
-	pass1 := pass1.NewPass1(
-		0,
-		make(map[string]uint32),
-		[]string{},
-		[]string{},
-		stack.NewStack[*token.ParseToken](0),
-	)
+	// pass1のEvalを実行
+	pass1 := &pass1.Pass1{
+		LOC:              0,
+		BitMode:          pass1.ID_16BIT_MODE,
+		EquMap:           make(map[string]*token.ParseToken, 0),
+		SymTable:         make(map[string]uint32, 0),
+		GlobalSymbolList: []string{},
+		ExternSymbolList: []string{},
+		Ctx:              stack.NewStack[*token.ParseToken](100),
+	}
 	pass1.Eval(prog)
 
 	// TODO: pass2のEvalを実行
