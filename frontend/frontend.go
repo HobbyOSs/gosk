@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/junkjit"
 	"github.com/HobbyOSs/gosk/pass1"
 	"github.com/HobbyOSs/gosk/pass2"
 	"github.com/HobbyOSs/gosk/token"
@@ -40,6 +41,9 @@ func Exec(parseTree any, assemblyDst string) {
 	}
 	pass1.Eval(prog)
 
+	code := &junkjit.CodeHolder{}
+	asm := junkjit.NewAssembler(code)
+
 	pass2 := &pass2.Pass2{
 		BitMode:          pass1.BitMode,
 		EquMap:           pass1.EquMap,
@@ -47,6 +51,15 @@ func Exec(parseTree any, assemblyDst string) {
 		GlobalSymbolList: pass1.GlobalSymbolList,
 		ExternSymbolList: pass1.ExternSymbolList,
 		Ctx:              stack.NewStack[*token.ParseToken](100),
+		Asm:              asm,
 	}
 	pass2.Eval(prog)
+
+	_, err = dstFile.Write(code.Buffer())
+	if err != nil {
+		fmt.Printf("GOSK : can't write %s", assemblyDst)
+		os.Exit(-1)
+	}
+
+	return
 }

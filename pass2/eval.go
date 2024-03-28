@@ -2,6 +2,7 @@ package pass2
 
 import (
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/junkjit"
 	"github.com/HobbyOSs/gosk/token"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
@@ -13,6 +14,7 @@ type Pass2 struct {
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
+	Asm              *junkjit.Assembler
 }
 
 func (p *Pass2) Eval(program ast.Prog) {
