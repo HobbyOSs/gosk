@@ -12,7 +12,7 @@ type Pass1 struct {
 	BitMode ast.BitMode
 	EquMap  map[string]*token.ParseToken
 	// Pass1のシンボルテーブル
-	SymTable         map[string]uint32
+	SymTable         map[string]int32
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -220,7 +220,7 @@ func TestParse(t *testing.T) {
 				[]ast.Exp{},
 			),
 		},
-		{"1 operand", "MnemonicStmt", " ORG 0x7c00 ; comment",
+		{"1 operand_1", "MnemonicStmt", " ORG 0x7c00 ; comment",
 			ast.NewMnemonicStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "ORG"),
@@ -229,12 +229,31 @@ func TestParse(t *testing.T) {
 				},
 			),
 		},
-		{"1 operand", "MnemonicStmt", " JMP fin ; comment",
+		{"1 operand_2", "MnemonicStmt", " JMP fin ; comment",
 			ast.NewMnemonicStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
 				[]ast.Exp{
 					buildSegmentExpFromValue("fin"),
+				},
+			),
+		},
+		{"1 operand_3", "MnemonicStmt", "RESB 0x7dfe-$",
+			ast.NewMnemonicStmt(
+				ast.BaseStatement{},
+				ast.NewIdentFactor(ast.BaseFactor{}, "RESB"),
+				[]ast.Exp{
+					&ast.SegmentExp{
+						DataType: "",
+						Left: &ast.AddExp{
+							HeadExp:   buildMultExpFromValue("0x7dfe"),
+							Operators: []string{"-"},
+							TailExps: []*ast.MultExp{
+								buildMultExpFromValue("$"),
+							},
+						},
+						Right: nil,
+					},
 				},
 			),
 		},

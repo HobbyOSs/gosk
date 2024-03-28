@@ -22,3 +22,8 @@ func NewParseToken(tokenType TokenType, v interface{}) *ParseToken {
 		Data:      variant.New(v),
 	}
 }
+
+// AsString `p.Data.ToString()` のショートハンド
+func (p *ParseToken) AsString() string {
+	return p.Data.ToString()
+}

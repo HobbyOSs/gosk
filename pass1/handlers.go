@@ -2,9 +2,12 @@ package pass1
 
 import (
 	"log"
+	"strings"
 
 	"github.com/HobbyOSs/gosk/ast"
 	"github.com/HobbyOSs/gosk/token"
+	"github.com/morikuni/failure"
+	"github.com/samber/lo"
 )
 
 //go:generate newc
@@ -109,6 +112,22 @@ type CharFactorHandlerImpl struct {
 	Env     *Pass1
 }
 
+type opcodeEvalFn func(*Pass1, []*token.ParseToken)
+
+var (
+	opcodeEvalFns = make(map[string]opcodeEvalFn, 0)
+)
+
+func init() {
+	// 疑似命令
+	opcodeEvalFns["ALIGNB"] = processALIGNB
+	opcodeEvalFns["DB"] = processDB
+	opcodeEvalFns["DD"] = processDD
+	opcodeEvalFns["DW"] = processDW
+	opcodeEvalFns["ORG"] = processORG
+	opcodeEvalFns["RESB"] = processRESB
+}
+
 func popAndPush(env *Pass1) {
 	ok, t := env.Ctx.Pop()
 	if !ok {
@@ -116,14 +135,22 @@ func popAndPush(env *Pass1) {
 	}
 	err := env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: failed to push token")
+		log.Fatal(failure.Wrap(err))
 	}
 }
 
-func pop(env *Pass1) {
-	ok, _ := env.Ctx.Pop()
+func pop(env *Pass1) *token.ParseToken {
+	ok, t := env.Ctx.Pop()
 	if !ok {
 		log.Fatal("error: failed to pop token")
+	}
+	return t
+}
+
+func push(env *Pass1, t *token.ParseToken) {
+	err := env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
 	}
 }
 
@@ -156,6 +183,12 @@ func (p *DeclareStmtHandlerImpl) DeclareStmt(node *ast.DeclareStmt) bool {
 
 func (p *LabelStmtHandlerImpl) LabelStmt(node *ast.LabelStmt) bool {
 	log.Println("trace: label handler!!!")
+	// ラベルが存在するので、シンボルテーブルのラベルのレコードに現在のLOCを設定
+	p.Visitor.Visit(node.Label)
+	vLabel := pop(p.Env)
+	label := strings.TrimSuffix(vLabel.AsString(), ":")
+	p.Env.SymTable[label] = p.Env.LOC
+
 	return true
 }
 
@@ -180,7 +213,7 @@ func (p *ConfigStmtHandlerImpl) ConfigStmt(node *ast.ConfigStmt) bool {
 		}
 		bitMode, ok := ast.NewBitMode(token.Data.ToInt())
 		if !ok {
-			log.Fatal("Failed to parse BITS")
+			log.Fatal("error: Failed to parse BITS")
 		}
 		p.Env.BitMode = bitMode
 	}
@@ -191,14 +224,28 @@ func (p *ConfigStmtHandlerImpl) ConfigStmt(node *ast.ConfigStmt) bool {
 func (p *MnemonicStmtHandlerImpl) MnemonicStmt(node *ast.MnemonicStmt) bool {
 	log.Println("trace: mnemonic stmt handler!!!")
 
-	// TODO: オペコードに応じてLOCを更新する
+	// オペコードに応じてLOCを更新する
 	p.Visitor.Visit(node.Opcode)
-	pop(p.Env)
+	vOpcode := pop(p.Env)
 
+	vOperands := make([]*token.ParseToken, 0)
 	for _, operand := range node.Operands {
 		p.Visitor.Visit(operand)
-		pop(p.Env)
+		vOperands = append(vOperands, pop(p.Env))
 	}
+
+	if vOpcode.Data.IsNil() {
+		log.Fatal("error: opcode is invalid")
+	}
+
+	opcode := vOpcode.Data.ToString()
+	evalOpcodeFn := opcodeEvalFns[opcode]
+	if evalOpcodeFn == nil {
+		log.Fatal("error: not registered opcode process function; ", opcode)
+	}
+
+	evalOpcodeFn(p.Env, vOperands) // 評価
+
 	return true
 }
 
@@ -222,22 +269,54 @@ func (p *SegmentExpHandlerImpl) SegmentExp(node *ast.SegmentExp) bool {
 }
 
 func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
+	// TODO: 計算をする
 	log.Println("trace: add exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
-	for _, tail := range node.TailExps {
-		p.Visitor.Visit(tail)
+	vHead := pop(p.Env)
+
+	vTail := make([]*token.ParseToken, 0)
+	ops := make([]string, 0)
+	tuples := lo.Zip2(node.Operators, node.TailExps)
+
+	for _, t := range tuples {
+		ops = append(ops, t.A)
+		p.Visitor.Visit(t.B)
+		vTail = append(vTail, pop(p.Env))
 	}
-	popAndPush(p.Env)
+
+	if len(vTail) == 0 {
+		push(p.Env, vHead)
+		return true
+	}
+	if vHead.TokenType == token.TTHex &&
+		ops[0] == "-" &&
+		vTail[0].Data.ToString() == "$" {
+		// 0xffff - $ という特殊系
+		v := token.NewParseToken(token.TTIdentifier, vHead.Data.ToString()+"-$")
+		push(p.Env, v)
+		return true
+	}
+
 	return true
 }
 
 func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
+	// TODO: 計算をする
 	log.Println("trace: mult exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
+	vHead := pop(p.Env)
+
+	vTail := make([]*token.ParseToken, 0)
 	for _, tail := range node.TailExps {
 		p.Visitor.Visit(tail)
+		vTail = append(vTail, pop(p.Env))
 	}
-	popAndPush(p.Env)
+
+	if len(vTail) == 0 {
+		push(p.Env, vHead)
+		return true
+	}
+
 	return true
 }
 
@@ -257,7 +336,7 @@ func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
 	t := token.NewParseToken(token.TTNumber, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 }
@@ -268,7 +347,7 @@ func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 
@@ -292,7 +371,7 @@ func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 
@@ -304,7 +383,7 @@ func (p *CharFactorHandlerImpl) CharFactor(node *ast.CharFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 }

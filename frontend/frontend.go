@@ -34,7 +34,7 @@ func Exec(parseTree any, assemblyDst string) {
 		LOC:              0,
 		BitMode:          ast.ID_16BIT_MODE,
 		EquMap:           make(map[string]*token.ParseToken, 0),
-		SymTable:         make(map[string]uint32, 0),
+		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
 		Ctx:              stack.NewStack[*token.ParseToken](100),
