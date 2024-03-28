@@ -1,20 +1,21 @@
 package pass2
 
 import (
-	"log"
-
-	"github.com/comail/colog"
 	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/token"
+	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
-func init() {
-	colog.Register()
-	colog.SetDefaultLevel(colog.LInfo)
-	colog.SetMinLevel(colog.LInfo)
-	colog.SetFlags(log.Lshortfile)
-	colog.SetFormatter(&colog.StdFormatter{Colors: false})
+type Pass2 struct {
+	BitMode          ast.BitMode
+	EquMap           map[string]*token.ParseToken
+	SymTable         map[string]uint32
+	GlobalSymbolList []string
+	ExternSymbolList []string
+	Ctx              *stack.Stack[*token.ParseToken]
 }
 
-func Eval(program ast.Prog) {
-	log.Println("pass2")
+func (p *Pass2) Eval(program ast.Prog) {
+	v := NewVisitor(p)
+	v.Visit(program)
 }

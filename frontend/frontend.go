@@ -31,7 +31,7 @@ func Exec(parseTree any, assemblyDst string) {
 	// pass1のEvalを実行
 	pass1 := &pass1.Pass1{
 		LOC:              0,
-		BitMode:          pass1.ID_16BIT_MODE,
+		BitMode:          ast.ID_16BIT_MODE,
 		EquMap:           make(map[string]*token.ParseToken, 0),
 		SymTable:         make(map[string]uint32, 0),
 		GlobalSymbolList: []string{},
@@ -40,6 +40,13 @@ func Exec(parseTree any, assemblyDst string) {
 	}
 	pass1.Eval(prog)
 
-	// TODO: pass2のEvalを実行
+	pass2 := &pass2.Pass2{
+		BitMode:          pass1.BitMode,
+		EquMap:           pass1.EquMap,
+		SymTable:         pass1.SymTable,
+		GlobalSymbolList: pass1.GlobalSymbolList,
+		ExternSymbolList: pass1.ExternSymbolList,
+		Ctx:              stack.NewStack[*token.ParseToken](100),
+	}
 	pass2.Eval(prog)
 }

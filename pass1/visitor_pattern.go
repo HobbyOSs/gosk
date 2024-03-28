@@ -2,7 +2,6 @@ package pass1
 
 import "github.com/HobbyOSs/gosk/ast"
 
-// 各フィールドを適切なハンドラーの新しいインスタンスで初期化
 func NewVisitor(p *Pass1) *ast.Visitor {
 	v := &ast.Visitor{}
 	// program

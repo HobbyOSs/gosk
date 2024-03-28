@@ -1,4 +1,4 @@
-package pass1
+package pass2
 
 import (
 	"log"
@@ -10,106 +10,106 @@ import (
 //go:generate newc
 type ProgramHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type DeclareStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type LabelStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type ExportSymStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type ExternSymStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type ConfigStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type MnemonicStmtHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type MemoryAddrExpHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type SegmentExpHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type AddExpHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type MultExpHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type ImmExpHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type NumberFactorHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type StringFactorHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type HexFactorHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type IdentFactorHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
 //go:generate newc
 type CharFactorHandlerImpl struct {
 	Visitor *ast.Visitor
-	Env     *Pass1
+	Env     *Pass2
 }
 
-func popAndPush(env *Pass1) {
+func popAndPush(env *Pass2) {
 	ok, t := env.Ctx.Pop()
 	if !ok {
 		log.Fatal("error: failed to pop token")
@@ -120,7 +120,7 @@ func popAndPush(env *Pass1) {
 	}
 }
 
-func pop(env *Pass1) {
+func pop(env *Pass2) {
 	ok, _ := env.Ctx.Pop()
 	if !ok {
 		log.Fatal("error: failed to pop token")

@@ -2,26 +2,29 @@ package pass2
 
 import "github.com/HobbyOSs/gosk/ast"
 
-// 各フィールドを適切なハンドラーの新しいインスタンスで初期化
-func NewVisitor() *ast.Visitor {
-	return &ast.Visitor{
-		//hSegmentExp:    nil,
-		//hMemoryAddrExp: nil,
-		//hAddExp:        nil,
-		//hMultExp:       nil,
-		//hImmExp:        nil,
-		//hNumberFactor:  nil,
-		//hStringFactor:  nil,
-		//hHexFactor:     nil,
-		//hIdentFactor:   nil,
-		//hCharFactor:    nil,
-		//hProgram:       nil,
-		//hDeclareStmt:   nil,
-		//hLabelStmt:     nil,
-		//hExportSymStmt: nil,
-		//hExternSymStmt: nil,
-		//hConfigStmt:    nil,
-		//hMnemonicStmt:  nil,
-		//hDefault:       nil,
-	}
+func NewVisitor(p *Pass2) *ast.Visitor {
+	v := &ast.Visitor{}
+	// program
+	v.Handler(NewProgramHandlerImpl(v, p))
+	// stmt
+	v.Handler(NewDeclareStmtHandlerImpl(v, p))
+	v.Handler(NewLabelStmtHandlerImpl(v, p))
+	v.Handler(NewExportSymStmtHandlerImpl(v, p))
+	v.Handler(NewExternSymStmtHandlerImpl(v, p))
+	v.Handler(NewConfigStmtHandlerImpl(v, p))
+	v.Handler(NewMnemonicStmtHandlerImpl(v, p))
+	// exp
+	v.Handler(NewMemoryAddrExpHandlerImpl(v, p))
+	v.Handler(NewSegmentExpHandlerImpl(v, p))
+	v.Handler(NewAddExpHandlerImpl(v, p))
+	v.Handler(NewMultExpHandlerImpl(v, p))
+	v.Handler(NewImmExpHandlerImpl(v, p))
+	// factor
+	v.Handler(NewNumberFactorHandlerImpl(v, p))
+	v.Handler(NewStringFactorHandlerImpl(v, p))
+	v.Handler(NewHexFactorHandlerImpl(v, p))
+	v.Handler(NewIdentFactorHandlerImpl(v, p))
+	v.Handler(NewCharFactorHandlerImpl(v, p))
+
+	return v
 }
