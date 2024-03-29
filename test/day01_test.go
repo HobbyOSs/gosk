@@ -47,7 +47,12 @@ func (s *Day01Suite) TestHelloos1() {
 
 	pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
 	s.Require().NoError(err)
-	frontend.Exec(pt, temp.Name())
+	pass1, _ := frontend.Exec(pt, temp.Name())
+
+	actual, err := ReadFileAsBytes(temp.Name())
+	s.Require().NoError(err)
+	s.Assert().Equal(int32(1474560), pass1.LOC)
+	s.Assert().NotZero(len(actual))
 }
 
 /**

@@ -13,7 +13,7 @@ import (
 )
 
 // pass1, pass2を操作するモジュール
-func Exec(parseTree any, assemblyDst string) {
+func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 
 	// 読み書き可能, 新規作成, ファイル内容あっても切り詰め
 	dstFile, err := os.OpenFile(assemblyDst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
@@ -61,5 +61,5 @@ func Exec(parseTree any, assemblyDst string) {
 		os.Exit(-1)
 	}
 
-	return
+	return pass1, pass2
 }
