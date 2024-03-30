@@ -54,10 +54,6 @@ func (s *Day01Suite) TestHelloos1() {
 	s.Require().NoError(err)
 	s.Assert().Equal(int32(1474560), pass1.LOC)
 
-	//s.T().Skip()
-	s.Assert().NotZero(len(actual))
-
-	actual = []byte{0xeb}
 	expected := defineHEX([]string{
 		"DATA 0xeb 0x4e 0x90 0x48 0x45 0x4c 0x4c 0x4f",
 		"DATA 0x49 0x50 0x4c 0x00 0x02 0x01 0x01 0x00",
@@ -83,6 +79,7 @@ func (s *Day01Suite) TestHelloos1() {
 		"FILL 1469432",
 	})
 
+	s.Assert().Equal(len(expected), len(actual))
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))
 	}

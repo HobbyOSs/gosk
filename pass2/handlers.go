@@ -216,14 +216,28 @@ func (p *ConfigStmtHandlerImpl) ConfigStmt(node *ast.ConfigStmt) bool {
 func (p *MnemonicStmtHandlerImpl) MnemonicStmt(node *ast.MnemonicStmt) bool {
 	log.Println("trace: mnemonic stmt handler!!!")
 
-	// TODO: オペコードに応じてLOCを更新する
+	// オペコードに応じて機械語を出力する
 	p.Visitor.Visit(node.Opcode)
-	pop(p.Env)
+	vOpcode := pop(p.Env)
 
+	vOperands := make([]*token.ParseToken, 0)
 	for _, operand := range node.Operands {
 		p.Visitor.Visit(operand)
-		pop(p.Env)
+		vOperands = append(vOperands, pop(p.Env))
 	}
+
+	if vOpcode.Data.IsNil() {
+		log.Fatal("error: opcode is invalid")
+	}
+
+	opcode := vOpcode.Data.ToString()
+	evalOpcodeFn := opcodeEvalFns[opcode]
+	if evalOpcodeFn == nil {
+		log.Fatal("error: not registered opcode process function; ", opcode)
+	}
+
+	evalOpcodeFn(p.Env, vOperands) // 評価
+
 	return true
 }
 

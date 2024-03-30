@@ -1,7 +1,12 @@
 package pass2
 
 import (
+	"log"
+	"strconv"
+
+	"github.com/HobbyOSs/gosk/junkjit"
 	"github.com/HobbyOSs/gosk/token"
+	"github.com/morikuni/failure"
 )
 
 func processALIGNB(env *Pass2, tokens []*token.ParseToken) {
@@ -61,7 +66,7 @@ func processORG(env *Pass2, tokens []*token.ParseToken) {
 }
 
 func processRESB(env *Pass2, tokens []*token.ParseToken) {
-	//arg := tokens[0].Data.ToString()
+	arg := tokens[0].Data.ToString()
 	//suffix := "-$"
 	//
 	//if strings.Contains(arg, suffix) {
@@ -73,10 +78,10 @@ func processRESB(env *Pass2, tokens []*token.ParseToken) {
 	// 	env.LOC += int32(size)
 	// 	return
 	//}
-	//
-	//size, err := strconv.ParseInt(arg, 10, 32)
-	//if err != nil {
-	// 	log.Fatal(failure.Wrap(err))
-	//}
-	//env.LOC += int32(size)
+
+	reserveSize, err := strconv.ParseInt(arg, 10, 32)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
+	}
+	env.Asm.DB(0x00, junkjit.DCount(int(reserveSize)))
 }
