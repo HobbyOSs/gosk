@@ -54,7 +54,7 @@ func (s *Day01Suite) TestHelloos1() {
 	s.Require().NoError(err)
 	s.Assert().Equal(int32(1474560), pass1.LOC)
 
-	s.T().Skip()
+	//s.T().Skip()
 	s.Assert().NotZero(len(actual))
 
 	actual = []byte{0xeb}

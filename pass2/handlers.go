@@ -5,6 +5,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/ast"
 	"github.com/HobbyOSs/gosk/token"
+	"github.com/morikuni/failure"
 )
 
 //go:generate newc
@@ -109,6 +110,22 @@ type CharFactorHandlerImpl struct {
 	Env     *Pass2
 }
 
+type opcodeEvalFn func(*Pass2, []*token.ParseToken)
+
+var (
+	opcodeEvalFns = make(map[string]opcodeEvalFn, 0)
+)
+
+func init() {
+	// 疑似命令
+	opcodeEvalFns["ALIGNB"] = processALIGNB
+	opcodeEvalFns["DB"] = processDB
+	opcodeEvalFns["DD"] = processDD
+	opcodeEvalFns["DW"] = processDW
+	opcodeEvalFns["ORG"] = processORG
+	opcodeEvalFns["RESB"] = processRESB
+}
+
 func popAndPush(env *Pass2) {
 	ok, t := env.Ctx.Pop()
 	if !ok {
@@ -116,14 +133,22 @@ func popAndPush(env *Pass2) {
 	}
 	err := env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: failed to push token")
+		log.Fatal(failure.Wrap(err))
 	}
 }
 
-func pop(env *Pass2) {
-	ok, _ := env.Ctx.Pop()
+func pop(env *Pass2) *token.ParseToken {
+	ok, t := env.Ctx.Pop()
 	if !ok {
 		log.Fatal("error: failed to pop token")
+	}
+	return t
+}
+
+func push(env *Pass2, t *token.ParseToken) {
+	err := env.Ctx.Push(t)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
 	}
 }
 
@@ -257,7 +282,7 @@ func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
 	t := token.NewParseToken(token.TTNumber, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 }
@@ -268,7 +293,7 @@ func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 
@@ -292,7 +317,7 @@ func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 
@@ -304,7 +329,7 @@ func (p *CharFactorHandlerImpl) CharFactor(node *ast.CharFactor) bool {
 	t := token.NewParseToken(token.TTIdentifier, node.Value)
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
-		log.Fatal("error: Failed to push token; ", err)
+		log.Fatal(failure.Wrap(err))
 	}
 	return true
 }

@@ -14,7 +14,7 @@ type Pass2 struct {
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
-	Asm              *junkjit.Assembler
+	Asm              junkjit.Assembler
 }
 
 func (p *Pass2) Eval(program ast.Prog) {

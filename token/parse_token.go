@@ -1,6 +1,12 @@
 package token
 
-import "github.com/go-ext/variant"
+import (
+	"log"
+	"strconv"
+
+	"github.com/go-ext/variant"
+	"github.com/morikuni/failure"
+)
 
 type TokenType string
 
@@ -26,4 +32,12 @@ func NewParseToken(tokenType TokenType, v interface{}) *ParseToken {
 // AsString `p.Data.ToString()` のショートハンド
 func (p *ParseToken) AsString() string {
 	return p.Data.ToString()
+}
+
+func (p *ParseToken) HexAsUInt() uint {
+	i, err := strconv.ParseInt(p.Data.ToString()[2:], 16, 32)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
+	}
+	return uint(i)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/ast"
 	"github.com/HobbyOSs/gosk/junkjit"
+	"github.com/HobbyOSs/gosk/junkjit/x86"
 	"github.com/HobbyOSs/gosk/pass1"
 	"github.com/HobbyOSs/gosk/pass2"
 	"github.com/HobbyOSs/gosk/token"
@@ -42,7 +43,7 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	pass1.Eval(prog)
 
 	code := &junkjit.CodeHolder{}
-	asm := junkjit.NewAssembler(code)
+	asm := x86.NewX86Assembler(code)
 
 	pass2 := &pass2.Pass2{
 		BitMode:          pass1.BitMode,

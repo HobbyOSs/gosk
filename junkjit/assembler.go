@@ -1,20 +1,21 @@
 package junkjit
 
-type Assembler struct {
-	Code *CodeHolder
+type Assembler interface {
+	DB(x uint8, options ...DOption)
+	DW(x uint16, options ...DOption)
+	DD(x uint32, options ...DOption)
+	DStruct(x any)
+	CLI()
 }
 
-func NewAssembler(code *CodeHolder) *Assembler {
-	return &Assembler{
-		Code: code,
+type DOptions struct {
+	Count int
+}
+
+type DOption func(*DOptions)
+
+func DCount(count int) DOption {
+	return func(opts *DOptions) {
+		opts.Count = count
 	}
-}
-
-// ボイラープレートコードには下記を使う
-// https://github.com/switchupcb/copygen/blob/main/examples/tmpl/template/generate.tmpl
-func (a *Assembler) Cli() {
-	// CLI命令のオペコードは0xfa
-	opcode := []byte{0xfa}
-	// CodeHolderが保持するバイト配列にオペコードを追加
-	a.Code.Bytes = append(a.Code.Bytes, opcode...)
 }
