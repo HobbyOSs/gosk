@@ -6,6 +6,7 @@ import (
 	"github.com/HobbyOSs/gosk/ast"
 	"github.com/HobbyOSs/gosk/token"
 	"github.com/morikuni/failure"
+	"github.com/samber/lo"
 )
 
 //go:generate newc
@@ -263,20 +264,50 @@ func (p *SegmentExpHandlerImpl) SegmentExp(node *ast.SegmentExp) bool {
 func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
 	log.Println("trace: add exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
-	for _, tail := range node.TailExps {
-		p.Visitor.Visit(tail)
+	vHead := pop(p.Env)
+
+	vTail := make([]*token.ParseToken, 0)
+	ops := make([]string, 0)
+	tuples := lo.Zip2(node.Operators, node.TailExps)
+
+	for _, t := range tuples {
+		ops = append(ops, t.A)
+		p.Visitor.Visit(t.B)
+		vTail = append(vTail, pop(p.Env))
 	}
-	popAndPush(p.Env)
+
+	if len(vTail) == 0 {
+		push(p.Env, vHead)
+		return true
+	}
+	if vHead.TokenType == token.TTHex &&
+		ops[0] == "-" &&
+		vTail[0].Data.ToString() == "$" {
+		// 0xffff - $ という特殊系
+		v := token.NewParseToken(token.TTIdentifier, vHead.Data.ToString()+"-$")
+		push(p.Env, v)
+		return true
+	}
+
 	return true
 }
 
 func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
 	log.Println("trace: mult exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
+	vHead := pop(p.Env)
+
+	vTail := make([]*token.ParseToken, 0)
 	for _, tail := range node.TailExps {
 		p.Visitor.Visit(tail)
+		vTail = append(vTail, pop(p.Env))
 	}
-	popAndPush(p.Env)
+
+	if len(vTail) == 0 {
+		push(p.Env, vHead)
+		return true
+	}
+
 	return true
 }
 

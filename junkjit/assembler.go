@@ -1,6 +1,8 @@
 package junkjit
 
 type Assembler interface {
+	BufferData() []byte
+
 	DB(x uint8, options ...DOption)
 	DW(x uint16, options ...DOption)
 	DD(x uint32, options ...DOption)

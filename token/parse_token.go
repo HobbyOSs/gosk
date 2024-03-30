@@ -35,7 +35,7 @@ func (p *ParseToken) AsString() string {
 }
 
 func (p *ParseToken) HexAsUInt() uint {
-	i, err := strconv.ParseInt(p.Data.ToString()[2:], 16, 32)
+	i, err := strconv.ParseInt(p.Data.ToString(), 0, 64)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
 	}

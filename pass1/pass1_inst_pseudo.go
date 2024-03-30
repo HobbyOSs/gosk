@@ -64,7 +64,7 @@ func processDD(env *Pass1, tokens []*token.ParseToken) {
 
 func processORG(env *Pass1, tokens []*token.ParseToken) {
 	arg := tokens[0].Data.ToString()
-	size, err := strconv.ParseInt(arg[2:], 16, 32)
+	size, err := strconv.ParseInt(arg, 0, 32)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
 	}
@@ -77,7 +77,7 @@ func processRESB(env *Pass1, tokens []*token.ParseToken) {
 
 	if strings.Contains(arg, suffix) {
 		reserveSize := arg[:len(arg)-len(suffix)]
-		size, err := strconv.ParseInt(reserveSize[2:], 16, 32)
+		size, err := strconv.ParseInt(reserveSize, 0, 32)
 		if err != nil {
 			log.Fatal(failure.Wrap(err))
 		}

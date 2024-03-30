@@ -3,6 +3,7 @@ package pass2
 import (
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/HobbyOSs/gosk/junkjit"
 	"github.com/HobbyOSs/gosk/token"
@@ -67,17 +68,21 @@ func processORG(env *Pass2, tokens []*token.ParseToken) {
 
 func processRESB(env *Pass2, tokens []*token.ParseToken) {
 	arg := tokens[0].Data.ToString()
-	//suffix := "-$"
-	//
-	//if strings.Contains(arg, suffix) {
-	// 	reserveSize := arg[:len(arg)-len(suffix)]
-	// 	size, err := strconv.ParseInt(reserveSize[2:], 16, 32)
-	// 	if err != nil {
-	// 		log.Fatal(failure.Wrap(err))
-	// 	}
-	// 	env.LOC += int32(size)
-	// 	return
-	//}
+	suffix := "-$"
+
+	if strings.Contains(arg, suffix) {
+		rangeOfResb := arg[:len(arg)-len(suffix)]
+		reserveSize, err := strconv.ParseInt(rangeOfResb, 0, 32)
+		if err != nil {
+			log.Fatal(failure.Wrap(err))
+		}
+
+		currentBufferSize := len(env.Asm.BufferData())
+		needToAppendSize := reserveSize - int64(currentBufferSize)
+
+		env.Asm.DB(0x00, junkjit.DCount(int(needToAppendSize)))
+		return
+	}
 
 	reserveSize, err := strconv.ParseInt(arg, 10, 32)
 	if err != nil {

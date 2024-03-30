@@ -11,3 +11,7 @@ func NewX86Assembler(code *junkjit.CodeHolder) *X86Assembler {
 		Code: code,
 	}
 }
+
+func (x *X86Assembler) BufferData() []byte {
+	return x.Code.Buffer()
+}
