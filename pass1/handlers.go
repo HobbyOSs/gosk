@@ -126,6 +126,40 @@ func init() {
 	opcodeEvalFns["DW"] = processDW
 	opcodeEvalFns["ORG"] = processORG
 	opcodeEvalFns["RESB"] = processRESB
+
+	// JMP
+	opcodeEvalFns["JA"] = processCalcJcc
+	opcodeEvalFns["JAE"] = processCalcJcc
+	opcodeEvalFns["JB"] = processCalcJcc
+	opcodeEvalFns["JBE"] = processCalcJcc
+	opcodeEvalFns["JC"] = processCalcJcc
+	opcodeEvalFns["JE"] = processCalcJcc
+	opcodeEvalFns["JG"] = processCalcJcc
+	opcodeEvalFns["JGE"] = processCalcJcc
+	opcodeEvalFns["JL"] = processCalcJcc
+	opcodeEvalFns["JLE"] = processCalcJcc
+	opcodeEvalFns["JMP"] = processCalcJcc
+	opcodeEvalFns["JNA"] = processCalcJcc
+	opcodeEvalFns["JNAE"] = processCalcJcc
+	opcodeEvalFns["JNB"] = processCalcJcc
+	opcodeEvalFns["JNBE"] = processCalcJcc
+	opcodeEvalFns["JNC"] = processCalcJcc
+	opcodeEvalFns["JNE"] = processCalcJcc
+	opcodeEvalFns["JNG"] = processCalcJcc
+	opcodeEvalFns["JNGE"] = processCalcJcc
+	opcodeEvalFns["JNL"] = processCalcJcc
+	opcodeEvalFns["JNLE"] = processCalcJcc
+	opcodeEvalFns["JNO"] = processCalcJcc
+	opcodeEvalFns["JNP"] = processCalcJcc
+	opcodeEvalFns["JNS"] = processCalcJcc
+	opcodeEvalFns["JNZ"] = processCalcJcc
+	opcodeEvalFns["JO"] = processCalcJcc
+	opcodeEvalFns["JP"] = processCalcJcc
+	opcodeEvalFns["JPE"] = processCalcJcc
+	opcodeEvalFns["JPO"] = processCalcJcc
+	opcodeEvalFns["JS"] = processCalcJcc
+	opcodeEvalFns["JZ"] = processCalcJcc
+
 }
 
 func popAndPush(env *Pass1) {

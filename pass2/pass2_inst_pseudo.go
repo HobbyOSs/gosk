@@ -58,12 +58,12 @@ func processDD(env *Pass2, tokens []*token.ParseToken) {
 }
 
 func processORG(env *Pass2, tokens []*token.ParseToken) {
-	//arg := tokens[0].Data.ToString()
-	//size, err := strconv.ParseInt(arg[2:], 16, 32)
-	//if err != nil {
-	// 	log.Fatal(failure.Wrap(err))
-	//}
-	//env.LOC = int32(size)
+	arg := tokens[0].Data.ToString()
+	currentPos, err := strconv.ParseInt(arg, 0, 32)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
+	}
+	env.DollarPos = uint32(currentPos)
 }
 
 func processRESB(env *Pass2, tokens []*token.ParseToken) {

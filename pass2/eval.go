@@ -14,6 +14,7 @@ type Pass2 struct {
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
+	DollarPos        uint32 // $ の位置
 	Asm              junkjit.Assembler
 }
 
