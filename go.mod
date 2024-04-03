@@ -16,8 +16,17 @@ require golang.org/x/net v0.22.0
 require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
 require (
+	github.com/goccy/go-yaml v1.11.3
 	github.com/sergi/go-diff v1.1.0
 	github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d
+)
+
+require (
+	github.com/fatih/color v1.10.0 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
 
 require (
