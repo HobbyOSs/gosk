@@ -6,7 +6,8 @@ import (
 )
 
 type Options struct {
-	BitMode ast.BitMode
+	BitMode   ast.BitMode
+	TargetCPU ast.SupCPU
 }
 
 type Option func(*Options)
@@ -14,6 +15,12 @@ type Option func(*Options)
 func BitMode(b ast.BitMode) Option {
 	return func(opts *Options) {
 		opts.BitMode = b
+	}
+}
+
+func TargetCPU(s ast.SupCPU) Option {
+	return func(opts *Options) {
+		opts.TargetCPU = s
 	}
 }
 
