@@ -1,23 +1,24 @@
 package junkjit
 
+// すべての命令で機械語のサイズを返す
 type Assembler interface {
 	BufferData() []byte
 
-	DB(x uint8, options ...DOption)
-	DW(x uint16, options ...DOption)
-	DD(x uint32, options ...DOption)
-	DStruct(x any)
-	CLI()
+	DB(x uint8, options ...Option) int
+	DW(x uint16, options ...Option) int
+	DD(x uint32, options ...Option) int
+	DStruct(x any) int
+	CLI() int
 }
 
-type DOptions struct {
+type Options struct {
 	Count int
 }
 
-type DOption func(*DOptions)
+type Option func(*Options)
 
-func DCount(count int) DOption {
-	return func(opts *DOptions) {
+func Count(count int) Option {
+	return func(opts *Options) {
 		opts.Count = count
 	}
 }

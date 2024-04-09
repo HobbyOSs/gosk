@@ -80,7 +80,7 @@ func processRESB(env *Pass2, tokens []*token.ParseToken) {
 		currentBufferSize := len(env.Asm.BufferData())
 		needToAppendSize := reserveSize - int64(currentBufferSize)
 
-		env.Asm.DB(0x00, junkjit.DCount(int(needToAppendSize)))
+		env.Asm.DB(0x00, junkjit.Count(int(needToAppendSize)))
 		return
 	}
 
@@ -88,5 +88,5 @@ func processRESB(env *Pass2, tokens []*token.ParseToken) {
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
 	}
-	env.Asm.DB(0x00, junkjit.DCount(int(reserveSize)))
+	env.Asm.DB(0x00, junkjit.Count(int(reserveSize)))
 }

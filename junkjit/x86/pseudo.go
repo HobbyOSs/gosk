@@ -9,8 +9,8 @@ import (
 	"github.com/morikuni/failure"
 )
 
-func (a *X86Assembler) DB(x uint8, options ...junkjit.DOption) {
-	opts := &junkjit.DOptions{Count: 1}
+func (a *X86Assembler) DB(x uint8, options ...junkjit.Option) int {
+	opts := &junkjit.Options{Count: 1}
 	for _, option := range options {
 		option(opts)
 	}
@@ -18,10 +18,11 @@ func (a *X86Assembler) DB(x uint8, options ...junkjit.DOption) {
 	for i := 0; i < opts.Count; i++ {
 		a.Code.Bytes = append(a.Code.Bytes, b)
 	}
+	return opts.Count
 }
 
-func (a *X86Assembler) DW(x uint16, options ...junkjit.DOption) {
-	opts := &junkjit.DOptions{Count: 1}
+func (a *X86Assembler) DW(x uint16, options ...junkjit.Option) int {
+	opts := &junkjit.Options{Count: 1}
 	for _, option := range options {
 		option(opts)
 	}
@@ -36,10 +37,11 @@ func (a *X86Assembler) DW(x uint16, options ...junkjit.DOption) {
 	for i := 0; i < opts.Count; i++ {
 		a.Code.Bytes = append(a.Code.Bytes, b...)
 	}
+	return 2 * opts.Count
 }
 
-func (a *X86Assembler) DD(x uint32, options ...junkjit.DOption) {
-	opts := &junkjit.DOptions{Count: 1}
+func (a *X86Assembler) DD(x uint32, options ...junkjit.Option) int {
+	opts := &junkjit.Options{Count: 1}
 	for _, option := range options {
 		option(opts)
 	}
@@ -54,9 +56,10 @@ func (a *X86Assembler) DD(x uint32, options ...junkjit.DOption) {
 	for i := 0; i < opts.Count; i++ {
 		a.Code.Bytes = append(a.Code.Bytes, b...)
 	}
+	return 4 * opts.Count
 }
 
-func (a *X86Assembler) DStruct(x any) {
+func (a *X86Assembler) DStruct(x any) int {
 
 	buf := new(bytes.Buffer)
 
@@ -71,4 +74,5 @@ func (a *X86Assembler) DStruct(x any) {
 	}
 
 	a.Code.Bytes = append(a.Code.Bytes, buf.Bytes()...)
+	return len(buf.Bytes())
 }
