@@ -82,8 +82,6 @@
 - mnem: PUSH
   opcd: '06'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: ES
@@ -95,8 +93,6 @@
     dst:
       operand_s: ES
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop a Value from the Stack
 - mnem: OR
@@ -182,8 +178,6 @@
 - mnem: PUSH
   opcd: 0E
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: CS
@@ -195,8 +189,6 @@
     dst:
       operand_s: CS
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '00'
   desc: Pop a Value from the Stack
 - mnem: ADC
@@ -282,8 +274,6 @@
 - mnem: PUSH
   opcd: '16'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: SS
@@ -295,8 +285,6 @@
     dst:
       operand_s: SS
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop a Value from the Stack
 - mnem: SBB
@@ -382,8 +370,6 @@
 - mnem: PUSH
   opcd: 1E
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: DS
@@ -395,8 +381,6 @@
     dst:
       operand_s: DS
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop a Value from the Stack
 - mnem: AND
@@ -482,16 +466,12 @@
 - mnem: ES
   opcd: '26'
   op1:
-    src:
-      operand_s: ES
   op2:
   proc: 00+
   desc: ES segment override prefix
 - mnem: DAA
   opcd: '27'
   op1:
-    dst:
-      operand_s: AL
   op2:
   proc: 00+
   desc: Decimal Adjust AL after Addition
@@ -578,8 +558,6 @@
 - mnem: CS
   opcd: 2E
   op1:
-    src:
-      operand_s: CS
   op2:
   proc: 00+
   desc: CS segment override prefix
@@ -592,8 +570,6 @@
 - mnem: DAS
   opcd: 2F
   op1:
-    dst:
-      operand_s: AL
   op2:
   proc: 00+
   desc: Decimal Adjust AL after Subtraction
@@ -680,19 +656,13 @@
 - mnem: SS
   opcd: '36'
   op1:
-    src:
-      operand_s: SS
   op2:
   proc: 00+
   desc: SS segment override prefix
 - mnem: AAA
   opcd: '37'
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: ASCII Adjust After Addition
 - mnem: CMP
@@ -778,8 +748,6 @@
 - mnem: DS
   opcd: 3E
   op1:
-    src:
-      operand_s: DS
   op2:
   proc: 00+
   desc: DS segment override prefix
@@ -792,11 +760,7 @@
 - mnem: AAS
   opcd: 3F
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: ASCII Adjust AL After Subtraction
 - mnem: INC
@@ -918,8 +882,6 @@
 - mnem: PUSH
   opcd: '50'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r16/32
@@ -930,8 +892,6 @@
 - mnem: PUSH
   opcd: '50'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r64/16
@@ -947,8 +907,6 @@
       a: Z
       t: v
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop a Value from the Stack
 - mnem: POP
@@ -959,55 +917,35 @@
       a: Z
       t: vq
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '10'
   desc: Pop a Value from the Stack
 - mnem: PUSHA
   opcd: '60'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: AX
   proc: '01'
   desc: Push All General-Purpose Registers
 - mnem: PUSHAD
   opcd: '60'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: EAX
   proc: '03'
   desc: Push All General-Purpose Registers
 - mnem: POPA
   opcd: '61'
   op1:
-    dst:
-      operand_s: DI
   op2:
-    dst:
-      operand_s: SI
   proc: '01'
   desc: Pop All General-Purpose Registers
 - mnem: POPAD
   opcd: '61'
   op1:
-    dst:
-      operand_s: EDI
   op2:
-    dst:
-      operand_s: ESI
   proc: '03'
   desc: Pop All General-Purpose Registers
 - mnem: BOUND
   opcd: '62'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r16/32
@@ -1046,8 +984,6 @@
 - mnem: FS
   opcd: '64'
   op1:
-    src:
-      operand_s: FS
   op2:
   proc: '03'
   desc: FS segment override prefix
@@ -1060,16 +996,12 @@
 - mnem: GS
   opcd: '65'
   op1:
-    src:
-      operand_s: GS
   op2:
   proc: '03'
   desc: GS segment override prefix
 - mnem: PUSH
   opcd: '68'
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: imm16/32
@@ -1094,8 +1026,6 @@
 - mnem: PUSH
   opcd: 6A
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: imm8
@@ -1995,8 +1925,6 @@
       a: E
       t: v
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop a Value from the Stack
 - mnem: POP
@@ -2007,8 +1935,6 @@
       a: E
       t: vq
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '10'
   desc: Pop a Value from the Stack
 - mnem: XCHG
@@ -2044,68 +1970,42 @@
 - mnem: CBW
   opcd: '98'
   op1:
-    dst:
-      operand_s: AX
   op2:
-    src:
-      operand_s: AL
   proc: 00+
   desc: Convert Byte to Word
 - mnem: CWDE
   opcd: '98'
   op1:
-    dst:
-      operand_s: EAX
   op2:
-    src:
-      operand_s: AX
   proc: '03'
   desc: Convert Word to Doubleword
 - mnem: CDQE
   opcd: '98'
   op1:
-    dst:
-      operand_s: AX
   op2:
-    src:
-      operand_s: AL
   proc: '10'
   desc: Convert
 - mnem: CWD
   opcd: '99'
   op1:
-    dst:
-      operand_s: DX
   op2:
-    src:
-      operand_s: AX
   proc: 00+
   desc: Convert Word to Doubleword
 - mnem: CDQ
   opcd: '99'
   op1:
-    dst:
-      operand_s: EDX
   op2:
-    src:
-      operand_s: EAX
   proc: '03'
   desc: Convert Doubleword to Quadword
 - mnem: CQO
   opcd: '99'
   op1:
-    dst:
-      operand_s: DX
   op2:
-    src:
-      operand_s: AX
   proc: '10'
   desc: Convert
 - mnem: CALLF
   opcd: 9A
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: ptr16:16/32
@@ -2122,76 +2022,48 @@
 - mnem: PUSHF
   opcd: 9C
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: Flags
   proc: 00+
   desc: Push FLAGS Register onto the Stack
 - mnem: PUSHFD
   opcd: 9C
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: EFlags
   proc: '03'
   desc: Push eFLAGS Register onto the Stack
 - mnem: PUSHFQ
   opcd: 9C
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: Flags
   proc: '10'
   desc: Push rFLAGS Register onto the Stack
 - mnem: POPF
   opcd: 9D
   op1:
-    dst:
-      operand_s: Flags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Pop Stack into FLAGS Register
 - mnem: POPFD
   opcd: 9D
   op1:
-    dst:
-      operand_s: EFlags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '03'
   desc: Pop Stack into eFLAGS Register
 - mnem: POPFQ
   opcd: 9D
   op1:
-    dst:
-      operand_s: Flags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '10'
   desc: Pop Stack into rFLAGS Register
 - mnem: SAHF
   opcd: 9E
   op1:
-    src:
-      operand_s: AH
   op2:
   proc: 00+
   desc: Store AH into Flags
 - mnem: LAHF
   opcd: 9F
   op1:
-    dst:
-      operand_s: AH
   op2:
   proc: 00+
   desc: Load Status Flags into AH Register
@@ -2353,8 +2225,6 @@
     dst:
       operand_s: "(ES:)[rDI]"
   op2:
-    src:
-      operand_s: AL
   proc: 00+
   desc: Store String
 - mnem: STOSW
@@ -2363,8 +2233,6 @@
     dst:
       operand_s: ES:[DI]
   op2:
-    src:
-      operand_s: AX
   proc: 00+
   desc: Store String
 - mnem: STOSD
@@ -2373,8 +2241,6 @@
     dst:
       operand_s: "(ES:)[rDI]"
   op2:
-    src:
-      operand_s: eAX
   proc: '03'
   desc: Store String
 - mnem: STOSQ
@@ -2383,15 +2249,11 @@
     dst:
       operand_s: "[rDI]"
   op2:
-    src:
-      operand_s: rAX
   proc: '10'
   desc: Store String
 - mnem: LODSB
   opcd: AC
   op1:
-    dst:
-      operand_s: AL
   op2:
     src:
       operand_s: "(DS:)[rSI]"
@@ -2400,8 +2262,6 @@
 - mnem: LODSW
   opcd: AD
   op1:
-    dst:
-      operand_s: AX
   op2:
     src:
       operand_s: DS:[SI]
@@ -2410,8 +2270,6 @@
 - mnem: LODSD
   opcd: AD
   op1:
-    dst:
-      operand_s: eAX
   op2:
     src:
       operand_s: "(DS:)[rSI]"
@@ -2420,8 +2278,6 @@
 - mnem: LODSQ
   opcd: AD
   op1:
-    dst:
-      operand_s: rAX
   op2:
     src:
       operand_s: "[rSI]"
@@ -2433,8 +2289,6 @@
     src:
       operand_s: "(ES:)[rDI]"
   op2:
-    src:
-      operand_s: AL
   proc: 00+
   desc: Scan String
 - mnem: SCASW
@@ -2443,8 +2297,6 @@
     src:
       operand_s: ES:[DI]
   op2:
-    src:
-      operand_s: AX
   proc: 00+
   desc: Scan String
 - mnem: SCASD
@@ -2453,8 +2305,6 @@
     src:
       operand_s: "(ES:)[rDI]"
   op2:
-    src:
-      operand_s: eAX
   proc: '03'
   desc: Scan String
 - mnem: SCASQ
@@ -2463,8 +2313,6 @@
     src:
       operand_s: "[rDI]"
   op2:
-    src:
-      operand_s: rAX
   proc: '10'
   desc: Scan String
 - mnem: MOV
@@ -2722,8 +2570,6 @@
 - mnem: RETN
   opcd: C2
   op1:
-    src:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: imm16
@@ -2734,16 +2580,12 @@
 - mnem: RETN
   opcd: C3
   op1:
-    src:
-      operand_s: SS:[rSP]
   op2:
   proc: 00+
   desc: Return from procedure
 - mnem: LES
   opcd: C4
   op1:
-    dst:
-      operand_s: ES
   op2:
     dst:
       operand_s: r16/32
@@ -2754,8 +2596,6 @@
 - mnem: LDS
   opcd: C5
   op1:
-    dst:
-      operand_s: DS
   op2:
     dst:
       operand_s: r16/32
@@ -2794,41 +2634,25 @@
 - mnem: ENTER
   opcd: C8
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    dst:
-      operand_s: eBP
   proc: '01'
   desc: Make Stack Frame for Procedure Parameters
 - mnem: ENTER
   opcd: C8
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    dst:
-      operand_s: rBP
   proc: '10'
   desc: Make Stack Frame for Procedure Parameters
 - mnem: LEAVE
   opcd: C9
   op1:
-    dst:
-      operand_s: eBP
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '01'
   desc: High Level Procedure Exit
 - mnem: LEAVE
   opcd: C9
   op1:
-    dst:
-      operand_s: rBP
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '10'
   desc: High Level Procedure Exit
 - mnem: RETF
@@ -2839,23 +2663,17 @@
       a: I
       t: w
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Return from procedure
 - mnem: RETF
   opcd: CB
   op1:
-    src:
-      operand_s: SS:[rSP]
   op2:
   proc: 00+
   desc: Return from procedure
 - mnem: INT
   opcd: CC
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: '3'
@@ -2864,8 +2682,6 @@
 - mnem: INT
   opcd: CD
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: imm8
@@ -2876,41 +2692,25 @@
 - mnem: INTO
   opcd: CE
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: eFlags
   proc: 00+
   desc: Call to Interrupt Procedure
 - mnem: IRET
   opcd: CF
   op1:
-    dst:
-      operand_s: Flags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Interrupt Return
 - mnem: IRETD
   opcd: CF
   op1:
-    dst:
-      operand_s: EFlags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '03'
   desc: Interrupt Return
 - mnem: IRETQ
   opcd: CF
   op1:
-    dst:
-      operand_s: Flags
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: 00+
   desc: Interrupt Return
 - mnem: ROL
@@ -3300,58 +3100,36 @@
 - mnem: AAM
   opcd: D4
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: ASCII Adjust AX After Multiply
 - mnem: AMX
   opcd: D4
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: Adjust AX After Multiply
 - mnem: AAD
   opcd: D5
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: ASCII Adjust AX Before Division
 - mnem: ADX
   opcd: D5
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: Adjust AX Before Division
 - mnem: SETALC
   opcd: D6
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AL
   proc: '02'
   desc: Set AL If Carry
 - mnem: XLATB
   opcd: D7
   op1:
-    dst:
-      operand_s: AL
   op2:
     src:
       operand_s: "(DS:)[rBX+AL]"
@@ -3360,8 +3138,6 @@
 - mnem: FADD
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3372,8 +3148,6 @@
 - mnem: FMUL
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3384,8 +3158,6 @@
 - mnem: FCOM
   opcd: D8
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi/m32real
@@ -3396,18 +3168,12 @@
 - mnem: FCOM
   opcd: D8
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: Compare Real
 - mnem: FCOMP
   opcd: D8
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi/m32real
@@ -3418,18 +3184,12 @@
 - mnem: FCOMP
   opcd: D8
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: Compare Real and Pop
 - mnem: FSUB
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3440,8 +3200,6 @@
 - mnem: FSUBR
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3452,8 +3210,6 @@
 - mnem: FDIV
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3464,8 +3220,6 @@
 - mnem: FDIVR
   opcd: D8
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32real
@@ -3476,8 +3230,6 @@
 - mnem: FLD
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: STi/m32real
@@ -3488,8 +3240,6 @@
 - mnem: FXCH
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
     dst:
       operand_s: STi
@@ -3500,11 +3250,7 @@
 - mnem: FXCH
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: 00+
   desc: Exchange Register Contents
 - mnem: FST
@@ -3515,8 +3261,6 @@
       a: M
       t: sr
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value
 - mnem: FNOP
@@ -3533,8 +3277,6 @@
       a: M
       t: sr
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FSTP1
@@ -3545,8 +3287,6 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FSTP1
@@ -3557,8 +3297,6 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: '03'
   desc: Store Floating Point Value and Pop
 - mnem: FLDENV
@@ -3574,32 +3312,24 @@
 - mnem: FCHS
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Change Sign
 - mnem: FABS
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Absolute Value
 - mnem: FTST
   opcd: D9
   op1:
-    src:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Test
 - mnem: FXAM
   opcd: D9
   op1:
-    src:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Examine
@@ -3616,56 +3346,42 @@
 - mnem: FLD1
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant +1.0
 - mnem: FLDL2T
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant log
 - mnem: FLDL2E
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant log
 - mnem: FLDPI
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant π
 - mnem: FLDLG2
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant log
 - mnem: FLDLN2
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant log
 - mnem: FLDZ
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Load Constant +0.0
@@ -3692,55 +3408,37 @@
 - mnem: F2XM1
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Compute 2
 - mnem: FYL2X
   opcd: D9
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Compute y × log
 - mnem: FPTAN
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Partial Tangent
 - mnem: FPATAN
   opcd: D9
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Partial Arctangent and Pop
 - mnem: FXTRACT
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Extract Exponent and Significand
 - mnem: FPREM1
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: IEEE Partial Remainder
 - mnem: FDECSTP
@@ -3778,78 +3476,54 @@
 - mnem: FPREM
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: Partial Remainder (for compatibility with i8087 and i287)
 - mnem: FYL2XP1
   opcd: D9
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Compute y × log
 - mnem: FSQRT
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Square Root
 - mnem: FSINCOS
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Sine and Cosine
 - mnem: FRNDINT
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Round to Integer
 - mnem: FSCALE
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: Scale
 - mnem: FSIN
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Sine
 - mnem: FCOS
   opcd: D9
   op1:
-    dst:
-      operand_s: ST
   op2:
   proc: 00+
   desc: Cosine
 - mnem: FIADD
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3872,8 +3546,6 @@
 - mnem: FIMUL
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3896,8 +3568,6 @@
 - mnem: FICOM
   opcd: DA
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3920,8 +3590,6 @@
 - mnem: FICOMP
   opcd: DA
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3944,8 +3612,6 @@
 - mnem: FISUB
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3956,8 +3622,6 @@
 - mnem: FISUBR
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3968,18 +3632,12 @@
 - mnem: FUCOMPP
   opcd: DA
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: '03'
   desc: Unordered Compare Floating Point Values and Pop Twice
 - mnem: FIDIV
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -3990,8 +3648,6 @@
 - mnem: FIDIVR
   opcd: DA
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -4002,8 +3658,6 @@
 - mnem: FILD
   opcd: DB
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m32int
@@ -4031,8 +3685,6 @@
       a: M
       t: di
   op2:
-    src:
-      operand_s: ST
   proc: '10'
   desc: Store Integer with Truncation and Pop
 - mnem: FCMOVNE
@@ -4055,8 +3707,6 @@
       a: M
       t: di
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Integer
 - mnem: FCMOVNBE
@@ -4079,8 +3729,6 @@
       a: M
       t: di
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Integer and Pop
 - mnem: FCMOVNU
@@ -4176,8 +3824,6 @@
 - mnem: FLD
   opcd: DB
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m80real
@@ -4217,15 +3863,11 @@
       a: M
       t: er
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FADD
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4248,8 +3890,6 @@
 - mnem: FMUL
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4272,8 +3912,6 @@
 - mnem: FCOM
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4284,8 +3922,6 @@
 - mnem: FCOM2
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4296,8 +3932,6 @@
 - mnem: FCOM2
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4308,8 +3942,6 @@
 - mnem: FCOMP
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4320,8 +3952,6 @@
 - mnem: FCOMP3
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4332,8 +3962,6 @@
 - mnem: FCOMP3
   opcd: DC
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4344,8 +3972,6 @@
 - mnem: FSUB
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4368,8 +3994,6 @@
 - mnem: FSUBR
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4392,8 +4016,6 @@
 - mnem: FDIV
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4416,8 +4038,6 @@
 - mnem: FDIVR
   opcd: DC
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4440,8 +4060,6 @@
 - mnem: FLD
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64real
@@ -4467,15 +4085,11 @@
       a: M
       t: qi
   op2:
-    src:
-      operand_s: ST
   proc: '10'
   desc: Store Integer with Truncation and Pop
 - mnem: FXCH4
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
     dst:
       operand_s: STi
@@ -4486,8 +4100,6 @@
 - mnem: FXCH4
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
     dst:
       operand_s: STi
@@ -4503,15 +4115,11 @@
       a: M
       t: dr
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value
 - mnem: FST
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4527,15 +4135,11 @@
       a: M
       t: dr
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FSTP
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4546,18 +4150,12 @@
 - mnem: FRSTOR
   opcd: DD
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: 00+
   desc: Restore x87 FPU State
 - mnem: FUCOM
   opcd: DD
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4568,18 +4166,12 @@
 - mnem: FUCOM
   opcd: DD
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: '03'
   desc: Unordered Compare Floating Point Values
 - mnem: FUCOMP
   opcd: DD
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4590,11 +4182,7 @@
 - mnem: FUCOMP
   opcd: DD
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: '03'
   desc: Unordered Compare Floating Point Values and Pop
 - mnem: FNSAVE
@@ -4605,8 +4193,6 @@
       a: M
       t: st
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store x87 FPU State
 - mnem: FSAVE
@@ -4617,8 +4203,6 @@
       a: M
       t: st
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store x87 FPU State
 - mnem: FNSTSW
@@ -4644,8 +4228,6 @@
 - mnem: FIADD
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4668,18 +4250,12 @@
 - mnem: FADDP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Add and Pop
 - mnem: FIMUL
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4702,18 +4278,12 @@
 - mnem: FMULP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Multiply and Pop
 - mnem: FICOM
   opcd: DE
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4724,8 +4294,6 @@
 - mnem: FCOMP5
   opcd: DE
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4736,8 +4304,6 @@
 - mnem: FCOMP5
   opcd: DE
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: STi
@@ -4748,8 +4314,6 @@
 - mnem: FICOMP
   opcd: DE
   op1:
-    src:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4760,18 +4324,12 @@
 - mnem: FCOMPP
   opcd: DE
   op1:
-    src:
-      operand_s: ST
   op2:
-    src:
-      operand_s: ST1
   proc: 00+
   desc: Compare Real and Pop Twice
 - mnem: FISUB
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4794,18 +4352,12 @@
 - mnem: FSUBRP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Reverse Subtract and Pop
 - mnem: FISUBR
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4828,18 +4380,12 @@
 - mnem: FSUBP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Subtract and Pop
 - mnem: FIDIV
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4862,18 +4408,12 @@
 - mnem: FDIVRP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Reverse Divide and Pop
 - mnem: FIDIVR
   opcd: DE
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4896,18 +4436,12 @@
 - mnem: FDIVP
   opcd: DE
   op1:
-    dst:
-      operand_s: ST1
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Divide and Pop
 - mnem: FILD
   opcd: DF
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m16int
@@ -4933,15 +4467,11 @@
       a: M
       t: wi
   op2:
-    src:
-      operand_s: ST
   proc: '10'
   desc: Store Integer with Truncation and Pop
 - mnem: FXCH7
   opcd: DF
   op1:
-    dst:
-      operand_s: ST
   op2:
     dst:
       operand_s: STi
@@ -4952,8 +4482,6 @@
 - mnem: FXCH7
   opcd: DF
   op1:
-    dst:
-      operand_s: ST
   op2:
     dst:
       operand_s: STi
@@ -4969,8 +4497,6 @@
       a: M
       t: wi
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Integer
 - mnem: FSTP8
@@ -4981,8 +4507,6 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FSTP8
@@ -4993,8 +4517,6 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: '03'
   desc: Store Floating Point Value and Pop
 - mnem: FISTP
@@ -5005,8 +4527,6 @@
       a: M
       t: wi
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Integer and Pop
 - mnem: FSTP9
@@ -5017,8 +4537,6 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Floating Point Value and Pop
 - mnem: FSTP9
@@ -5029,15 +4547,11 @@
       a: EST
       t:
   op2:
-    src:
-      operand_s: ST
   proc: '03'
   desc: Store Floating Point Value and Pop
 - mnem: FBLD
   opcd: DF
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m80dec
@@ -5064,8 +4578,6 @@
 - mnem: FILD
   opcd: DF
   op1:
-    dst:
-      operand_s: ST
   op2:
     src:
       operand_s: m64int
@@ -5093,8 +4605,6 @@
       a: M
       t: bcd
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store BCD Integer and Pop
 - mnem: FCOMIP
@@ -5117,15 +4627,11 @@
       a: M
       t: qi
   op2:
-    src:
-      operand_s: ST
   proc: 00+
   desc: Store Integer and Pop
 - mnem: LOOPNE
   opcd: E0
   op1:
-    dst:
-      operand_s: eCX
   op2:
     src:
       operand_s: rel8
@@ -5136,8 +4642,6 @@
 - mnem: LOOPNE
   opcd: E0
   op1:
-    dst:
-      operand_s: rCX
   op2:
     src:
       operand_s: rel8
@@ -5148,8 +4652,6 @@
 - mnem: LOOPE
   opcd: E1
   op1:
-    dst:
-      operand_s: eCX
   op2:
     src:
       operand_s: rel8
@@ -5160,8 +4662,6 @@
 - mnem: LOOPE
   opcd: E1
   op1:
-    dst:
-      operand_s: rCX
   op2:
     src:
       operand_s: rel8
@@ -5172,8 +4672,6 @@
 - mnem: LOOP
   opcd: E2
   op1:
-    dst:
-      operand_s: eCX
   op2:
     src:
       operand_s: rel8
@@ -5184,8 +4682,6 @@
 - mnem: LOOP
   opcd: E2
   op1:
-    dst:
-      operand_s: rCX
   op2:
     src:
       operand_s: rel8
@@ -5201,8 +4697,6 @@
       a: J
       t: bs
   op2:
-    src:
-      operand_s: CX
   proc: 00+
   desc: Jump short if eCX register is 0
 - mnem: JRCXZ
@@ -5213,8 +4707,6 @@
       a: J
       t: bs
   op2:
-    src:
-      operand_s: ECX
   proc: '10'
   desc: Jump short if rCX register is 0
 - mnem: IN
@@ -5268,8 +4760,6 @@
 - mnem: CALL
   opcd: E8
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: rel16/32
@@ -5356,82 +4846,54 @@
 - mnem: ICEBP
   opcd: F1
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
-    src:
-      operand_s: eFlags
   proc: '03'
   desc: Call to Interrupt Procedure
 - mnem: REPNE
   opcd: F2
   op1:
-    dst:
-      operand_s: eCX
   op2:
-    dst:
-      operand_s: eCX
   proc: 00+
   desc: Repeat String Operation Prefix
 - mnem: REP
   opcd: F2
   op1:
-    dst:
-      operand_s: eCX
   op2:
   proc: 00+
   desc: Repeat String Operation Prefix
 - mnem: REPNE
   opcd: F2
   op1:
-    dst:
-      operand_s: rCX
   op2:
-    dst:
-      operand_s: rCX
   proc: '10'
   desc: Repeat String Operation Prefix
 - mnem: REP
   opcd: F2
   op1:
-    dst:
-      operand_s: rCX
   op2:
   proc: '10'
   desc: Repeat String Operation Prefix
 - mnem: REPE
   opcd: F3
   op1:
-    dst:
-      operand_s: eCX
   op2:
-    dst:
-      operand_s: eCX
   proc: 00+
   desc: Repeat String Operation Prefix
 - mnem: REP
   opcd: F3
   op1:
-    dst:
-      operand_s: rCX
   op2:
   proc: 00+
   desc: Repeat String Operation Prefix
 - mnem: REPE
   opcd: F3
   op1:
-    dst:
-      operand_s: rCX
   op2:
-    dst:
-      operand_s: rCX
   proc: '10'
   desc: Repeat String Operation Prefix
 - mnem: REP
   opcd: F3
   op1:
-    dst:
-      operand_s: rCX
   op2:
   proc: '10'
   desc: Repeat String Operation Prefix
@@ -5498,41 +4960,25 @@
 - mnem: MUL
   opcd: F6
   op1:
-    dst:
-      operand_s: AX
   op2:
-    src:
-      operand_s: AL
   proc: 00+
   desc: Unsigned Multiply
 - mnem: IMUL
   opcd: F6
   op1:
-    dst:
-      operand_s: AX
   op2:
-    src:
-      operand_s: AL
   proc: 00+
   desc: Signed Multiply
 - mnem: DIV
   opcd: F6
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: Unsigned Divide
 - mnem: IDIV
   opcd: F6
   op1:
-    dst:
-      operand_s: AL
   op2:
-    dst:
-      operand_s: AH
   proc: 00+
   desc: Signed Divide
 - mnem: TEST
@@ -5586,41 +5032,25 @@
 - mnem: MUL
   opcd: F7
   op1:
-    dst:
-      operand_s: rDX
   op2:
-    dst:
-      operand_s: rAX
   proc: 00+
   desc: Unsigned Multiply
 - mnem: IMUL
   opcd: F7
   op1:
-    dst:
-      operand_s: rDX
   op2:
-    dst:
-      operand_s: rAX
   proc: 00+
   desc: Signed Multiply
 - mnem: DIV
   opcd: F7
   op1:
-    dst:
-      operand_s: rDX
   op2:
-    dst:
-      operand_s: rAX
   proc: 00+
   desc: Unsigned Divide
 - mnem: IDIV
   opcd: F7
   op1:
-    dst:
-      operand_s: rDX
   op2:
-    dst:
-      operand_s: rAX
   proc: 00+
   desc: Signed Divide
 - mnem: CLC
@@ -5702,8 +5132,6 @@
 - mnem: CALL
   opcd: FF
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r/m16/32
@@ -5714,8 +5142,6 @@
 - mnem: CALL
   opcd: FF
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r/m64
@@ -5726,8 +5152,6 @@
 - mnem: CALLF
   opcd: FF
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: m16:16/32/64
@@ -5768,8 +5192,6 @@
 - mnem: PUSH
   opcd: FF
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r/m16/32
@@ -5780,8 +5202,6 @@
 - mnem: PUSH
   opcd: FF
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: r/m64/16
@@ -5797,8 +5217,6 @@
       a: M
       t: w
   op2:
-    src:
-      operand_s: LDTR
   proc: 00+
   desc: Store Local Descriptor Table Register
 - mnem: STR
@@ -5809,15 +5227,11 @@
       a: M
       t: w
   op2:
-    src:
-      operand_s: TR
   proc: 00+
   desc: Store Task Register
 - mnem: LLDT
   opcd: '00'
   op1:
-    dst:
-      operand_s: LDTR
   op2:
     src:
       operand_s: r/m16
@@ -5828,8 +5242,6 @@
 - mnem: LTR
   opcd: '00'
   op1:
-    dst:
-      operand_s: TR
   op2:
     src:
       operand_s: r/m16
@@ -5871,8 +5283,6 @@
       a: M
       t: s
   op2:
-    src:
-      operand_s: GDTR
   proc: 00+
   desc: Store Global Descriptor Table Register
 - mnem: VMCALL
@@ -5907,35 +5317,23 @@
       a: M
       t: s
   op2:
-    src:
-      operand_s: IDTR
   proc: 00+
   desc: Store Interrupt Descriptor Table Register
 - mnem: MONITOR
   opcd: '01'
   op1:
-    src:
-      operand_s: "(DS:)[rAX]"
   op2:
-    src:
-      operand_s: ECX
   proc: '10'
   desc: Set Up Monitor Address
 - mnem: MWAIT
   opcd: '01'
   op1:
-    src:
-      operand_s: EAX
   op2:
-    src:
-      operand_s: ECX
   proc: '10'
   desc: Monitor Wait
 - mnem: LGDT
   opcd: '01'
   op1:
-    dst:
-      operand_s: GDTR
   op2:
     src:
       operand_s: m-
@@ -5946,28 +5344,18 @@
 - mnem: XGETBV
   opcd: '01'
   op1:
-    dst:
-      operand_s: EDX
   op2:
-    dst:
-      operand_s: EAX
   proc: '12'
   desc: Get Value of Extended Control Register
 - mnem: XSETBV
   opcd: '01'
   op1:
-    dst:
-      operand_s: XCR
   op2:
-    src:
-      operand_s: ECX
   proc: '12'
   desc: Set Extended Control Register
 - mnem: LIDT
   opcd: '01'
   op1:
-    dst:
-      operand_s: IDTR
   op2:
     src:
       operand_s: m-
@@ -5983,15 +5371,11 @@
       a: M
       t: w
   op2:
-    src:
-      operand_s: MSW
   proc: 00+
   desc: Store Machine Status Word
 - mnem: LMSW
   opcd: '01'
   op1:
-    dst:
-      operand_s: MSW
   op2:
     src:
       operand_s: r/m16
@@ -6012,21 +5396,13 @@
 - mnem: SWAPGS
   opcd: '01'
   op1:
-    dst:
-      operand_s: GS
   op2:
-    dst:
-      operand_s: IA32_KERNEL_GSBASE
   proc: '10'
   desc: Swap GS Base Register
 - mnem: RDTSCP
   opcd: '01'
   op1:
-    dst:
-      operand_s: EAX
   op2:
-    dst:
-      operand_s: EDX
   proc: '13'
   desc: Read Time-Stamp Counter and Processor ID
 - mnem: LAR
@@ -6060,49 +5436,31 @@
 - mnem: LOADALL
   opcd: '05'
   op1:
-    dst:
-      operand_s: AX
   op2:
-    dst:
-      operand_s: CX
   proc: '02'
   desc: Load All of the CPU Registers
 - mnem: SYSCALL
   opcd: '05'
   op1:
-    dst:
-      operand_s: RCX
   op2:
-    dst:
-      operand_s: R11
   proc: '10'
   desc: Fast System Call
 - mnem: CLTS
   opcd: '06'
   op1:
-    dst:
-      operand_s: CR0
   op2:
   proc: '02'
   desc: Clear Task-Switched Flag in CR0
 - mnem: LOADALL
   opcd: '07'
   op1:
-    dst:
-      operand_s: EAX
   op2:
-    dst:
-      operand_s: ECX
   proc: '03'
   desc: Load All of the CPU Registers
 - mnem: SYSRET
   opcd: '07'
   op1:
-    dst:
-      operand_s: SS
   op2:
-    dst:
-      operand_s: EFlags
   proc: '10'
   desc: Return From Fast System Call
 - mnem: INVD
@@ -7314,78 +6672,48 @@
 - mnem: WRMSR
   opcd: '30'
   op1:
-    dst:
-      operand_s: MSR
   op2:
-    src:
-      operand_s: rCX
   proc: '05'
   desc: Write to Model Specific Register
 - mnem: RDTSC
   opcd: '31'
   op1:
-    dst:
-      operand_s: EAX
   op2:
-    dst:
-      operand_s: EDX
   proc: '05'
   desc: Read Time-Stamp Counter
 - mnem: RDMSR
   opcd: '32'
   op1:
-    dst:
-      operand_s: rAX
   op2:
-    dst:
-      operand_s: rDX
   proc: '05'
   desc: Read from Model Specific Register
 - mnem: RDPMC
   opcd: '33'
   op1:
-    dst:
-      operand_s: EAX
   op2:
-    dst:
-      operand_s: EDX
   proc: '06'
   desc: Read Performance-Monitoring Counters
 - mnem: SYSENTER
   opcd: '34'
   op1:
-    dst:
-      operand_s: SS
   op2:
-    dst:
-      operand_s: ESP
   proc: '08'
   desc: Fast System Call
 - mnem: SYSENTER
   opcd: '34'
   op1:
-    dst:
-      operand_s: SS
   op2:
-    dst:
-      operand_s: RSP
   proc: '10'
   desc: Fast System Call
 - mnem: SYSEXIT
   opcd: '35'
   op1:
-    dst:
-      operand_s: SS
   op2:
-    dst:
-      operand_s: eSP
   proc: '08'
   desc: Fast Return from Fast System Call
 - mnem: GETSEC
   opcd: '37'
   op1:
-    src:
-      operand_s: EAX
   op2:
   proc: '12'
   desc: GETSEC Leaf Functions
@@ -8624,8 +7952,6 @@
 - mnem: PCMPESTRM
   opcd: 3A
   op1:
-    dst:
-      operand_s: XMM0
   op2:
     src:
       operand_s: xmm128
@@ -8636,8 +7962,6 @@
 - mnem: PCMPESTRI
   opcd: 3A
   op1:
-    dst:
-      operand_s: rCX
   op2:
     src:
       operand_s: xmm128
@@ -8648,8 +7972,6 @@
 - mnem: PCMPISTRM
   opcd: 3A
   op1:
-    dst:
-      operand_s: XMM0
   op2:
     src:
       operand_s: xmm128
@@ -8660,8 +7982,6 @@
 - mnem: PCMPISTRI
   opcd: 3A
   op1:
-    dst:
-      operand_s: rCX
   op2:
     src:
       operand_s: xmm128
@@ -11082,8 +10402,6 @@
 - mnem: PUSH
   opcd: A0
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: FS
@@ -11095,18 +10413,12 @@
     dst:
       operand_s: FS
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '03'
   desc: Pop a Value from the Stack
 - mnem: CPUID
   opcd: A2
   op1:
-    dst:
-      operand_s: IA32_BIOS_SIGN_ID
   op2:
-    dst:
-      operand_s: EAX
   proc: '04'
   desc: CPU Identification
 - mnem: BT
@@ -11154,8 +10466,6 @@
 - mnem: PUSH
   opcd: A8
   op1:
-    dst:
-      operand_s: SS:[rSP]
   op2:
     src:
       operand_s: GS
@@ -11167,15 +10477,11 @@
     dst:
       operand_s: GS
   op2:
-    src:
-      operand_s: SS:[rSP]
   proc: '03'
   desc: Pop a Value from the Stack
 - mnem: RSM
   opcd: AA
   op1:
-    dst:
-      operand_s: Flags
   op2:
   proc: '03'
   desc: Resume from System Management Mode
@@ -11229,8 +10535,6 @@
       a: M
       t: stx
   op2:
-    src:
-      operand_s: ST
   proc: '08'
   desc: Save x87 FPU, MMX, XMM, and MXCSR State
 - mnem: FXSAVE
@@ -11241,28 +10545,18 @@
       a: M
       t: stx
   op2:
-    src:
-      operand_s: ST
   proc: '10'
   desc: Save x87 FPU, MMX, XMM, and MXCSR State
 - mnem: FXRSTOR
   opcd: AE
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: '08'
   desc: Restore x87 FPU, MMX, XMM, and MXCSR State
 - mnem: FXRSTOR
   opcd: AE
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: '10'
   desc: Restore x87 FPU, MMX, XMM, and MXCSR State
 - mnem: LDMXCSR
@@ -11293,8 +10587,6 @@
       a: M
       t:
   op2:
-    src:
-      operand_s: EDX
   proc: '12'
   desc: Save Processor Extended States
 - mnem: XSAVE
@@ -11305,8 +10597,6 @@
       a: M
       t:
   op2:
-    src:
-      operand_s: EDX
   proc: '12'
   desc: Save Processor Extended States
 - mnem: LFENCE
@@ -11318,21 +10608,13 @@
 - mnem: XRSTOR
   opcd: AE
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: '12'
   desc: Restore Processor Extended States
 - mnem: XRSTOR
   opcd: AE
   op1:
-    dst:
-      operand_s: ST
   op2:
-    dst:
-      operand_s: ST1
   proc: '12'
   desc: Restore Processor Extended States
 - mnem: MFENCE
@@ -11379,8 +10661,6 @@
       a: E
       t: b
   op2:
-    dst:
-      operand_s: AL
   proc: '04'
   desc: Compare and Exchange
 - mnem: CMPXCHG
@@ -11391,15 +10671,11 @@
       a: E
       t: vqp
   op2:
-    dst:
-      operand_s: rAX
   proc: '04'
   desc: Compare and Exchange
 - mnem: LSS
   opcd: B2
   op1:
-    dst:
-      operand_s: SS
   op2:
     dst:
       operand_s: r16/32/64
@@ -11424,8 +10700,6 @@
 - mnem: LFS
   opcd: B4
   op1:
-    dst:
-      operand_s: FS
   op2:
     dst:
       operand_s: r16/32/64
@@ -11436,8 +10710,6 @@
 - mnem: LGS
   opcd: B5
   op1:
-    dst:
-      operand_s: GS
   op2:
     dst:
       operand_s: r16/32/64
@@ -11823,8 +11095,6 @@
       a: M
       t: q
   op2:
-    dst:
-      operand_s: EAX
   proc: '05'
   desc: Compare and Exchange Bytes
 - mnem: CMPXCHG16B
@@ -11835,8 +11105,6 @@
       a: M
       t: q
   op2:
-    dst:
-      operand_s: EAX
   proc: '10'
   desc: Compare and Exchange Bytes
 - mnem: VMPTRLD
@@ -12998,8 +12266,6 @@
 - mnem: MASKMOVQ
   opcd: F7
   op1:
-    dst:
-      operand_s: "(DS:)[rDI]"
   op2:
     dst:
       operand_s: mm64
@@ -13010,8 +12276,6 @@
 - mnem: MASKMOVDQU
   opcd: F7
   op1:
-    dst:
-      operand_s: "(DS:)[rDI]"
   op2:
     src:
       operand_s: xmm128

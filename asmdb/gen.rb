@@ -124,7 +124,13 @@ REXML::XPath.match(doc, "/x86reference/one-byte/pri_opcd/entry | /x86reference/t
       when 'mnem'
         mnem = elem&.text
       when 'src', 'dst'
-        if elem.text.nil?
+        # If an operand is set up using italic, it is an implicit operand,
+        # which is not explicitly used. If an operand is set up using boldface,
+        # it is modified by the instruction.
+        # つまり、上記の場合実際のアセンブラの引数にはならない
+        if elem.attributes["displayed"] == 'no'
+          operands << nil
+        elsif elem.text.nil?
           addr = elem.elements['a']&.text
           type = elem.elements['t']&.text
 
