@@ -42,6 +42,7 @@ tool:
 	go install -v github.com/awalterschulze/goderive@latest
 	go install -v github.com/Bin-Huang/newc@latest
 	go install -v github.com/HobbyOSs/astv@latest
+	go install -v github.com/hairyhenderson/gomplate/v3/cmd/gomplate@latest
 
 testdata:
 	$(NASK) testdata/byte-opcode.nas testdata/byte-opcode.obj testdata/byte-opcode.list
