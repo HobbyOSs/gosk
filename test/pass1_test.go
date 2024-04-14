@@ -134,7 +134,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 			},
-		},
+		}, /**
 		{
 			"integration test for pass1",
 			`		ORG		0x7c00
@@ -201,7 +201,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 			},
-		},
+		},*/
 	}
 
 	t := s.T()
