@@ -36,6 +36,10 @@ func (p *ParseToken) AsString() string {
 	return p.Data.ToString()
 }
 
+func (p *ParseToken) IsNumber() bool {
+	return p.TokenType == TTNumber
+}
+
 func (p *ParseToken) HexAsUInt() uint {
 	i, err := strconv.ParseInt(p.Data.ToString(), 0, 64)
 	if err != nil {
@@ -45,5 +49,9 @@ func (p *ParseToken) HexAsUInt() uint {
 }
 
 func (p *ParseToken) AsOperand() junkjit.Operand {
-	return x86.NewX86Operand(p.Data.ToString())
+	operand, err := x86.NewX86Operand(p.Data.ToString())
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
+	}
+	return operand
 }

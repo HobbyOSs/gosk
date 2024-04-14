@@ -303,11 +303,9 @@ func (p *SegmentExpHandlerImpl) SegmentExp(node *ast.SegmentExp) bool {
 }
 
 func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
-	// TODO: 計算をする
 	log.Println("trace: add exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
 	vHead := pop(p.Env)
-
 	vTail := make([]*token.ParseToken, 0)
 	ops := make([]string, 0)
 	tuples := lo.Zip2(node.Operators, node.TailExps)
@@ -322,6 +320,7 @@ func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
 		push(p.Env, vHead)
 		return true
 	}
+
 	if vHead.TokenType == token.TTHex &&
 		ops[0] == "-" &&
 		vTail[0].Data.ToString() == "$" {
@@ -331,18 +330,39 @@ func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
 		return true
 	}
 
+	acc := 0
+	if vHead.IsNumber() {
+		acc = vHead.Data.ToInt()
+	} else {
+		push(p.Env, vHead)
+	}
+
+	sum := lo.Reduce(lo.Zip2(ops, vTail), func(acc int, t lo.Tuple2[string, *token.ParseToken], _ int) int {
+		if t.A == "+" && t.B.IsNumber() {
+			return acc + t.B.Data.ToInt()
+		} else if t.A == "-" && t.B.IsNumber() {
+			return acc - t.B.Data.ToInt()
+		}
+		return acc
+	}, acc)
+
+	v := token.NewParseToken(token.TTNumber, sum)
+	push(p.Env, v)
+
 	return true
 }
 
 func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
-	// TODO: 計算をする
 	log.Println("trace: mult exp handler!!!")
 	p.Visitor.Visit(node.HeadExp)
 	vHead := pop(p.Env)
-
 	vTail := make([]*token.ParseToken, 0)
-	for _, tail := range node.TailExps {
-		p.Visitor.Visit(tail)
+	ops := make([]string, 0)
+	tuples := lo.Zip2(node.Operators, node.TailExps)
+
+	for _, t := range tuples {
+		ops = append(ops, t.A)
+		p.Visitor.Visit(t.B)
 		vTail = append(vTail, pop(p.Env))
 	}
 
@@ -350,6 +370,25 @@ func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
 		push(p.Env, vHead)
 		return true
 	}
+
+	base := 1
+	if vHead.IsNumber() {
+		base = vHead.Data.ToInt()
+	} else {
+		push(p.Env, vHead)
+	}
+
+	sum := lo.Reduce(lo.Zip2(ops, vTail), func(acc int, t lo.Tuple2[string, *token.ParseToken], _ int) int {
+		if t.A == "*" && t.B.IsNumber() {
+			return acc * t.B.Data.ToInt()
+		} else if t.A == "/" && t.B.IsNumber() {
+			return acc / t.B.Data.ToInt()
+		}
+		return acc
+	}, base)
+
+	v := token.NewParseToken(token.TTNumber, sum)
+	push(p.Env, v)
 
 	return true
 }
