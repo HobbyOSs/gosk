@@ -119,25 +119,25 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 			},
-		}, /**
-				{
-					"Label",
-					`ORG 0x7c00
+		},
+		{
+			"Label",
+			`ORG 0x7c00
 		                         label:
 		                         # dummy`,
-					stack.NewStack[*token.ParseToken](100),
-					nil,
-					&pass1.Pass1{
-						LOC:              0x7c00,
-						BitMode:          ast.ID_16BIT_MODE,
-						SymTable:         map[string]int32{"label": 0x7c00},
-						GlobalSymbolList: []string{},
-						ExternSymbolList: []string{},
-					},
-				},
-				{
-					"integration test for pass1",
-					`		ORG		0x7c00
+			stack.NewStack[*token.ParseToken](100),
+			nil,
+			&pass1.Pass1{
+				LOC:              0x7c00,
+				BitMode:          ast.ID_16BIT_MODE,
+				SymTable:         map[string]int32{"label": 0x7c00},
+				GlobalSymbolList: []string{},
+				ExternSymbolList: []string{},
+			},
+		},
+		{
+			"integration test for pass1",
+			`		ORG		0x7c00
 
 				JMP		entry
 				DB		0x90
@@ -163,45 +163,45 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 		; プログラム本体
 
 		entry:
-				MOV		AX,0
-				MOV		SS,AX
-				MOV		SP,0x7c00
-				MOV		DS,AX
-				MOV		ES,AX
+				;MOV		AX,0
+				;MOV		SS,AX
+				;MOV		SP,0x7c00
+				;MOV		DS,AX
+				;MOV		ES,AX
 
-				MOV		SI,msg
+				;MOV		SI,msg
 
 		putloop:
-				MOV		AL,[SI]
-				ADD		SI,1
-				CMP		AL,0
-				JE		fin
-				MOV		AH,0x0e
-				MOV		BX,15
-				INT		0x10
-				JMP		putloop
+				;MOV		AL,[SI]
+				;ADD		SI,1
+				;CMP		AL,0
+				;JE		fin
+				;MOV		AH,0x0e
+				;MOV		BX,15
+				;INT		0x10
+				;JMP		putloop
 
 		fin:
-				HLT
-				JMP		fin
+				;HLT
+				;JMP		fin
 
 		msg:
 		`,
-					stack.NewStack[*token.ParseToken](100),
-					nil,
-					&pass1.Pass1{
-						LOC:     31860,
-						BitMode: ast.ID_16BIT_MODE,
-						SymTable: map[string]int32{
-							"entry":   31824,
-							"putloop": 31839,
-							"fin":     31857,
-							"msg":     31860,
-						},
-						GlobalSymbolList: []string{},
-						ExternSymbolList: []string{},
-					},
-				},*/
+			stack.NewStack[*token.ParseToken](100),
+			nil,
+			&pass1.Pass1{
+				LOC:     31860,
+				BitMode: ast.ID_16BIT_MODE,
+				SymTable: map[string]int32{
+					"entry":   31824,
+					"putloop": 31839,
+					"fin":     31857,
+					"msg":     31860,
+				},
+				GlobalSymbolList: []string{},
+				ExternSymbolList: []string{},
+			},
+		},
 	}
 
 	t := s.T()

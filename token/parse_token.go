@@ -4,6 +4,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/HobbyOSs/gosk/junkjit"
+	"github.com/HobbyOSs/gosk/junkjit/x86"
 	"github.com/go-ext/variant"
 	"github.com/morikuni/failure"
 )
@@ -40,4 +42,8 @@ func (p *ParseToken) HexAsUInt() uint {
 		log.Fatal(failure.Wrap(err))
 	}
 	return uint(i)
+}
+
+func (p *ParseToken) AsOperand() junkjit.Operand {
+	return x86.NewX86Operand(p.Data.ToString())
 }

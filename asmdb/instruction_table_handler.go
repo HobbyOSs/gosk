@@ -29,7 +29,3 @@ func (x x86Reference) InstructionsBy(mnem string, options ...Option) []Instructi
 		return i.Mnemonic == mnem
 	})
 }
-
-func (x x86Reference) MachineCodeSize(mnem string, options ...Option) int {
-	return 0
-}
