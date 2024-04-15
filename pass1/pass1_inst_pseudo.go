@@ -11,7 +11,7 @@ import (
 
 func processALIGNB(env *Pass1, tokens []*token.ParseToken) {
 	arg := tokens[0]
-	unit := arg.Data.ToInt32()
+	unit := arg.ToInt32()
 	nearestSize := env.LOC/unit + 1
 	loc := nearestSize*unit - env.LOC
 	env.LOC += loc
@@ -25,7 +25,7 @@ func processDB(env *Pass1, tokens []*token.ParseToken) {
 		case token.TTNumber, token.TTHex:
 			loc += 1
 		case token.TTIdentifier:
-			loc += int32(len(t.Data.ToString()))
+			loc += int32(len(t.AsString()))
 		}
 	}
 
@@ -40,7 +40,7 @@ func processDW(env *Pass1, tokens []*token.ParseToken) {
 		case token.TTNumber, token.TTHex:
 			loc += 2
 		case token.TTIdentifier:
-			loc += int32(len(t.Data.ToString()))
+			loc += int32(len(t.AsString()))
 		}
 	}
 
@@ -55,7 +55,7 @@ func processDD(env *Pass1, tokens []*token.ParseToken) {
 		case token.TTNumber, token.TTHex:
 			loc += 4
 		case token.TTIdentifier:
-			loc += int32(len(t.Data.ToString()))
+			loc += int32(len(t.AsString()))
 		}
 	}
 
@@ -63,7 +63,7 @@ func processDD(env *Pass1, tokens []*token.ParseToken) {
 }
 
 func processORG(env *Pass1, tokens []*token.ParseToken) {
-	arg := tokens[0].Data.ToString()
+	arg := tokens[0].AsString()
 	size, err := strconv.ParseInt(arg, 0, 32)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
@@ -72,7 +72,7 @@ func processORG(env *Pass1, tokens []*token.ParseToken) {
 }
 
 func processRESB(env *Pass1, tokens []*token.ParseToken) {
-	arg := tokens[0].Data.ToString()
+	arg := tokens[0].AsString()
 	suffix := "-$"
 
 	if strings.Contains(arg, suffix) {

@@ -22,7 +22,7 @@ func processDB(env *Pass2, tokens []*token.ParseToken) {
 	for _, t := range tokens {
 		switch t.TokenType {
 		case token.TTNumber:
-			env.Asm.DB(uint8(t.Data.ToUInt()))
+			env.Asm.DB(uint8(t.ToUInt()))
 		case token.TTHex:
 			env.Asm.DB(uint8(t.HexAsUInt()))
 		case token.TTIdentifier:
@@ -35,7 +35,7 @@ func processDW(env *Pass2, tokens []*token.ParseToken) {
 	for _, t := range tokens {
 		switch t.TokenType {
 		case token.TTNumber:
-			env.Asm.DW(uint16(t.Data.ToUInt()))
+			env.Asm.DW(uint16(t.ToUInt()))
 		case token.TTHex:
 			env.Asm.DW(uint16(t.HexAsUInt()))
 		case token.TTIdentifier:
@@ -48,7 +48,7 @@ func processDD(env *Pass2, tokens []*token.ParseToken) {
 	for _, t := range tokens {
 		switch t.TokenType {
 		case token.TTNumber:
-			env.Asm.DD(uint32(t.Data.ToUInt()))
+			env.Asm.DD(uint32(t.ToUInt()))
 		case token.TTHex:
 			env.Asm.DD(uint32(t.HexAsUInt()))
 		case token.TTIdentifier:
@@ -58,7 +58,7 @@ func processDD(env *Pass2, tokens []*token.ParseToken) {
 }
 
 func processORG(env *Pass2, tokens []*token.ParseToken) {
-	arg := tokens[0].Data.ToString()
+	arg := tokens[0].AsString()
 	currentPos, err := strconv.ParseInt(arg, 0, 32)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
@@ -67,7 +67,7 @@ func processORG(env *Pass2, tokens []*token.ParseToken) {
 }
 
 func processRESB(env *Pass2, tokens []*token.ParseToken) {
-	arg := tokens[0].Data.ToString()
+	arg := tokens[0].AsString()
 	suffix := "-$"
 
 	if strings.Contains(arg, suffix) {

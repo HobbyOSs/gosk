@@ -210,7 +210,7 @@ func (p *DeclareStmtHandlerImpl) DeclareStmt(node *ast.DeclareStmt) bool {
 	if !ok {
 		log.Fatal("error: EQU failed to pop token value")
 	}
-	p.Env.EquMap[key.Data.ToString()] = value
+	p.Env.EquMap[key.AsString()] = value
 
 	return true
 }
@@ -245,7 +245,7 @@ func (p *ConfigStmtHandlerImpl) ConfigStmt(node *ast.ConfigStmt) bool {
 		if !ok {
 			log.Fatal("Failed to pop token")
 		}
-		bitMode, ok := ast.NewBitMode(token.Data.ToInt())
+		bitMode, ok := ast.NewBitMode(token.ToInt())
 		if !ok {
 			log.Fatal("error: Failed to parse BITS")
 		}
@@ -268,11 +268,11 @@ func (p *MnemonicStmtHandlerImpl) MnemonicStmt(node *ast.MnemonicStmt) bool {
 		vOperands = append(vOperands, pop(p.Env))
 	}
 
-	if vOpcode.Data.IsNil() {
+	if vOpcode.Data == nil {
 		log.Fatal("error: opcode is invalid")
 	}
 
-	opcode := vOpcode.Data.ToString()
+	opcode := vOpcode.AsString()
 	evalOpcodeFn := opcodeEvalFns[opcode]
 	if evalOpcodeFn == nil {
 		log.Fatal("error: not registered opcode process function; ", opcode)
@@ -323,30 +323,34 @@ func (p *AddExpHandlerImpl) AddExp(node *ast.AddExp) bool {
 
 	if vHead.TokenType == token.TTHex &&
 		ops[0] == "-" &&
-		vTail[0].Data.ToString() == "$" {
+		vTail[0].AsString() == "$" {
 		// 0xffff - $ という特殊系
-		v := token.NewParseToken(token.TTIdentifier, vHead.Data.ToString()+"-$")
+		v := token.NewParseToken(token.TTIdentifier,
+			ast.NewImmExp(ast.BaseExp{}, ast.NewIdentFactor(ast.BaseFactor{}, vHead.AsString()+"-$")),
+		)
 		push(p.Env, v)
 		return true
 	}
 
 	acc := 0
 	if vHead.IsNumber() {
-		acc = vHead.Data.ToInt()
+		acc = vHead.ToInt()
 	} else {
 		push(p.Env, vHead)
 	}
 
 	sum := lo.Reduce(lo.Zip2(ops, vTail), func(acc int, t lo.Tuple2[string, *token.ParseToken], _ int) int {
 		if t.A == "+" && t.B.IsNumber() {
-			return acc + t.B.Data.ToInt()
+			return acc + t.B.ToInt()
 		} else if t.A == "-" && t.B.IsNumber() {
-			return acc - t.B.Data.ToInt()
+			return acc - t.B.ToInt()
 		}
 		return acc
 	}, acc)
 
-	v := token.NewParseToken(token.TTNumber, sum)
+	v := token.NewParseToken(token.TTNumber,
+		ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
+	)
 	push(p.Env, v)
 
 	return true
@@ -373,21 +377,23 @@ func (p *MultExpHandlerImpl) MultExp(node *ast.MultExp) bool {
 
 	base := 1
 	if vHead.IsNumber() {
-		base = vHead.Data.ToInt()
+		base = vHead.ToInt()
 	} else {
 		push(p.Env, vHead)
 	}
 
 	sum := lo.Reduce(lo.Zip2(ops, vTail), func(acc int, t lo.Tuple2[string, *token.ParseToken], _ int) int {
 		if t.A == "*" && t.B.IsNumber() {
-			return acc * t.B.Data.ToInt()
+			return acc * t.B.ToInt()
 		} else if t.A == "/" && t.B.IsNumber() {
-			return acc / t.B.Data.ToInt()
+			return acc / t.B.ToInt()
 		}
 		return acc
 	}, base)
 
-	v := token.NewParseToken(token.TTNumber, sum)
+	v := token.NewParseToken(token.TTNumber,
+		ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
+	)
 	push(p.Env, v)
 
 	return true
@@ -406,7 +412,7 @@ func (p *ImmExpHandlerImpl) ImmExp(node *ast.ImmExp) bool {
 func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
 	log.Printf("trace: number factor: %+v\n", node)
 
-	t := token.NewParseToken(token.TTNumber, node.Value)
+	t := token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, node))
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
@@ -417,7 +423,7 @@ func (p *NumberFactorHandlerImpl) NumberFactor(node *ast.NumberFactor) bool {
 func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
 	log.Printf("trace: string factor: %+v\n", node)
 
-	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	t := token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, node))
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
@@ -429,7 +435,7 @@ func (p *StringFactorHandlerImpl) StringFactor(node *ast.StringFactor) bool {
 func (p *HexFactorHandlerImpl) HexFactor(node *ast.HexFactor) bool {
 	log.Printf("trace: hex factor: %+v\n", node)
 
-	t := token.NewParseToken(token.TTHex, node.Value)
+	t := token.NewParseToken(token.TTHex, ast.NewImmExp(ast.BaseExp{}, node))
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
 		log.Fatal("error: Failed to push token; ", err)
@@ -441,7 +447,7 @@ func (p *HexFactorHandlerImpl) HexFactor(node *ast.HexFactor) bool {
 func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
 	log.Printf("trace: ident factor: %+v\n", node)
 
-	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	t := token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, node))
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))
@@ -453,7 +459,7 @@ func (p *IdentFactorHandlerImpl) IdentFactor(node *ast.IdentFactor) bool {
 func (p *CharFactorHandlerImpl) CharFactor(node *ast.CharFactor) bool {
 	log.Printf("trace: char factor: %+v\n", node)
 
-	t := token.NewParseToken(token.TTIdentifier, node.Value)
+	t := token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, node))
 	err := p.Env.Ctx.Push(t)
 	if err != nil {
 		log.Fatal(failure.Wrap(err))

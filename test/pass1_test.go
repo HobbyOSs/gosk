@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/HobbyOSs/gosk/ast"
@@ -20,6 +21,22 @@ type Pass1Suite struct {
 
 // mapやstackの内部はgo-cmpで比較できなかった
 var IgnoreFields = []string{"Ctx", "EquMap"}
+
+func buildImmExpFromValue(value any) *ast.ImmExp {
+	var factor ast.Factor
+	switch v := value.(type) {
+	case int:
+		factor = &ast.NumberFactor{ast.BaseFactor{}, v}
+	case string:
+		if strings.HasPrefix(v, "0x") {
+			factor = &ast.HexFactor{ast.BaseFactor{}, v}
+		} else {
+			factor = &ast.IdentFactor{ast.BaseFactor{}, v}
+		}
+	}
+
+	return &ast.ImmExp{Factor: factor}
+}
 
 func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 	tests := []struct {
@@ -46,7 +63,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			"equ",
 			"CYLS EQU 10",
 			stack.NewStack[*token.ParseToken](100),
-			map[string]*token.ParseToken{"CYLS": token.NewParseToken(token.TTNumber, 10)},
+			map[string]*token.ParseToken{"CYLS": token.NewParseToken(token.TTNumber, buildImmExpFromValue(10))},
 			&pass1.Pass1{
 				LOC:              0,
 				BitMode:          ast.ID_16BIT_MODE,

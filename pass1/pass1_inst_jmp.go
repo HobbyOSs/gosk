@@ -13,7 +13,7 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken) {
 		env.LOC += 2
 		return
 	}
-	dataSize := checkUintRange(arg.Data.ToUInt())
+	dataSize := checkUintRange(arg.ToUInt())
 	env.LOC += int32(dataSize)
 }
 
