@@ -98,10 +98,22 @@ func (p *ParseToken) HexAsUInt() uint {
 }
 
 func (p *ParseToken) AsOperand() junkjit.Operand {
+
 	// TODO: ast.Expの型で分岐する
-	operand, err := x86.NewX86Operand(p.Data.TokenLiteral())
-	if err != nil {
-		log.Fatal(failure.Wrap(err))
+	switch v := p.Data.(type) {
+	case *ast.ImmExp:
+		op, err := x86.NewX86OperandByImmExp(v)
+		if err != nil {
+			panic(fmt.Sprintf("error: failed to convert token %s", p.Data.TokenLiteral()))
+		}
+		return op
+	default:
+		panic(fmt.Sprintf("token %s should be number", p.Data.TokenLiteral()))
 	}
-	return operand
+
+	//operand, err := x86.NewX86Operand(p.Data.TokenLiteral())
+	//if err != nil {
+	// 	log.Fatal(failure.Wrap(err))
+	//}
+	//return operand
 }
