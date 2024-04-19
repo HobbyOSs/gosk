@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
-require golang.org/x/net v0.22.0
+require golang.org/x/net v0.23.0
 
 require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
