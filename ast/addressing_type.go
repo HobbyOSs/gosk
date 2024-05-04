@@ -1,4 +1,4 @@
-package asmdb
+package ast
 
 type AddressingType string
 

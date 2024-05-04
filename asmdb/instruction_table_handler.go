@@ -8,6 +8,8 @@ import (
 type Options struct {
 	BitMode   ast.BitMode
 	TargetCPU ast.SupCPU
+	Operand1  ast.Operand
+	Operand2  ast.Operand
 }
 
 type Option func(*Options)

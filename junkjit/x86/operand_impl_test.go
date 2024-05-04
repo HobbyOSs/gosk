@@ -3,7 +3,7 @@ package x86
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/asmdb"
+	"github.com/HobbyOSs/gosk/ast"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,30 +12,30 @@ func TestParse(t *testing.T) {
 	tests := []struct {
 		name  string
 		text  string
-		wantA asmdb.AddressingType
+		wantA ast.AddressingType
 	}{
-		{"+int", "30", asmdb.CodeImmediate},
-		{"-int", "-30", asmdb.CodeImmediate},
-		{"hex", "0x0ff0", asmdb.CodeImmediate},
-		{"char", "'0x0ff0'", asmdb.CodeImmediate},
-		{"string", "\"0x0ff0\"", asmdb.CodeImmediate},
-		{"ident", "_testZ009$", asmdb.CodeImmediate},
-		{"CR0", "CR0", asmdb.CodeCRField},
-		{"CR8", "CR8", asmdb.CodeCRField},
-		{"DR0", "DR0", asmdb.CodeDebugField},
-		{"DR7", "DR7", asmdb.CodeDebugField},
-		{"Sreg1", "CS", asmdb.CodeSregField},
-		{"Sreg2", "DS", asmdb.CodeSregField},
-		{"Sreg3", "ES", asmdb.CodeSregField},
-		{"Sreg4", "SS", asmdb.CodeSregField},
-		{"Sreg5", "FS", asmdb.CodeSregField},
-		{"Sreg6", "GS", asmdb.CodeSregField},
-		{"GR1", "AX", asmdb.CodeGeneralReg},
-		{"GR2", "SI", asmdb.CodeGeneralReg},
-		{"GR3", "AH", asmdb.CodeGeneralReg},
-		{"GR4", "EAX", asmdb.CodeGeneralReg},
-		{"GR5", "EBX", asmdb.CodeGeneralReg},
-		{"GR6", "RAX", asmdb.CodeGeneralReg},
+		{"+int", "30", ast.CodeImmediate},
+		{"-int", "-30", ast.CodeImmediate},
+		{"hex", "0x0ff0", ast.CodeImmediate},
+		{"char", "'0x0ff0'", ast.CodeImmediate},
+		{"string", "\"0x0ff0\"", ast.CodeImmediate},
+		{"ident", "_testZ009$", ast.CodeImmediate},
+		{"CR0", "CR0", ast.CodeCRField},
+		{"CR8", "CR8", ast.CodeCRField},
+		{"DR0", "DR0", ast.CodeDebugField},
+		{"DR7", "DR7", ast.CodeDebugField},
+		{"Sreg1", "CS", ast.CodeSregField},
+		{"Sreg2", "DS", ast.CodeSregField},
+		{"Sreg3", "ES", ast.CodeSregField},
+		{"Sreg4", "SS", ast.CodeSregField},
+		{"Sreg5", "FS", ast.CodeSregField},
+		{"Sreg6", "GS", ast.CodeSregField},
+		{"GR1", "AX", ast.CodeGeneralReg},
+		{"GR2", "SI", ast.CodeGeneralReg},
+		{"GR3", "AH", ast.CodeGeneralReg},
+		{"GR4", "EAX", ast.CodeGeneralReg},
+		{"GR5", "EBX", ast.CodeGeneralReg},
+		{"GR6", "RAX", ast.CodeGeneralReg},
 
 		//{"memory address direct", "Exp", "[100]",
 		// 	&ast.MemoryAddrExp{

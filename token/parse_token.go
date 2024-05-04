@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/junkjit"
 	"github.com/HobbyOSs/gosk/junkjit/x86"
 	"github.com/morikuni/failure"
 )
@@ -97,7 +96,7 @@ func (p *ParseToken) HexAsUInt() uint {
 	return uint(i)
 }
 
-func (p *ParseToken) AsOperand() junkjit.Operand {
+func (p *ParseToken) AsOperand() ast.Operand {
 
 	// TODO: ast.Expの型で分岐する
 	switch v := p.Data.(type) {
