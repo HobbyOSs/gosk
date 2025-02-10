@@ -23,7 +23,7 @@ _testmain.go
 *.test
 *.prof
 
-# my repo
+# project
 *.bin
 *.hex
 *.obj
@@ -31,5 +31,4 @@ _testmain.go
 
 .idea/
 gosk
-f12copy
-f12format
+.aider.*.history*
