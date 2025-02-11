@@ -19,6 +19,5 @@ type Pass1 struct {
 }
 
 func (p *Pass1) Eval(program ast.Prog) {
-	v := NewVisitor(p)
-	v.Visit(program)
+	TraverseAST(program, p)
 }

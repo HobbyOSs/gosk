@@ -148,9 +148,7 @@ func TestAddExp(t *testing.T) {
 			p := &Pass1{
 				Ctx: stack.NewStack[*token.ParseToken](10),
 			}
-			v := NewVisitor(p)
-			handler := NewAddExpHandlerImpl(v, p)
-			handler.AddExp(node)
+			TraverseAST(node, p)
 
 			for i := p.Ctx.Count(); i >= 0; i-- {
 				_, expected := tt.want.Pop()
@@ -221,9 +219,7 @@ func TestMultExp(t *testing.T) {
 			p := &Pass1{
 				Ctx: stack.NewStack[*token.ParseToken](10),
 			}
-			v := NewVisitor(p)
-			handler := NewMultExpHandlerImpl(v, p)
-			handler.MultExp(node)
+			TraverseAST(node, p)
 
 			for i := p.Ctx.Count(); i >= 0; i-- {
 				_, expected := tt.want.Pop()
