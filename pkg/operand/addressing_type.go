@@ -64,6 +64,15 @@ var codeMap = map[string]AddressingType{
 	"Z":   CodeModRM,
 }
 
+func (at AddressingType) String() string {
+	for key, val := range codeMap {
+		if val == at {
+			return key
+		}
+	}
+	return "unknown"
+}
+
 func GetCode(s string) (AddressingType, bool) {
 	code, ok := codeMap[s]
 	return code, ok

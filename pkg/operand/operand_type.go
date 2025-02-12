@@ -76,6 +76,15 @@ var typeMap = map[string]OperandType{
 	"wi":  CodeWordInteger,                        //
 }
 
+func (ot OperandType) String() string {
+	for key, val := range typeMap {
+		if val == ot {
+			return key
+		}
+	}
+	return "unknown"
+}
+
 func GetType(s string) (OperandType, bool) {
 	code, ok := typeMap[s]
 	return code, ok
