@@ -7,18 +7,33 @@ import (
 )
 
 func TestOperandBuilder(t *testing.T) {
-	op1 := operand.OperandBuilder{}.Reg("EAX")
-	if op1.Serialize() != "EAX" {
-		t.Errorf("Expected EAX, got %s", op1.Serialize())
+	tests := []struct {
+		name     string
+		operand  operand.Operand
+		expected string
+	}{
+		{
+			name:     "Register Operand",
+			operand:  operand.OperandBuilder{}.Reg("EAX"),
+			expected: "EAX",
+		},
+		{
+			name:     "Immediate Operand",
+			operand:  operand.OperandBuilder{}.Imm(42),
+			expected: "#42",
+		},
+		{
+			name:     "Memory Operand",
+			operand:  operand.OperandBuilder{}.Mem("EBX", "ECX", 2, 8),
+			expected: "[EBX ECX*2 +8]",
+		},
 	}
 
-	op2 := operand.OperandBuilder{}.Imm(42)
-	if op2.Serialize() != "#42" {
-		t.Errorf("Expected #42, got %s", op2.Serialize())
-	}
-
-	op3 := operand.OperandBuilder{}.Mem("EBX", "ECX", 2, 8)
-	if op3.Serialize() != "[EBX ECX*2 +8]" {
-		t.Errorf("Expected [EBX ECX*2 +8], got %s", op3.Serialize())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.operand.Serialize(); got != tt.expected {
+				t.Errorf("Expected %s, got %s", tt.expected, got)
+			}
+		})
 	}
 }
