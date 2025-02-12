@@ -1,4 +1,4 @@
-package ast
+package operand
 
 type AddressingType string
 

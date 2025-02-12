@@ -2,14 +2,15 @@ package asmdb
 
 import (
 	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/samber/lo"
 )
 
 type Options struct {
 	BitMode   ast.BitMode
 	TargetCPU ast.SupCPU
-	Operand1  ast.Operand
-	Operand2  ast.Operand
+	Operand1  operand.Operand
+	Operand2  operand.Operand
 }
 
 type Option func(*Options)

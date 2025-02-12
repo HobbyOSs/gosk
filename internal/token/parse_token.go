@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	"github.com/HobbyOSs/gosk/internal/junkjit/x86"
 	"github.com/morikuni/failure"
 )
 
@@ -94,25 +93,4 @@ func (p *ParseToken) HexAsUInt() uint {
 		log.Fatal(failure.Wrap(err))
 	}
 	return uint(i)
-}
-
-func (p *ParseToken) AsOperand() ast.Operand {
-
-	// TODO: ast.Expの型で分岐する
-	switch v := p.Data.(type) {
-	case *ast.ImmExp:
-		op, err := x86.NewX86OperandByImmExp(v)
-		if err != nil {
-			panic(fmt.Sprintf("error: failed to convert token %s", p.Data.TokenLiteral()))
-		}
-		return op
-	default:
-		panic(fmt.Sprintf("token %s should be number", p.Data.TokenLiteral()))
-	}
-
-	//operand, err := x86.NewX86Operand(p.Data.TokenLiteral())
-	//if err != nil {
-	// 	log.Fatal(failure.Wrap(err))
-	//}
-	//return operand
 }

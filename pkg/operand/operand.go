@@ -1,4 +1,4 @@
-package ast
+package operand
 
 type Operand interface {
 	AddressingType() AddressingType
