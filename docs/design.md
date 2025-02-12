@@ -15,28 +15,37 @@
 ## **2. プロジェクトのディレクトリ構成**
 ```
 .
-├── main.go             // エントリポイント
-├── asmdb/              // x86 命令データベース
-├── ast/                // AST (抽象構文木) 関連
-│   ├── ast.go          // AST の構造定義
-├── cmd/
-│   └── gosk/
-│       ├── main.go     // CLI エントリポイント
-├── frontend/           // プログラムのエントリーポイント
-├── gen/                // PEG で記述されたパーサの生成
-│   ├── grammer.peg     // PEG 構文ファイル
-├── pass1/              // AST の解析と変換
-│   ├── eval.go         // AST の評価
-├── pass2/              // 機械語生成部位
-│   ├── eval.go         // AST の評価 (後処理)
-└── test/               // e2eテスト関連
+├── /cmd/                # 各エントリポイント
+│   ├── gosk/           # アセンブラのCLI
+│   │   ├── main.go
+│   ├── codegen/        # コードジェネレータのCLI
+│   │   ├── main.go
+│
+├── /internal/           # 内部実装 (外部パッケージには非公開)
+│   ├── asmdb/          # x86 命令データベース
+│   ├── ast/            # AST (抽象構文木) 関連
+│   ├── frontend/       # プログラムのエントリーポイント
+│   ├── gen/            # PEG で記述されたパーサの生成
+│   ├── pass1/          # AST の解析と変換
+│   ├── pass2/          # AST の後処理（Ocodeで置き換え）
+│   ├── codegen/        # x86 コード生成
+│        ├── x86gen.go  # Ocode → x86 機械語変換
+│
+├── /pkg/                  # 外部公開モジュール
+│   ├── ocode/            # Ocode モジュール (中間言語の定義)
+│   │   ├── ocode.go     # Ocode 命令とオペランド定義
+│   │   ├── serialize.go # シリアライズ機能 (Ocode → テキスト)
+│   │   ├── builder.go   # ビルダーパターン
+│
+├── go.mod              # Go モジュール定義
+└── README.md           # プロジェクト概要
 ```
 
 ---
 
 ## **3. 各ディレクトリとファイルの役割**
 
-### **メインプログラム (`main.go`)**
+### **メインプログラム (`cmd/gosk/main.go`)**
 - `gosk` の CLI ツールとして動作し、アセンブラの入力を解析する。
 - PEG パーサを通じて構文解析を行い、x86 機械語へ変換。
 
@@ -58,5 +67,12 @@
 - `eval.go` : 変換後の評価処理。
 - codegeneratorをここで呼び出す予定
 
+### **`codegen/` (機械語変換関連)**
+- `x86gen.go` : OCODE を x86機械語に変換。
+
 ### **`test/` (テスト関連)**
 - `pass<N>_test.go` : e2eテストをここに追加する
+
+### **`ocode/` (OCODE 変換関連)**
+- `ocode.go` : OCODE のデータ構造と命令セットの定義。
+- `generator.go` : AST から OCODE への変換。
