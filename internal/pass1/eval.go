@@ -1,8 +1,8 @@
 package pass1
 
 import (
-	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 

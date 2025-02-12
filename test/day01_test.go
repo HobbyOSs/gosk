@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/HobbyOSs/gosk/frontend"
-	"github.com/HobbyOSs/gosk/gen"
+	"github.com/HobbyOSs/gosk/internal/frontend"
+	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/comail/colog"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/suite"

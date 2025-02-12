@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HobbyOSs/gosk/junkjit"
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/junkjit"
+	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/morikuni/failure"
 )
 

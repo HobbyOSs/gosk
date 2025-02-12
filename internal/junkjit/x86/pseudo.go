@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"log"
 
-	"github.com/HobbyOSs/gosk/junkjit"
+	"github.com/HobbyOSs/gosk/internal/junkjit"
 	"github.com/morikuni/failure"
 )
 

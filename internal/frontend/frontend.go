@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/junkjit"
-	"github.com/HobbyOSs/gosk/junkjit/x86"
-	"github.com/HobbyOSs/gosk/pass1"
-	"github.com/HobbyOSs/gosk/pass2"
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/junkjit"
+	"github.com/HobbyOSs/gosk/internal/junkjit/x86"
+	"github.com/HobbyOSs/gosk/internal/pass1"
+	"github.com/HobbyOSs/gosk/internal/pass2"
+	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 

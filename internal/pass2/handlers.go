@@ -3,8 +3,8 @@ package pass2
 import (
 	"log"
 
-	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/morikuni/failure"
 	"github.com/samber/lo"
 )

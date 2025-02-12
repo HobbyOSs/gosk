@@ -3,7 +3,7 @@ package pass1
 import (
 	"log"
 
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/token"
 )
 
 func processCalcJcc(env *Pass1, tokens []*token.ParseToken) {

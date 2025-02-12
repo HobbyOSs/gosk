@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/HobbyOSs/gosk/frontend"
-	"github.com/HobbyOSs/gosk/gen"
+	"github.com/HobbyOSs/gosk/internal/frontend"
+	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/comail/colog"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/transform"

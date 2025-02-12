@@ -1,3 +1,0 @@
-[submodule "asmdb/x86reference"]
-	path = asmdb/x86reference
-	url = https://github.com/Barebit/x86reference.git

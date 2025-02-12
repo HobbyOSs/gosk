@@ -3,7 +3,7 @@ package x86
 import (
 	"regexp"
 
-	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/internal/ast"
 )
 
 type X86Operand struct {

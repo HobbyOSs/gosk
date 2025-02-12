@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/gen"
-	"github.com/HobbyOSs/gosk/token"
+	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/gen"
+	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/stretchr/testify/assert"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )

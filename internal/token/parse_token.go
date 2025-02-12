@@ -5,8 +5,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/HobbyOSs/gosk/ast"
-	"github.com/HobbyOSs/gosk/junkjit/x86"
+	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/junkjit/x86"
 	"github.com/morikuni/failure"
 )
 

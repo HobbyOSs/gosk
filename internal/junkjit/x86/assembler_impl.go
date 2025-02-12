@@ -1,6 +1,6 @@
 package x86
 
-import "github.com/HobbyOSs/gosk/junkjit"
+import "github.com/HobbyOSs/gosk/internal/junkjit"
 
 type X86Assembler struct {
 	Code *junkjit.CodeHolder

@@ -1,7 +1,7 @@
 package asmdb
 
 import (
-	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/samber/lo"
 )
 

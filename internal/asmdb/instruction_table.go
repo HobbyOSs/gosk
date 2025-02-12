@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"log"
 
-	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/goccy/go-yaml"
 )
 

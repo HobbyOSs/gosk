@@ -2,7 +2,7 @@
 package x86
 
 import (
-	"github.com/HobbyOSs/gosk/asmdb"
+	"github.com/HobbyOSs/gosk/internal/asmdb"
 
 	"encoding/hex"
 	"fmt"

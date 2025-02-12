@@ -3,7 +3,7 @@ package x86
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/ast"
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )
