@@ -31,5 +31,5 @@ func (m MemoryOperand) FromString(text string) Operand {
 	var base, index string
 	var scale, displacement int
 	fmt.Sscanf(text, "[%s %s*%d +%d]", &base, &index, &scale, &displacement)
-	return MemoryOperand{BaseOperand: BaseOperand{internal: text}, base: base, index: index, scale: scale, displacement: displacement}
+	return MemoryOperand{BaseOperand: BaseOperand{Internal: text}, base: base, index: index, scale: scale, displacement: displacement}
 }

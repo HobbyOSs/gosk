@@ -27,5 +27,5 @@ func (i ImmediateOperand) Serialize() string {
 func (i ImmediateOperand) FromString(text string) Operand {
 	var value int
 	fmt.Sscanf(text, "#%d", &value)
-	return ImmediateOperand{BaseOperand: BaseOperand{internal: text}, value: value}
+	return ImmediateOperand{BaseOperand: BaseOperand{Internal: text}, value: value}
 }

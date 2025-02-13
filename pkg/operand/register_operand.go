@@ -6,7 +6,7 @@ type RegisterOperand struct {
 }
 
 func (r RegisterOperand) InternalString() string {
-	return r.internal
+	return r.Internal
 }
 
 func (r RegisterOperand) AddressingType() AddressingType {
@@ -22,5 +22,5 @@ func (r RegisterOperand) Serialize() string {
 }
 
 func (r RegisterOperand) FromString(text string) Operand {
-	return RegisterOperand{BaseOperand: BaseOperand{internal: text}, reg: text}
+	return RegisterOperand{BaseOperand: BaseOperand{Internal: text}, reg: text}
 }
