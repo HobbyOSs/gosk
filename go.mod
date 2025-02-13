@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
-require golang.org/x/net v0.23.0
+require golang.org/x/net v0.33.0
 
 require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
@@ -27,7 +27,7 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
@@ -36,6 +36,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
-	golang.org/x/text v0.14.0
+	golang.org/x/text v0.21.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
