@@ -15,6 +15,7 @@ require golang.org/x/net v0.23.0
 require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
 require (
+	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/goccy/go-yaml v1.11.3
 	github.com/sergi/go-diff v1.2.0
 	github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d

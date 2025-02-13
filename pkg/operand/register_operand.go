@@ -1,15 +1,20 @@
 package operand
 
 type RegisterOperand struct {
+	BaseOperand
 	reg string
 }
 
+func (r RegisterOperand) InternalString() string {
+	return r.internal
+}
+
 func (r RegisterOperand) AddressingType() AddressingType {
-	return CodeGeneralReg
+	return r.AddressingType()
 }
 
 func (r RegisterOperand) OperandType() OperandType {
-	return CodeWord
+	return r.OperandType()
 }
 
 func (r RegisterOperand) Serialize() string {
@@ -17,5 +22,5 @@ func (r RegisterOperand) Serialize() string {
 }
 
 func (r RegisterOperand) FromString(text string) Operand {
-	return RegisterOperand{reg: text}
+	return RegisterOperand{BaseOperand: BaseOperand{internal: text}, reg: text}
 }
