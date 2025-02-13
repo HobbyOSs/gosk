@@ -1,23 +1,49 @@
 package operand
 
 type BaseOperand struct {
-	internal string
+	Internal string
 }
 
 func (b *BaseOperand) AddressingType() AddressingType {
 	parser := getParser()
-	if _, err := parser.ParseString("", b.internal); err == nil {
-		// TODO
-		return CodeGeneralReg
+	parsed, err := parser.ParseString("", b.Internal)
+	if err == nil {
+		switch {
+		case parsed.Reg != "":
+			return CodeGeneralReg
+		case parsed.Mem != "":
+			return CodeModRMAddress
+		case parsed.Imm != "":
+			return CodeImmediate
+		case parsed.Seg != "":
+			return CodeSregField
+		case parsed.Rel != "":
+			return CodeRelativeOffset
+		case parsed.Addr != "":
+			return CodeDirectAddress
+		}
 	}
-	return ""
+	return AddressingType("unknown")
 }
 
 func (b *BaseOperand) OperandType() OperandType {
 	parser := getParser()
-	if _, err := parser.ParseString("", b.internal); err == nil {
-		// TODO
-		return CodeDoubleword
+	parsed, err := parser.ParseString("", b.Internal)
+	if err == nil {
+		switch {
+		case parsed.Reg != "":
+			return CodeDoubleword
+		case parsed.Mem != "":
+			return CodeDoubleword
+		case parsed.Imm != "":
+			return CodeDoublewordInteger
+		case parsed.Seg != "":
+			return CodeWord
+		case parsed.Rel != "":
+			return CodeWord
+		case parsed.Addr != "":
+			return CodeDoubleword
+		}
 	}
-	return ""
+	return OperandType("unknown")
 }
