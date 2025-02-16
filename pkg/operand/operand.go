@@ -7,13 +7,27 @@ import (
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
+type SegmentedReg struct {
+	Seg   string `@Seg`
+	Colon string `@Colon`
+	Reg   string `@Reg`
+}
+
+type SegmentedMem struct {
+	Seg   string `@Seg`
+	Colon string `@Colon`
+	Mem   string `@Mem`
+}
+
 type ParsedOperand struct {
-	Reg  string `@Reg`
-	Mem  string `| @Mem`
-	Imm  string `| @Imm`
-	Seg  string `| @Seg`
-	Rel  string `| @Rel`
-	Addr string `| @Addr`
+	SegReg *SegmentedReg `@@`
+	SegMem *SegmentedMem `| @@`
+	Reg    string        `| @Reg`
+	Addr   string        `| @Addr`
+	Mem    string        `| @Mem`
+	Imm    string        `| @Imm`
+	Seg    string        `| @Seg`
+	Rel    string        `| @Rel`
 }
 
 type Operand interface {
@@ -27,12 +41,13 @@ type Operand interface {
 type OperandBuilder struct{}
 
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
-	{Name: "Reg", Pattern: `\b(R[ABCD]X|E[ABCD]X|AL|CL|DL|BL|AH|CH|DH|BH|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
+	{Name: "Colon", Pattern: `:`},
+	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
+	{Name: "Reg", Pattern: `\b(R?[ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
+	{Name: "Addr", Pattern: `\[(?: (?: (?:FAR\s+PTR|NEAR\s+PTR|PTR)\s+ )? \[0x[a-fA-F0-9]+\] )\]`},
 	{Name: "Mem", Pattern: `\[(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
-	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Rel", Pattern: `\b(JMP|CALL|JNZ|JE|JNE|LABEL)\s+\w+\b`},
-	{Name: "Addr", Pattern: `(?:PTR\s+\[0x[a-fA-F0-9]+\]|FAR\s+PTR\s+\[0x[a-fA-F0-9]+\]|NEAR\s+PTR\s+\[0x[a-fA-F0-9]+\])`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 })

@@ -1,5 +1,9 @@
 package operand
 
+import (
+	"strings"
+)
+
 type BaseOperand struct {
 	Internal string
 }
@@ -7,11 +11,23 @@ type BaseOperand struct {
 func (b BaseOperand) AddressingType() AddressingType {
 	parser := getParser()
 	parsed, err := parser.ParseString("", b.Internal)
+
 	if err != nil {
 		return "unknown"
 	}
 
 	switch {
+	case parsed.SegReg != nil:
+		switch parsed.SegReg.Seg {
+		case "DS":
+			return CodeMemoryAddressX
+		case "ES":
+			return CodeMemoryAddressY
+		default:
+			return CodeSregField
+		}
+	//case parsed.SegMem != nil:
+	//	return CodeModRMAddress
 	case parsed.Reg != "":
 		// Add length checks before accessing slices
 		switch {
@@ -31,15 +47,22 @@ func (b BaseOperand) AddressingType() AddressingType {
 			return CodeGeneralReg
 		}
 	case parsed.Mem != "":
+		if strings.Contains(b.Internal, "DWORD PTR") ||
+			strings.Contains(b.Internal, "XMMWORD PTR") ||
+			strings.Contains(b.Internal, "YMMWORD PTR") {
+			return CodeModRMAddress
+		}
 		return CodeModRMAddress
 	case parsed.Imm != "":
 		return CodeImmediate
-	case parsed.Seg != "":
-		return CodeSregField
 	case parsed.Rel != "":
 		return CodeRelativeOffset
 	case parsed.Addr != "":
 		return CodeDirectAddress
+	case parsed.Seg != "":
+		return CodeSregField
+	// case parsed.MemOffset != "":
+	// 	return CodeModRMAddressMoffs
 	default:
 		return "unknown"
 	}
