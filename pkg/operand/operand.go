@@ -27,12 +27,12 @@ type Operand interface {
 type OperandBuilder struct{}
 
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
-	{Name: "Reg", Pattern: `\b(R[ABCD]X|E[ABCD]X|AL|CL|DL|BL|AH|CH|DH|BH|MM[0-7]|XMM[0-9]|YMM[0-9])\b`},
-	{Name: "Mem", Pattern: `\[(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+)\]`},
+	{Name: "Reg", Pattern: `\b(R[ABCD]X|E[ABCD]X|AL|CL|DL|BL|AH|CH|DH|BH|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
+	{Name: "Mem", Pattern: `\[(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Rel", Pattern: `\b(JMP|CALL|JNZ|JE|JNE|LABEL)\s+\w+\b`},
-	{Name: "Addr", Pattern: `\[(?:0x[a-fA-F0-9]+|\d+)\]`},
+	{Name: "Addr", Pattern: `(?:PTR\s+\[0x[a-fA-F0-9]+\]|FAR\s+PTR\s+\[0x[a-fA-F0-9]+\]|NEAR\s+PTR\s+\[0x[a-fA-F0-9]+\])`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 })
