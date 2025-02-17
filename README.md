@@ -1,4 +1,4 @@
-# Gosk [![Build Status](https://travis-ci.org/hangingman/gosk.svg?branch=master)](https://travis-ci.org/hangingman/gosk)
+# Gosk ![Build Status]((https://github.com/github/HobbyOSs/gosk/actions/workflows/go.yml/badge.svg))
 
 This is a yet another assembly interpreter gosk!
 

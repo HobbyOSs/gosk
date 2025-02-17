@@ -19,15 +19,16 @@ func GenerateX86(ocodes []ocode.Ocode) []byte {
 		VS:          variantstack.NewVariantStack(),
 	}
 
+	log.Printf("debug: === ocode ===\n")
 	for _, ocode := range ocodes {
-		log.Printf("trace: %s\n", ocode)
+		log.Printf("debug: %s\n", ocode)
 		code, err := processOcode(ocode, &ctx)
 		if err != nil {
 
 		}
 		ctx.MachineCode = append(ctx.MachineCode, code...)
 	}
-
+	log.Printf("debug: === ocode ===\n")
 	return ctx.MachineCode
 }
 

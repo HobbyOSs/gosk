@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/codegen"
@@ -27,7 +28,7 @@ func NewCodegenClient() CodegenClient {
 
 // Emit メソッドの実装
 func (c *ocodeClient) Emit(line string) error {
-	// 単一行の命令を処理するロジックを実装
+	log.Printf("debug: emit %s\n", line)
 	ocode, err := parseLineToOcode(line)
 	if err != nil {
 		return err
