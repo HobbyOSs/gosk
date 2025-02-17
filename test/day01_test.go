@@ -7,7 +7,6 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/frontend"
 	"github.com/HobbyOSs/gosk/internal/gen"
-	"github.com/comail/colog"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/suite"
 )
@@ -212,16 +211,4 @@ func (s *Day01Suite) SetupTest() {
 }
 
 func (s *Day01Suite) TearDownTest() {
-}
-
-func setUpColog(debug bool) {
-	colog.Register()
-	colog.SetDefaultLevel(colog.LInfo)
-	if debug {
-		colog.SetMinLevel(colog.LDebug)
-	} else {
-		colog.SetMinLevel(colog.LInfo)
-	}
-	colog.SetFlags(log.Lshortfile)
-	colog.SetFormatter(&colog.StdFormatter{Colors: false})
 }

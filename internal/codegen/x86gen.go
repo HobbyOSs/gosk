@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/variantstack"
@@ -20,7 +20,7 @@ func GenerateX86(ocodes []ocode.Ocode) []byte {
 	}
 
 	for _, ocode := range ocodes {
-		fmt.Printf("trace: %s\n", ocode)
+		log.Printf("trace: %s\n", ocode)
 		code, err := processOcode(ocode, &ctx)
 		if err != nil {
 

@@ -2,9 +2,24 @@ package test
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
+
+	"github.com/comail/colog"
 )
+
+func setUpColog(debug bool) {
+	colog.Register()
+	colog.SetDefaultLevel(colog.LInfo)
+	if debug {
+		colog.SetMinLevel(colog.LDebug)
+	} else {
+		colog.SetMinLevel(colog.LInfo)
+	}
+	colog.SetFlags(log.Lshortfile)
+	colog.SetFormatter(&colog.StdFormatter{Colors: false})
+}
 
 // 16進数文字列をテスト用に用意するDSL
 func defineHEX(dsl []string) []byte {
