@@ -22,9 +22,7 @@ type ocodeClient struct {
 
 // NewCodegenClient は新しい CodegenClient を返す
 func NewCodegenClient() CodegenClient {
-	return &ocodeClient{
-		// フィールドの初期化
-	}
+	return &ocodeClient{}
 }
 
 // Emit メソッドの実装

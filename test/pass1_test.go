@@ -6,6 +6,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/internal/gen"
+	client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/google/go-cmp/cmp"
@@ -19,8 +20,8 @@ type Pass1Suite struct {
 	suite.Suite
 }
 
-// mapやstackの内部はgo-cmpで比較できなかった
-var IgnoreFields = []string{"Ctx", "EquMap"}
+// go-cmpで比較できない要素をここに列挙する
+var IgnoreFields = []string{"Ctx", "EquMap", "Client"}
 
 func buildImmExpFromValue(value any) *ast.ImmExp {
 	var factor ast.Factor
@@ -57,6 +58,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -70,6 +72,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -83,6 +86,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -96,6 +100,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -109,6 +114,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -122,6 +128,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -135,6 +142,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		},
 		{
@@ -150,6 +158,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         map[string]int32{"label": 0x7c00},
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
+				Client:           client.NewCodegenClient(),
 			},
 		}, /**
 		{
@@ -238,6 +247,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 				Ctx:              stack.NewStack[*token.ParseToken](100),
+				Client:           client.NewCodegenClient(),
 			}
 			pass1.Eval(prog)
 			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(*pass1, IgnoreFields...)); diff != "" {
