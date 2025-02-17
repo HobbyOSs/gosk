@@ -5,8 +5,7 @@ import (
 	"os"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	"github.com/HobbyOSs/gosk/internal/junkjit"
-	"github.com/HobbyOSs/gosk/internal/junkjit/x86"
+	client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -39,11 +38,9 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
 		Ctx:              stack.NewStack[*token.ParseToken](100),
+		Client:           client.NewCodegenClient(),
 	}
 	pass1.Eval(prog)
-
-	code := &junkjit.CodeHolder{}
-	asm := x86.NewX86Assembler(code)
 
 	pass2 := &pass2.Pass2{
 		BitMode:          pass1.BitMode,
@@ -52,11 +49,15 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		GlobalSymbolList: pass1.GlobalSymbolList,
 		ExternSymbolList: pass1.ExternSymbolList,
 		Ctx:              stack.NewStack[*token.ParseToken](100),
-		Asm:              asm,
+		Client:           pass1.Client,
 	}
-	pass2.Eval(prog)
+	code, err := pass2.Eval(prog)
+	if err != nil {
+		fmt.Printf("GOSK : failed to generate %s", err)
+		os.Exit(-1)
+	}
 
-	_, err = dstFile.Write(code.Buffer())
+	_, err = dstFile.Write(code)
 	if err != nil {
 		fmt.Printf("GOSK : can't write %s", assemblyDst)
 		os.Exit(-1)

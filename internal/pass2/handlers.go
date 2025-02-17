@@ -18,11 +18,7 @@ var (
 func init() {
 	// 疑似命令
 	opcodeEvalFns["ALIGNB"] = processALIGNB
-	opcodeEvalFns["DB"] = processDB
-	opcodeEvalFns["DD"] = processDD
-	opcodeEvalFns["DW"] = processDW
 	opcodeEvalFns["ORG"] = processORG
-	opcodeEvalFns["RESB"] = processRESB
 }
 
 func popAndPush(env *Pass2) {

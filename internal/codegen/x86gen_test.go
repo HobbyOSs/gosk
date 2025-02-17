@@ -33,6 +33,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x78, 0x56, 0x34, 0x12},
 		},
+		{
+			name: "RESB",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpRESB, Operands: []string{"3"}},
+			},
+			expected: []byte{0x00, 0x00, 0x00},
+		},
 	}
 
 	for _, tt := range tests {
