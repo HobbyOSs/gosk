@@ -93,8 +93,7 @@ func processRESB(env *Pass1, tokens []*token.ParseToken) {
 		if err != nil {
 			log.Fatal(failure.Wrap(err))
 		}
-		needToAppendSize := reserveSize - int64(env.LOC)
-		env.LOC += int32(needToAppendSize)
+		env.LOC += int32(reserveSize)
 		env.Client.Emit(fmt.Sprintf("RESB %d-$", reserveSize))
 		return
 	}
