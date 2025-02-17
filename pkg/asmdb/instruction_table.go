@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"log"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/goccy/go-yaml"
 )
 
@@ -36,14 +35,6 @@ type Instruction struct {
 	Operand2    *Operand `yaml:"op2,omitempty"`
 	Proc        string   `yaml:"proc"`
 	Description string   `yaml:"desc,omitempty"`
-}
-
-func (i Instruction) IsSupported(targetCPU ast.SupCPU) bool {
-	supportCPURange, ok := ast.NewSupCPUByCode(i.Proc)
-	if !ok {
-		return false
-	}
-	return supportCPURange.IsSupported(targetCPU)
 }
 
 func init() {

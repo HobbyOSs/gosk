@@ -1,3 +1,5 @@
-[submodule "internal/asmdb/x86reference"]
-	path = internal/asmdb/x86reference
+[submodule "pkg/asmdb/x86reference"]
+	path = pkg/asmdb/x86reference
 	url = https://github.com/Barebit/x86reference.git
+[submodule "https://github.com/mazegen/x86reference.git"]
+	url = pkg/asmdb/x86reference
