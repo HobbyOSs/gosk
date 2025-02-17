@@ -8,6 +8,7 @@ const (
 	OpDB                        // DB n_1,n_2,n_3,..,n_k
 	OpDW                        // DW n_1,n_2,n_3,..,n_k
 	OpDD                        // DD n_1,n_2,n_3,..,n_k
+	OpRESB                      // RESB n または RESB n-$
 	OpADD                       // ADD
 	OpAAA                       // AAA
 	OpAAD                       // AAD
