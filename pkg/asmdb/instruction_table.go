@@ -1,26 +1,113 @@
 package asmdb
 
 import (
-	_ "embed"
 	"bytes"
 	"compress/gzip"
+	_ "embed"
+	"encoding/json"
 	"io"
 	"log"
-
-	"github.com/tidwall/gjson"
 )
 
-	//go:embed json-x86-64/x86_64.json.gz
-	var compressedJSON []byte
+//go:embed json-x86-64/x86_64.json.gz
+var compressedJSON []byte
 
-type Instruction struct {
-	Mnemonic    string   `yaml:"mnem"`
-	Opcode      string   `yaml:"opcd"`
-	Proc        string   `yaml:"proc"`
-	Description string   `yaml:"desc,omitempty"`
+type Isa struct {
+	ID string `json:"id"`
 }
 
-var instructions []Instruction
+type DataOffset struct {
+	Size  int    `json:"size"`
+	Value string `json:"value"`
+}
+
+type CodeOffset struct {
+	Size  int    `json:"size"`
+	Value string `json:"value"`
+}
+
+type Prefix struct {
+	Mandatory bool   `json:"mandatory"`
+	Byte      string `json:"byte"`
+}
+
+type Rex struct {
+	Mandatory bool    `json:"mandatory"`
+	W         *string `json:"W,omitempty"`
+	R         *string `json:"R,omitempty"`
+	B         *string `json:"B,omitempty"`
+	X         *string `json:"X,omitempty"`
+}
+
+type Vex struct {
+	Mmmmm *string `json:"mmmmm,omitempty"`
+	Pp    *string `json:"pp,omitempty"`
+	W     *string `json:"W,omitempty"`
+	L     *string `json:"L,omitempty"`
+	R     *string `json:"R,omitempty"`
+	X     *string `json:"X,omitempty"`
+}
+
+type Modrm struct {
+	Mode string `json:"mode"`
+	Rm   string `json:"rm"`
+	Reg  string `json:"reg"`
+}
+
+type Operand struct {
+	Type         string `json:"type"`
+	Input        *bool  `json:"input,omitempty"`
+	Output       *bool  `json:"output,omitempty"`
+	ExtendedSize *int   `json:"extended_size,omitempty"`
+}
+
+type ImplicitOperand struct {
+	ID     string `json:"id"`
+	Input  *bool  `json:"input,omitempty"`
+	Output *bool  `json:"output,omitempty"`
+}
+
+type Immediate struct {
+	Size  int    `json:"size"`
+	Value string `json:"value"`
+}
+
+type Opcode struct {
+	Byte   string  `json:"byte"`
+	Addend *string `json:"addend,omitempty"`
+}
+
+type Encoding struct {
+	Opcode     Opcode      `json:"opcode"`
+	Prefix     *Prefix     `json:"prefix,omitempty"`
+	REX        *Rex        `json:"REX,omitempty"`
+	VEX        *Vex        `json:"VEX,omitempty"`
+	ModRM      *Modrm      `json:"ModRM,omitempty"`
+	Immediate  *Immediate  `json:"immediate,omitempty"`
+	DataOffset *DataOffset `json:"data_offset,omitempty"`
+	CodeOffset *CodeOffset `json:"code_offset,omitempty"`
+}
+
+type InstructionForm struct {
+	Encodings        []Encoding         `json:"encodings"`
+	Operands         *[]Operand         `json:"operands,omitempty"`
+	ImplicitOperands *[]ImplicitOperand `json:"implicit_operands,omitempty"`
+	XmmMode          *string            `json:"xmm_mode,omitempty"`
+	CancellingInputs *bool              `json:"cancelling_inputs,omitempty"`
+	Isa              *[]Isa             `json:"isa,omitempty"`
+}
+
+type Instruction struct {
+	Summary string            `json:"summary"`
+	Forms   []InstructionForm `json:"forms"`
+}
+
+type InstructionData struct {
+	InstructionSet string                 `json:"instruction_set"`
+	Instructions   map[string]Instruction `json:"instructions"`
+}
+
+var instructionData InstructionData
 
 func decompressGzip(data []byte) ([]byte, error) {
 	reader, err := gzip.NewReader(bytes.NewReader(data))
@@ -37,17 +124,12 @@ func init() {
 		log.Fatalf("Failed to decompress JSON: %v", err)
 	}
 
-	gjson.ParseBytes(data).ForEach(func(key, value gjson.Result) bool {
-		instructions = append(instructions, Instruction{
-			Mnemonic:    value.Get("mnem").String(),
-			Opcode:      value.Get("opcd").String(),
-			Proc:        value.Get("proc").String(),
-			Description: value.Get("desc").String(),
-		})
-		return true
-	})
+	// Unmarshal the JSON data into the instructions map
+	if err := json.Unmarshal(data, &instructionData); err != nil {
+		log.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
 }
 
-func X86Instructions() []Instruction {
-	return instructions
+func X86Instructions() map[string]Instruction {
+	return instructionData.Instructions
 }

@@ -10,5 +10,10 @@ func TestX86Instructions(t *testing.T) {
 	instrs := X86Instructions()
 	assert.NotNil(t, instrs)
 	assert.NotEmpty(t, instrs)
-	//assert.NotEmpty(t, instrs[0].Mnemonic)
+
+	if instr, exists := instrs["MOV"]; exists {
+		assert.NotEmpty(t, instr.Summary)
+		assert.NotEmpty(t, instr.Forms)
+		assert.NotEmpty(t, instr.Forms[0].Encodings)
+	}
 }
