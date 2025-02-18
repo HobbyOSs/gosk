@@ -17,3 +17,24 @@ func TestX86Instructions(t *testing.T) {
 		assert.NotEmpty(t, instr.Forms[0].Encodings)
 	}
 }
+
+func TestGetInstructionByOpcode(t *testing.T) {
+	// Test for a known opcode like "NOP"
+	instr, err := GetInstructionByOpcode("NOP")
+	assert.NoError(t, err)
+	assert.NotNil(t, instr)
+	assert.NotEmpty(t, instr.Summary)
+	assert.NotEmpty(t, instr.Forms)
+
+	// Test for another known opcode like "MOV"
+	instr, err = GetInstructionByOpcode("MOV")
+	assert.NoError(t, err)
+	assert.NotNil(t, instr)
+	assert.NotEmpty(t, instr.Summary)
+	assert.NotEmpty(t, instr.Forms)
+
+	// Test for a non-existent opcode
+	instr, err = GetInstructionByOpcode("NONEXISTENT")
+	assert.NoError(t, err)
+	assert.Nil(t, instr)
+}

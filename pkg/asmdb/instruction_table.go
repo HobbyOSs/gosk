@@ -130,6 +130,14 @@ func init() {
 	}
 }
 
+func GetInstructionByOpcode(opcode string) (*Instruction, error) {
+	instr, exists := instructionData.Instructions[opcode]
+	if !exists {
+		return nil, nil
+	}
+	return &instr, nil
+}
+
 func X86Instructions() map[string]Instruction {
 	return instructionData.Instructions
 }
