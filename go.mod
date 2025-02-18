@@ -4,7 +4,6 @@ go 1.22.0
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/harakeishi/gats v0.0.0-20230219034858-055bc915842a
 	github.com/morikuni/failure v1.1.2
 	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.9.0
@@ -17,6 +16,7 @@ require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 require (
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/goccy/go-yaml v1.11.3
+	github.com/harakeishi/gats v0.0.0-20230219034858-055bc915842a
 	github.com/sergi/go-diff v1.2.0
 	github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d
 )

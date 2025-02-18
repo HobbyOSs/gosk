@@ -9,6 +9,7 @@ const (
 	OpDW                        // DW n_1,n_2,n_3,..,n_k
 	OpDD                        // DD n_1,n_2,n_3,..,n_k
 	OpRESB                      // RESB n または RESB n-$
+	OpMOV                       // MOV dst, src
 	OpADD                       // ADD
 	OpAAA                       // AAA
 	OpAAD                       // AAD

@@ -38,6 +38,9 @@ func init() {
 		},
 	)
 	opcodeEvalFns = lo.Assign(opcodeEvalFns, jmpFns)
+
+	// MOV
+	opcodeEvalFns["MOV"] = processMOV
 }
 
 func popAndPush(env *Pass1) {
