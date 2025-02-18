@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestX86Reference(t *testing.T) {
-	ref := X86Reference()
-	assert.NotNil(t, ref)
-	t.Skip()
+func TestX86Instructions(t *testing.T) {
+	instrs := X86Instructions()
+	assert.NotNil(t, instrs)
+	assert.NotEmpty(t, instrs)
+	//assert.NotEmpty(t, instrs[0].Mnemonic)
 }

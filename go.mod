@@ -15,20 +15,17 @@ require github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 
 require (
 	github.com/alecthomas/participle/v2 v2.1.1
-	github.com/goccy/go-yaml v1.11.3
 	github.com/harakeishi/gats v0.0.0-20230219034858-055bc915842a
 	github.com/sergi/go-diff v1.2.0
+	github.com/tidwall/gjson v1.18.0
 	github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d
 )
 
 require (
-	github.com/fatih/color v1.13.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
