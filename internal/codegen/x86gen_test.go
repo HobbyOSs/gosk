@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/HobbyOSs/gosk/pkg/ocode"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateX86(t *testing.T) {
@@ -45,9 +46,7 @@ func TestGenerateX86(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := GenerateX86(tt.ocodes)
-			if !equal(result, tt.expected) {
-				t.Errorf("got %v, expected %v", result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
 		})
 	}
 }

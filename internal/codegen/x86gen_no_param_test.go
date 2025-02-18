@@ -4,44 +4,15 @@ import (
 	"testing"
 
 	"github.com/HobbyOSs/gosk/pkg/ocode"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateX86NoParam(t *testing.T) {
-	tests := []struct {
-		name     string
-		ocode    ocode.Ocode
-		expected []byte
-	}{
-		{
-			name:     "Single Opcode NOP",
-			ocode:    ocode.Ocode{Kind: ocode.OpNOP, Operands: nil},
-			expected: []byte{0x90},
-		},
-		{
-			name:     "Single Opcode HLT",
-			ocode:    ocode.Ocode{Kind: ocode.OpHLT, Operands: nil},
-			expected: []byte{0xF4},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := GenerateX86NoParam(tt.ocode)
-			if !equal(result, tt.expected) {
-				t.Errorf("got %v, expected %v", result, tt.expected)
-			}
+	for kind, expected := range opcodeMap {
+		t.Run(kind.String(), func(t *testing.T) {
+			ocode := ocode.Ocode{Kind: kind, Operands: nil}
+			result := GenerateX86NoParam(ocode)
+			assert.Equal(t, []byte{expected}, result, "Opcode %s should generate correct binary", kind.String())
 		})
 	}
-}
-
-func equal(a, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
