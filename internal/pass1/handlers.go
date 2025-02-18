@@ -39,6 +39,32 @@ func init() {
 	)
 	opcodeEvalFns = lo.Assign(opcodeEvalFns, jmpFns)
 
+	// No-parameter instructions
+	noParamOps := []string{
+		"AAA", "AAD", "AAM", "AAS", "CBW", "CDQ", "CDQE", "CLC", "CLD", "CLI", "CLTS", "CMC",
+		"CPUID", "CQO", "CS", "CWD", "CWDE", "DAA", "DAS", "DIV", "DS", "EMMS", "ENTER", "ES",
+		"F2XM1", "FABS", "FADDP", "FCHS", "FCLEX", "FCOM", "FCOMP", "FCOMPP", "FCOS", "FDECSTP",
+		"FDISI", "FDIVP", "FDIVRP", "FENI", "FINCSTP", "FINIT", "FLD1", "FLDL2E", "FLDL2T",
+		"FLDLG2", "FLDLN2", "FLDPI", "FLDZ", "FMULP", "FNCLEX", "FNDISI", "FNENI", "FNINIT",
+		"FNOP", "FNSETPM", "FPATAN", "FPREM", "FPREM1", "FPTAN", "FRNDINT", "FRSTOR", "FS",
+		"FSCALE", "FSETPM", "FSIN", "FSINCOS", "FSQRT", "FSUBP", "FSUBRP", "FTST", "FUCOM",
+		"FUCOMP", "FUCOMPP", "FXAM", "FXCH", "FXRSTOR", "FXTRACT", "FYL2X", "FYL2XP1", "GETSEC",
+		"GS", "HLT", "ICEBP", "IDIV", "IMUL", "INTO", "INVD", "IRET", "IRETD", "IRETQ", "JMPE",
+		"LAHF", "LEAVE", "LFENCE", "LOADALL", "LOCK", "MFENCE", "MONITOR", "MUL", "MWAIT", "NOP",
+		"PAUSE", "POPA", "POPAD", "POPF", "POPFD", "POPFQ", "PUSHA", "PUSHAD", "PUSHF", "PUSHFD",
+		"PUSHFQ", "RDMSR", "RDPMC", "RDTSC", "RDTSCP", "REP", "REPE", "REPNE", "RETF", "RETN",
+		"RSM", "SAHF", "SETALC", "SFENCE", "SS", "STC", "STD", "STI", "SWAPGS", "SYSCALL",
+		"SYSENTER", "SYSEXIT", "SYSRET", "TAKEN", "UD2", "VMCALL", "VMLAUNCH", "VMRESUME",
+		"VMXOFF", "WAIT", "WBINVD", "WRMSR", "XGETBV", "XRSTOR", "XSETBV",
+	}
+	noParamFns := lo.SliceToMap(
+		noParamOps,
+		func(op string) (string, opcodeEvalFn) {
+			return op, processNoParam
+		},
+	)
+	opcodeEvalFns = lo.Assign(opcodeEvalFns, noParamFns)
+
 	// MOV
 	opcodeEvalFns["MOV"] = processMOV
 }
@@ -122,6 +148,24 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}
 
 		evalOpcodeFn(env, vOperands)
+
+	case *ast.OpcodeStmt:
+		log.Println("trace: opcode stmt handler!!!")
+		TraverseAST(n.Opcode, env)
+		vOpcode := pop(env)
+
+		if vOpcode.Data == nil {
+			log.Fatal("error: opcode is invalid")
+		}
+
+		opcode := vOpcode.AsString()
+		evalOpcodeFn := opcodeEvalFns[opcode]
+		if evalOpcodeFn == nil {
+			log.Fatal("error: not registered opcode process function; ", opcode)
+		}
+
+		evalOpcodeFn(env, nil)
+		env.Client.Emit(opcode) // opcodeFnの中で実行できないので
 
 	case *ast.ExportSymStmt:
 		log.Println("trace: export sym stmt handler!!!")

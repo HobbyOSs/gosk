@@ -107,6 +107,14 @@ func NewDeclareStmt(baseStatement BaseStatement, id *IdentFactor, value Exp) *De
 	}
 }
 
+// NewOpcodeStmt Create a new OpcodeStmt
+func NewOpcodeStmt(baseStatement BaseStatement, opcode *IdentFactor) *OpcodeStmt {
+	return &OpcodeStmt{
+		BaseStatement: baseStatement,
+		Opcode:        opcode,
+	}
+}
+
 // NewLabelStmt Create a new LabelStmt
 func NewLabelStmt(baseStatement BaseStatement, label *IdentFactor) *LabelStmt {
 	return &LabelStmt{

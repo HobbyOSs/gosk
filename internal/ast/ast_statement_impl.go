@@ -13,6 +13,17 @@ type DeclareStmt struct {
 	Value Exp // interfaceはポインタにしない
 }
 
+//go:generate newc
+type OpcodeStmt struct {
+	BaseStatement
+	Opcode *IdentFactor
+}
+
+func (os OpcodeStmt) statementNode() {}
+func (os OpcodeStmt) TokenLiteral() string {
+	return os.Opcode.TokenLiteral()
+}
+
 func (d DeclareStmt) statementNode() {}
 func (d DeclareStmt) TokenLiteral() string {
 	return d.Id.TokenLiteral() + " EQU " + d.Value.TokenLiteral()
