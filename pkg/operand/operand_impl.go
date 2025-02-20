@@ -15,17 +15,87 @@ func (b *OperandImpl) OperandType() OperandType {
 	if err == nil {
 		switch {
 		case parsed.Reg != "":
-			return CodeDoubleword
+			// Determine register size based on name
+			switch {
+			case len(parsed.Reg) >= 3 && parsed.Reg[0] == 'R': // RAX, RBX etc
+				return CodeR32
+			case len(parsed.Reg) >= 3 && parsed.Reg[0] == 'E': // EAX, EBX etc
+				return CodeR32
+			case len(parsed.Reg) == 2 && parsed.Reg[1] == 'L': // AL, BL etc
+				return CodeR8
+			case len(parsed.Reg) == 2 && parsed.Reg[1] == 'X': // AX, BX etc
+				return CodeR16
+			case len(parsed.Reg) >= 3 && parsed.Reg[:3] == "XMM":
+				return CodeXMM
+			case len(parsed.Reg) >= 3 && parsed.Reg[:3] == "YMM":
+				return CodeYMM
+			case len(parsed.Reg) >= 3 && parsed.Reg[:3] == "ZMM":
+				return CodeZMM
+			case len(parsed.Reg) >= 2 && parsed.Reg[:2] == "MM":
+				return CodeMM
+			case len(parsed.Reg) >= 2 && parsed.Reg[:2] == "CR":
+				return CodeK
+			case len(parsed.Reg) >= 2 && parsed.Reg[:2] == "DR":
+				return CodeK
+			default:
+				return CodeR32
+			}
 		case parsed.Mem != "":
-			return CodeDoubleword
+			// Determine memory operand size based on prefix
+			switch {
+			case len(parsed.Mem) >= 5 && parsed.Mem[:5] == "BYTE ":
+				return CodeM8
+			case len(parsed.Mem) >= 6 && parsed.Mem[:6] == "WORD ":
+				return CodeM16
+			case len(parsed.Mem) >= 7 && parsed.Mem[:7] == "DWORD ":
+				return CodeM32
+			case len(parsed.Mem) >= 7 && parsed.Mem[:7] == "QWORD ":
+				return CodeM64
+			case len(parsed.Mem) >= 8 && parsed.Mem[:8] == "XMMWORD":
+				return CodeM128
+			case len(parsed.Mem) >= 8 && parsed.Mem[:8] == "YMMWORD":
+				return CodeM256
+			case len(parsed.Mem) >= 8 && parsed.Mem[:8] == "ZMMWORD":
+				return CodeM512
+			default:
+				return CodeM32
+			}
 		case parsed.Imm != "":
-			return CodeDoublewordInteger
+			// Determine immediate size based on value
+			val := parsed.Imm
+			if len(val) > 1 && val[:2] == "0x" {
+				hexLen := len(val) - 2
+				switch {
+				case hexLen <= 2:
+					return CodeIMM8
+				case hexLen <= 4:
+					return CodeIMM16
+				case hexLen <= 8:
+					return CodeIMM32
+				default:
+					return CodeIMM32
+				}
+			} else {
+				// Decimal immediate
+				num := val
+				if num[0] == '-' {
+					num = num[1:]
+				}
+				switch {
+				case len(num) <= 3 && num <= "127":
+					return CodeIMM8
+				case len(num) <= 5 && num <= "32767":
+					return CodeIMM16
+				default:
+					return CodeIMM32
+				}
+			}
 		case parsed.Seg != "":
-			return CodeWord
+			return CodeR16
 		case parsed.Rel != "":
-			return CodeWord
+			return CodeREL32
 		case parsed.Addr != "":
-			return CodeDoubleword
+			return CodeM32
 		}
 	}
 	return OperandType("unknown")
