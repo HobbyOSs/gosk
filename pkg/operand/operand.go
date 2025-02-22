@@ -6,6 +6,18 @@ type SegmentedReg struct {
 	Reg   string `@Reg`
 }
 
+func equalOperandTypes(a, b []OperandType) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 type SegmentedMem struct {
 	Seg   string `@Seg`
 	Colon string `@Colon`
@@ -23,11 +35,11 @@ type ParsedOperand struct {
 	Rel    string        `| @Rel`
 }
 
-type Operand interface {
+type Operands interface {
 	InternalString() string
-	OperandType() OperandType
+	OperandTypes() []OperandType
 	Serialize() string
-	FromString(text string) Operand
+	FromString(text string) Operands
 }
 
 type OperandBuilder struct{}
