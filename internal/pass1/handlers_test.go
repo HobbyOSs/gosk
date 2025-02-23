@@ -2,45 +2,30 @@ package pass1
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
-func buildImmExpFromValue(value any) *ast.ImmExp {
-	var factor ast.Factor
-	switch v := value.(type) {
-	case int:
-		factor = &ast.NumberFactor{BaseFactor: ast.BaseFactor{}, Value: v}
-	case string:
-		if strings.HasPrefix(v, "0x") {
-			factor = &ast.HexFactor{BaseFactor: ast.BaseFactor{}, Value: v}
-		} else if strings.HasPrefix(v, "'") && strings.HasSuffix(v, "'") {
-			factor = &ast.CharFactor{BaseFactor: ast.BaseFactor{}, Value: v[1 : len(v)-1]}
-		} else if strings.HasPrefix(v, `"`) && strings.HasSuffix(v, `"`) {
-			factor = &ast.StringFactor{BaseFactor: ast.BaseFactor{}, Value: v[1 : len(v)-1]}
-		} else {
-			factor = &ast.IdentFactor{BaseFactor: ast.BaseFactor{}, Value: v}
-		}
-	}
-
-	return &ast.ImmExp{Factor: factor}
+type Pass1HandlersSuite struct {
+	suite.Suite
 }
 
-func buildStack(tokens []*token.ParseToken) *stack.Stack[*token.ParseToken] {
-	stack := stack.NewStack[*token.ParseToken](10)
-	for _, t := range tokens {
-		stack.Push(t)
-	}
-	return stack
+func TestPass1HandlersSuite(t *testing.T) {
+	suite.Run(t, new(Pass1HandlersSuite))
 }
 
-func TestAddExp(t *testing.T) {
+func (s *Pass1HandlersSuite) SetupSuite() {
+	setUpColog(colog.LDebug)
+}
+
+func (s *Pass1HandlersSuite) TestAddExp() {
 	tests := []struct {
 		name string
 		text string
@@ -135,7 +120,7 @@ func TestAddExp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.T().Run(tt.name, func(t *testing.T) {
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -160,7 +145,7 @@ func TestAddExp(t *testing.T) {
 	}
 }
 
-func TestMultExp(t *testing.T) {
+func (s *Pass1HandlersSuite) TestMultExp() {
 	tests := []struct {
 		name string
 		text string
@@ -206,7 +191,7 @@ func TestMultExp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.T().Run(tt.name, func(t *testing.T) {
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("MultExp"))
 			if !assert.NoError(t, err) {
 				t.FailNow()

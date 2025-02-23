@@ -8,17 +8,14 @@ import (
 )
 
 type Pass1 struct {
-	// LOC(location of counter)
-	LOC     int32
-	BitMode ast.BitMode
-	EquMap  map[string]*token.ParseToken
-	// Pass1のシンボルテーブル
-	SymTable         map[string]int32
+	LOC              int32 // LOC(location of counter)
+	BitMode          ast.BitMode
+	EquMap           map[string]*token.ParseToken
+	SymTable         map[string]int32 // Pass1のシンボルテーブル
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
-	// 中間言語
-	Client client.CodegenClient
+	Client           client.CodegenClient // 中間言語
 }
 
 func (p *Pass1) Eval(program ast.Prog) {
