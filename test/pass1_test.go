@@ -54,7 +54,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0,
-				BitMode:          ast.ID_32BIT_MODE,
+				BitMode:          ast.MODE_32BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -68,7 +68,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			map[string]*token.ParseToken{"CYLS": token.NewParseToken(token.TTNumber, buildImmExpFromValue(10))},
 			&pass1.Pass1{
 				LOC:              0,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -82,7 +82,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              1,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -96,7 +96,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              11,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -110,7 +110,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7c00,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -124,7 +124,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              18,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -138,7 +138,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7dfe,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -154,7 +154,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7c00,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				SymTable:         map[string]int32{"label": 0x7c00},
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -217,7 +217,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:     31860,
-				BitMode: ast.ID_16BIT_MODE,
+				BitMode: ast.MODE_16BIT,
 				SymTable: map[string]int32{
 					"entry":   31824,
 					"putloop": 31839,
@@ -241,7 +241,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			// pass1のEvalを実行
 			pass1 := &pass1.Pass1{
 				LOC:              0,
-				BitMode:          ast.ID_16BIT_MODE,
+				BitMode:          ast.MODE_16BIT,
 				EquMap:           make(map[string]*token.ParseToken, 0),
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
