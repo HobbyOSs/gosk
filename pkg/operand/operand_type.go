@@ -32,6 +32,7 @@ const (
 	CodeZMMK        OperandType = "zmm{k}"
 	CodeZMMKZ       OperandType = "zmm{k}{z}"
 	CodeK           OperandType = "k"
+	CodeCR          OperandType = "cr"
 	CodeKK          OperandType = "k{k}"
 	CodeM           OperandType = "m"
 	CodeM8          OperandType = "m8"
@@ -71,6 +72,8 @@ const (
 	CodeVM64ZK      OperandType = "vm64z{k}"
 	CodeSAE         OperandType = "{sae}"
 	CodeER          OperandType = "{er}"
+	CodeTR          OperandType = "tr"
+	CodeDR          OperandType = "dr"
 )
 
 var typeMap = map[string]OperandType{
@@ -140,6 +143,9 @@ var typeMap = map[string]OperandType{
 	"vm64z{k}":     CodeVM64ZK,
 	"{sae}":        CodeSAE,
 	"{er}":         CodeER,
+	"cr":           CodeCR,
+	"tr":           CodeTR,
+	"dr":           CodeDR,
 }
 
 func (ot OperandType) String() string {

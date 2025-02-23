@@ -75,9 +75,11 @@ func getRegisterType(reg string) OperandType {
 	case len(reg) >= 2 && reg[:2] == "MM":
 		return CodeMM
 	case len(reg) >= 2 && reg[:2] == "CR":
-		return CodeK
+		return CodeCR
 	case len(reg) >= 2 && reg[:2] == "DR":
-		return CodeK
+		return CodeDR
+	case len(reg) >= 2 && reg[:2] == "TR":
+		return CodeTR
 	default:
 		return CodeR32
 	}
