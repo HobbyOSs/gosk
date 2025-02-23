@@ -13,6 +13,7 @@ const (
 	CodeXMM0        OperandType = "xmm0"
 	CodeREL8        OperandType = "rel8"
 	CodeREL32       OperandType = "rel32"
+	CodeIMM         OperandType = "imm"
 	CodeIMM4        OperandType = "imm4"
 	CodeIMM8        OperandType = "imm8"
 	CodeIMM16       OperandType = "imm16"
