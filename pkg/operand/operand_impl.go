@@ -21,7 +21,6 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		switch {
 		case parsed.SegMem != "":
 			types = append(types, CodeM16)
-
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
 		case parsed.Mem != "":
@@ -30,18 +29,20 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			} else {
 				types = append(types, CodeM)
 			}
-
 		case parsed.Imm != "":
 			if size := getImmediateSizeFromValue(parsed.Imm); size != "" {
 				types = append(types, size)
 			} else {
 				types = append(types, CodeIMM)
 			}
-
 		case parsed.Seg != "":
 			types = append(types, CodeR16)
 		case parsed.Rel != "":
-			types = append(types, CodeREL32)
+			if len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" {
+				types = append(types, CodeREL8)
+			} else {
+				types = append(types, CodeREL32)
+			}
 		case parsed.Addr != "":
 			types = append(types, CodeM32)
 		case parsed.Mem != "":
@@ -211,11 +212,10 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
 	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
-	{Name: "Ptr", Pattern: `\bPTR\b`},
-	{Name: "Addr", Pattern: `\[(?: (?: (?:FAR\s+PTR|NEAR\s+PTR|PTR)\s+ )? \[0x[a-fA-F0-9]+\] )\]`},
+	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[0x[a-fA-F0-9]+\]`},
 	{Name: "Mem", Pattern: `\[(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
-	{Name: "Rel", Pattern: `\b(JMP|CALL|JNZ|JE|JNE|LABEL)\s+\w+\b`},
+	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 	{Name: "Comma", Pattern: `,`},
