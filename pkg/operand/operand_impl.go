@@ -19,9 +19,11 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 	var types []OperandType
 	for _, parsed := range inst.Operands {
 		switch {
+		case parsed.SegMem != "":
+			types = append(types, CodeM16)
+
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
-
 		case parsed.Mem != "":
 			if size := getMemorySizeFromPrefix(parsed.Mem); size != "" {
 				types = append(types, size)
@@ -42,6 +44,12 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, CodeREL32)
 		case parsed.Addr != "":
 			types = append(types, CodeM32)
+		case parsed.Mem != "":
+			if size := getMemorySizeFromPrefix(parsed.Mem); size != "" {
+				types = append(types, size)
+			} else {
+				types = append(types, CodeM)
+			}
 		default:
 			types = append(types, OperandType("unknown"))
 		}
@@ -198,6 +206,7 @@ func getImmediateTypeFromRegisterSize(regSize OperandType) OperandType {
 }
 
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
+	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
 	{Name: "Colon", Pattern: `:`},
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
