@@ -1,5 +1,5 @@
 read: [docs/design.md]
-editor: "emacs -nw"
+editor: "code --wait"
 env:
   LANG: ja_JP.UTF-8
   LC_ALL: ja_JP.UTF-8
