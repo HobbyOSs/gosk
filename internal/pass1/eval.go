@@ -4,6 +4,7 @@ import (
 	"github.com/HobbyOSs/gosk/internal/ast"
 	client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
@@ -16,6 +17,7 @@ type Pass1 struct {
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
 	Client           client.CodegenClient // 中間言語
+	AsmDB            *asmdb.InstructionDB
 }
 
 func (p *Pass1) Eval(program ast.Prog) {

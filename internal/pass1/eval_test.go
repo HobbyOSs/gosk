@@ -7,6 +7,7 @@ import (
 	"github.com/HobbyOSs/gosk/internal/gen"
 	client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -66,17 +67,17 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		},
 		{
 			bitMode:     ast.MODE_16BIT,
-			text:        "MOV 0x0ff2, 8",
+			text:        "MOV [ 0x0ff2 ], 8",
 			expectedLOC: 5,
 		},
 		{
 			bitMode:     ast.MODE_16BIT,
-			text:        "MOV 0x0ff4, 320",
+			text:        "MOV [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
 		{
 			bitMode:     ast.MODE_16BIT,
-			text:        "MOV 0x0ff8, 0x000a0000",
+			text:        "MOV [ 0x0ff8 ], 0x000a0000",
 			expectedLOC: 9,
 		},
 		{
@@ -123,6 +124,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 				BitMode: tt.bitMode,
 				Ctx:     stack.NewStack[*token.ParseToken](10),
 				Client:  client.NewCodegenClient(),
+				AsmDB:   asmdb.NewInstructionDB(),
 			}
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
 			if !assert.NoError(t, err) {

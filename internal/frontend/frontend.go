@@ -9,6 +9,7 @@ import (
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
@@ -39,6 +40,7 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		ExternSymbolList: []string{},
 		Ctx:              stack.NewStack[*token.ParseToken](100),
 		Client:           client.NewCodegenClient(),
+		AsmDB:            asmdb.NewInstructionDB(),
 	}
 	pass1.Eval(prog)
 

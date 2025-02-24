@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 )
 
@@ -53,6 +54,22 @@ func (db *InstructionDB) FindForms(opcode string, operands []string) ([]Instruct
 		}
 	}
 	return matchedForms, nil
+}
+
+func (db *InstructionDB) FindMinOutputSize(opcode string, operands []string) (int, error) {
+	forms, err := db.FindForms(opcode, operands)
+	if err != nil {
+		return 0, err
+	}
+
+	allOutputSize := lo.FlatMap(forms, func(f InstructionForm, _ int) []int {
+		return lo.Map(f.Encodings, func(e Encoding, _ int) int {
+			return e.GetOutputSize()
+		})
+	})
+
+	// 最小値を取得
+	return lo.Min(allOutputSize), nil
 }
 
 func matchOperands(formOperands *[]Operand, queryOperands []string) bool {

@@ -10,19 +10,19 @@ type OperandImpl struct {
 }
 
 func NewOperandFromString(text string) Operands {
-    return &OperandImpl{Internal: text}
+	return &OperandImpl{Internal: text}
 }
 
 func (b *OperandImpl) InternalString() string {
-    return b.Internal
+	return b.Internal
 }
 
 func (b *OperandImpl) Serialize() string {
-    return b.Internal
+	return b.Internal
 }
 
 func (b *OperandImpl) FromString(text string) Operands {
-    return &OperandImpl{Internal: text}
+	return &OperandImpl{Internal: text}
 }
 
 func (b *OperandImpl) OperandTypes() []OperandType {
@@ -76,10 +76,6 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 	types = resolveOperandSizes(types)
 
 	return types
-}
-
-type Instruction struct {
-	Operands []*ParsedOperand `parser:"@@ (',' @@)*"`
 }
 
 // レジスタ名からタイプを取得
@@ -222,14 +218,18 @@ func getImmediateTypeFromRegisterSize(regSize OperandType) OperandType {
 	}
 }
 
+type Instruction struct {
+	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
+}
+
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
 	{Name: "Colon", Pattern: `:`},
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
 	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
-	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[0x[a-fA-F0-9]+\]`},
-	{Name: "Mem", Pattern: `\[(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\]`},
+	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
+	{Name: "Mem", Pattern: `\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
