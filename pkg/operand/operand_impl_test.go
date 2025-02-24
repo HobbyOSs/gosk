@@ -66,3 +66,29 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		})
 	}
 }
+
+func TestOperandImpl_InternalString(t *testing.T) {
+    operand := OperandImpl{Internal: "EAX, EBX"}
+    expected := "EAX, EBX"
+    if got := operand.InternalString(); got != expected {
+        t.Errorf("InternalString() = %v, want %v", got, expected)
+    }
+}
+
+func TestOperandImpl_Serialize(t *testing.T) {
+    operand := OperandImpl{Internal: "EAX, EBX"}
+    expected := "EAX, EBX"
+    if got := operand.Serialize(); got != expected {
+        t.Errorf("Serialize() = %v, want %v", got, expected)
+    }
+}
+
+func TestOperandImpl_FromString(t *testing.T) {
+    operand := OperandImpl{}
+    text := "EAX, EBX"
+    expected := "EAX, EBX"
+    newOperand := operand.FromString(text)
+    if got := newOperand.InternalString(); got != expected {
+        t.Errorf("FromString() = %v, want %v", got, expected)
+    }
+}

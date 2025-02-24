@@ -9,6 +9,18 @@ type OperandImpl struct {
 	Internal string
 }
 
+func (b *OperandImpl) InternalString() string {
+    return b.Internal
+}
+
+func (b *OperandImpl) Serialize() string {
+    return b.Internal
+}
+
+func (b *OperandImpl) FromString(text string) Operands {
+    return &OperandImpl{Internal: text}
+}
+
 func (b *OperandImpl) OperandTypes() []OperandType {
 	parser := getParser()
 	inst, err := parser.ParseString("", b.Internal)
