@@ -7,10 +7,7 @@ import (
 )
 
 func TestFindInstruction(t *testing.T) {
-	data, err := decompressGzip(compressedJSON)
-	assert.NoError(t, err)
-
-	db := NewInstructionDB(data)
+	db := NewInstructionDB()
 
 	instr, found := db.FindInstruction("MOV")
 	assert.True(t, found)
@@ -24,10 +21,7 @@ func TestFindInstruction(t *testing.T) {
 }
 
 func TestFindForms(t *testing.T) {
-	data, err := decompressGzip(compressedJSON)
-	assert.NoError(t, err)
-
-	db := NewInstructionDB(data)
+	db := NewInstructionDB()
 
 	forms, err := db.FindForms("MOV", []string{"r8", "m8"}) // MOV AL, [SI]
 	assert.NoError(t, err)

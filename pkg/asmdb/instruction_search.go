@@ -3,16 +3,27 @@ package asmdb
 import (
 	"encoding/json"
 	"errors"
+	"log"
 
 	"github.com/tidwall/gjson"
 )
+
+var jsonData []byte
+
+func init() {
+	var err error
+	jsonData, err = decompressGzip(compressedJSON)
+	if err != nil {
+		log.Fatalf("Failed to decompress JSON: %v", err)
+	}
+}
 
 type InstructionDB struct {
 	jsonData []byte
 }
 
-func NewInstructionDB(data []byte) *InstructionDB {
-	return &InstructionDB{jsonData: data}
+func NewInstructionDB() *InstructionDB {
+	return &InstructionDB{jsonData: jsonData}
 }
 
 func (db *InstructionDB) FindInstruction(opcode string) (*Instruction, bool) {
