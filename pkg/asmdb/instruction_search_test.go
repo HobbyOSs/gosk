@@ -29,9 +29,15 @@ func TestFindForms(t *testing.T) {
 
 	db := NewInstructionDB(data)
 
-	forms, err := db.FindForms("MOV", []string{"r16", "imm16"})
+	forms, err := db.FindForms("MOV", []string{"r8", "m8"}) // MOV AL, [SI]
 	assert.NoError(t, err)
 	assert.NotEmpty(t, forms)
+	assert.Equal(t, 2, forms[0].Encodings[0].GetOutputSize())
+
+	forms, err = db.FindForms("MOV", []string{"r8", "imm8"}) // MOV AX, 0
+	assert.NoError(t, err)
+	assert.NotEmpty(t, forms)
+	assert.Equal(t, 3, forms[0].Encodings[0].GetOutputSize())
 
 	forms, err = db.FindForms("MOV", []string{"NONEXISTENT"})
 	assert.NoError(t, err)
