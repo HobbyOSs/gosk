@@ -197,7 +197,14 @@ func TraverseAST(node ast.Node, env *Pass1) {
 
 	case *ast.MemoryAddrExp:
 		log.Println("trace: memory addr exp handler!!!")
-		log.Printf("trace: %+v", n)
+		TraverseAST(n.Left, env)
+		if n.Right != nil {
+			TraverseAST(n.Right, env)
+		}
+
+		pop(env)
+		v := token.NewParseToken(token.TTIdentifier, n)
+		push(env, v)
 
 	case *ast.SegmentExp:
 		log.Println("trace: segment exp handler!!!")

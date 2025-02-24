@@ -67,6 +67,15 @@ func TestBaseOperand_OperandType(t *testing.T) {
 	}
 }
 
+func TestNewOperandFromString(t *testing.T) {
+    text := "EAX, EBX"
+    expected := "EAX, EBX"
+    operand := NewOperandFromString(text)
+    if got := operand.InternalString(); got != expected {
+        t.Errorf("NewOperandFromString() = %v, want %v", got, expected)
+    }
+}
+
 func TestOperandImpl_InternalString(t *testing.T) {
     operand := OperandImpl{Internal: "EAX, EBX"}
     expected := "EAX, EBX"

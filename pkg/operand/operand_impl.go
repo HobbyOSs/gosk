@@ -9,6 +9,10 @@ type OperandImpl struct {
 	Internal string
 }
 
+func NewOperandFromString(text string) Operands {
+    return &OperandImpl{Internal: text}
+}
+
 func (b *OperandImpl) InternalString() string {
     return b.Internal
 }
