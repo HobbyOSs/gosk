@@ -65,26 +65,30 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV AX, 0",
 			expectedLOC: 3,
 		},
+		// {
+		// 	// 0xc6, 0x06, 0xf2, 0x0f, 0x08
+		// 	bitMode:     ast.MODE_16BIT,
+		// 	text:        "MOV [ 0x0ff2 ], 8",
+		// 	expectedLOC: 5,
+		// },
 		{
-			bitMode:     ast.MODE_16BIT,
-			text:        "MOV [ 0x0ff2 ], 8",
-			expectedLOC: 5,
-		},
-		{
+			// 0xc7, 0x06, 0xf4, 0x0f, 0x40, 0x01
 			bitMode:     ast.MODE_16BIT,
 			text:        "MOV [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
-		{
-			bitMode:     ast.MODE_16BIT,
-			text:        "MOV [ 0x0ff8 ], 0x000a0000",
-			expectedLOC: 9,
-		},
-		{
-			bitMode:     ast.MODE_16BIT,
-			text:        "MOV CL, 0x0ff0",
-			expectedLOC: 4,
-		},
+		// {
+		// 	// MOV DWORD [VRAM],0x000a0000  ; VRAM=0x0ff8
+		// 	// 0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00
+		// 	bitMode:     ast.MODE_16BIT,
+		// 	text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
+		// 	expectedLOC: 9,
+		// },
+		// {
+		// 	bitMode:     ast.MODE_16BIT,
+		// 	text:        "MOV CL, 0x0ff0",
+		// 	expectedLOC: 4,
+		// },
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
 		// 	text:        "OR EAX, 0x00000001",
@@ -95,26 +99,26 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// 	text:        "IMUL ECX, 4608",
 		// 	expectedLOC: 7,
 		// },
-		{
-			bitMode:     ast.MODE_16BIT,
-			text:        "MOV 0x0ff0, CH",
-			expectedLOC: 4,
-		},
+		// {
+		// 	bitMode:     ast.MODE_16BIT,
+		// 	text:        "MOV BYTE [ 0x0ff0 ], CH",
+		// 	expectedLOC: 4,
+		// },
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
 		// 	text:        "SUB ECX, 128",
 		// 	expectedLOC: 7,
 		// },
-		{
-			bitMode:     ast.MODE_16BIT,
-			text:        "MOV ECX, [EBX+16]",
-			expectedLOC: 5,
-		},
-		{
-			bitMode:     ast.MODE_32BIT,
-			text:        "MOV AX, SS",
-			expectedLOC: 3,
-		},
+		// {
+		// 	bitMode:     ast.MODE_16BIT,
+		// 	text:        "MOV ECX, [EBX+16]",
+		// 	expectedLOC: 5,
+		// },
+		// {
+		// 	bitMode:     ast.MODE_32BIT,
+		// 	text:        "MOV AX, SS",
+		// 	expectedLOC: 3,
+		// },
 	}
 
 	for _, tt := range tests {

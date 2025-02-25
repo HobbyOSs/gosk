@@ -17,13 +17,13 @@ require (
 	github.com/alecthomas/participle/v2 v2.1.1
 	github.com/harakeishi/gats v0.0.0-20230219034858-055bc915842a
 	github.com/sergi/go-diff v1.2.0
+	github.com/tidwall/gjson v1.18.0
 	github.com/zeroflucs-given/generics v0.0.0-20240314015508-5e445e47cf6d
 )
 
 require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

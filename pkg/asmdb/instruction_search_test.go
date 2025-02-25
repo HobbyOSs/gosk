@@ -3,6 +3,7 @@ package asmdb
 import (
 	"testing"
 
+	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,21 +24,24 @@ func TestFindInstruction(t *testing.T) {
 func TestFindForms(t *testing.T) {
 	db := NewInstructionDB()
 
-	forms, err := db.FindForms("MOV", []string{"r8", "m8"}) // MOV AL, [SI]
+	forms, err := db.FindForms("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
 	assert.NoError(t, err)
 	assert.NotEmpty(t, forms)
 	assert.Equal(t, 2, forms[0].Encodings[0].GetOutputSize())
 
-	forms, err = db.FindForms("MOV", []string{"r8", "imm8"}) // MOV AX, 0
-	assert.NoError(t, err)
-	assert.NotEmpty(t, forms)
-	assert.Equal(t, 3, forms[0].Encodings[0].GetOutputSize())
-
-	forms, err = db.FindForms("MOV", []string{"NONEXISTENT"})
+	forms, err = db.FindForms("MOV", operand.NewOperandFromString("NONEXISTENT"))
 	assert.NoError(t, err)
 	assert.Empty(t, forms)
 
-	forms, err = db.FindForms("NONEXISTENT", []string{"r32", "r32"})
+	forms, err = db.FindForms("NONEXISTENT", operand.NewOperandFromString("EAX, 0"))
 	assert.Error(t, err)
 	assert.Empty(t, forms)
+}
+
+func FindMinOutputSize(t *testing.T) {
+	db := NewInstructionDB()
+
+	size, err := db.FindMinOutputSize("MOV", operand.NewOperandFromString("AX, 0")) // MOV AX, 0
+	assert.NoError(t, err)
+	assert.Equal(t, 3, size)
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 )
@@ -41,7 +42,7 @@ func (db *InstructionDB) FindInstruction(opcode string) (*Instruction, bool) {
 	return &instr, true
 }
 
-func (db *InstructionDB) FindForms(opcode string, operands []string) ([]InstructionForm, error) {
+func (db *InstructionDB) FindForms(opcode string, operands operand.Operands) ([]InstructionForm, error) {
 	instr, found := db.FindInstruction(opcode)
 	if !found {
 		return nil, errors.New("instruction not found")
@@ -56,7 +57,7 @@ func (db *InstructionDB) FindForms(opcode string, operands []string) ([]Instruct
 	return matchedForms, nil
 }
 
-func (db *InstructionDB) FindMinOutputSize(opcode string, operands []string) (int, error) {
+func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Operands) (int, error) {
 	forms, err := db.FindForms(opcode, operands)
 	if err != nil {
 		return 0, err
@@ -72,12 +73,12 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands []string) (in
 	return lo.Min(allOutputSize), nil
 }
 
-func matchOperands(formOperands *[]Operand, queryOperands []string) bool {
-	if formOperands == nil || len(*formOperands) != len(queryOperands) {
+func matchOperands(formOperands *[]Operand, queryOperands operand.Operands) bool {
+	if formOperands == nil || len(*formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
 	for i, operand := range *formOperands {
-		if operand.Type != queryOperands[i] {
+		if operand.Type != queryOperands.OperandTypes()[i].String() {
 			return false
 		}
 	}

@@ -2,7 +2,6 @@ package pass1
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -16,13 +15,7 @@ func processMOV(env *Pass1, tokens []*token.ParseToken) {
 	})
 
 	operands := operand.NewOperandFromString(strings.Join(args, ","))
-	operandTypes := lo.Map(operands.OperandTypes(), func(t operand.OperandType, _ int) string {
-		return t.String()
-	})
-	size, _ := env.AsmDB.FindMinOutputSize("MOV", operandTypes)
-
-	log.Printf("debug: %s\noperands:%s\nsize: %d\n", operands.Serialize(), operandTypes, size)
-
+	size, _ := env.AsmDB.FindMinOutputSize("MOV", operands)
 	env.LOC += int32(size)
 	env.Client.Emit(fmt.Sprintf("MOV %s\n", strings.Join(args, ",")))
 }
