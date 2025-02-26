@@ -1,6 +1,10 @@
 package operand
 
 import (
+	"regexp"
+	"strconv"
+	"strings"
+
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -23,6 +27,33 @@ func (b *OperandImpl) Serialize() string {
 
 func (b *OperandImpl) FromString(text string) Operands {
 	return &OperandImpl{Internal: text}
+}
+
+type Instruction struct {
+	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
+}
+
+var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
+	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
+	{Name: "Colon", Pattern: `:`},
+	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
+	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
+	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
+	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
+	{Name: "Mem", Pattern: `\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
+	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
+	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
+	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
+	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
+	{Name: "Comma", Pattern: `,`},
+})
+
+func getParser() *participle.Parser[Instruction] {
+	return participle.MustBuild[Instruction](
+		participle.Lexer(operandLexer),
+		participle.Unquote(),
+		participle.Elide("Whitespace"),
+	)
 }
 
 func (b *OperandImpl) OperandTypes() []OperandType {
@@ -218,29 +249,96 @@ func getImmediateTypeFromRegisterSize(regSize OperandType) OperandType {
 	}
 }
 
-type Instruction struct {
-	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
+var reBaseOffset = regexp.MustCompile(`^\[\s*([A-Za-z0-9]+)\s*(?:\+|\-)\s*([0-9A-Fa-fx]+)\s*\]$`)
+var reDirect = regexp.MustCompile(`^\[\s*([0-9A-Fa-fx]+)\s*\]$`)
+
+// CalcOffsetByteSize
+// メモリーアドレス表現にあるoffset値について機械語サイズの計算をする
+// * ベースを持たない直接のアドレス表現 e.g. MOV CL,[0x0ff0]; の場合2byteを返す
+// * ベースがある場合のアドレス表現     e.g. MOV ECX,[EBX+16]; の場合1byteを返す
+func (b *OperandImpl) CalcOffsetByteSize() int {
+	parser := getParser()
+	inst, err := parser.ParseString("", b.Internal)
+	if err != nil {
+		return 0
+	}
+
+	var total int
+	for _, op := range inst.Operands {
+		// 例: op.Mem == "[EBX+16]" とか op.Mem == "[0x0ff0]" とかが入る
+		if op.Mem != "" {
+			size := calcMemOffsetSize(op.Mem)
+			total += size
+		}
+	}
+	return total
 }
 
-var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
-	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
-	{Name: "Colon", Pattern: `:`},
-	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
-	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
-	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
-	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
-	{Name: "Mem", Pattern: `\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
-	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
-	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
-	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
-	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
-	{Name: "Comma", Pattern: `,`},
-})
+func calcMemOffsetSize(mem string) int {
+	// まずベースレジスタがないパターン（[0x0ff0]など）を判定
+	if m := reDirect.FindStringSubmatch(mem); m != nil {
+		offsetVal, err := parseNumeric(m[1])
+		if err != nil {
+			return 0
+		}
+		// ベースなし ⇒ GetOffsetSize相当
+		return getOffsetSize(offsetVal)
+	}
 
-func getParser() *participle.Parser[Instruction] {
-	return participle.MustBuild[Instruction](
-		participle.Lexer(operandLexer),
-		participle.Unquote(),
-		participle.Elide("Whitespace"),
-	)
+	// ベースレジスタがあるパターン([EBX+16], [ECX-0x80]など)を判定
+	if m := reBaseOffset.FindStringSubmatch(mem); m != nil {
+		// m[1] がベース(EBX等), m[2] がオフセット値(16等)
+		offsetVal, err := parseNumeric(m[2])
+		if err != nil {
+			return 0
+		}
+		// ベース有り ⇒ 0の場合はサイズ0, そうでなければ-128~127 ⇒ 1バイト, …というロジック
+		if offsetVal == 0 {
+			return 0
+		}
+		if offsetVal >= -0x80 && offsetVal <= 0x7f {
+			return 1
+		}
+		if offsetVal >= -0x8000 && offsetVal <= 0x7fff {
+			return 2
+		}
+		return 4
+	}
+	// 上記のどれにも当てはまらない=パターン外。必要に応じて厳密に扱う
+	return 0
+}
+
+// -128～127, -32768～32767 などの判定に使う
+func getOffsetSize(imm int64) int {
+	if imm >= -0x80 && imm <= 0x7f {
+		return 1
+	}
+	if imm >= -0x8000 && imm <= 0x7fff {
+		return 2
+	}
+	return 4
+}
+
+// 文字列の数値(例: "16", "0x0ff0", "-123")をint64に変換
+func parseNumeric(s string) (int64, error) {
+	s = strings.ToLower(strings.TrimSpace(s))
+	negative := false
+	if strings.HasPrefix(s, "-") {
+		negative = true
+		s = s[1:]
+	}
+
+	base := 10
+	if strings.HasPrefix(s, "0x") {
+		base = 16
+		s = s[2:]
+	}
+	val, err := strconv.ParseInt(s, base, 64)
+	if err != nil {
+		return 0, err
+	}
+	if negative {
+		val = -val
+	}
+	return val, nil
 }

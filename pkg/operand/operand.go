@@ -27,6 +27,5 @@ type Operands interface {
 	OperandTypes() []OperandType
 	Serialize() string
 	FromString(text string) Operands
+	CalcOffsetByteSize() int
 }
-
-type OperandBuilder struct{}

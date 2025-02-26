@@ -68,9 +68,12 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 			return e.GetOutputSize()
 		})
 	})
+	// メモリーアドレス表現にあるoffset値について
+	// 機械語サイズの計算をして足し込む
+	offsetByteSize := operands.CalcOffsetByteSize()
 
 	// 最小値を取得
-	return lo.Min(allOutputSize), nil
+	return lo.Min(allOutputSize) + offsetByteSize, nil
 }
 
 func matchOperands(formOperands *[]Operand, queryOperands operand.Operands) bool {
