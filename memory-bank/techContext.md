@@ -1,6 +1,7 @@
 # Tech Context
 
 ## 使用技術
+- PEG (Parsing Expression Grammar) を用いた構文解析
 - Go言語
 - Gitによるバージョン管理
 
