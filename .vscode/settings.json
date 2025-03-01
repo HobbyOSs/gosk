@@ -1,5 +1,8 @@
 {
-    "go.goroot": "~/.asdf/installs/golang/1.22.0/go",
-    "go.gopath": "~/go",
-    "makefile.configureOnOpen": false
+  "go.goroot": "~/.asdf/installs/golang/1.22.0/go",
+  "go.gopath": "~/go",
+  "makefile.configureOnOpen": false,
+  "workbench.editorAssociations": {
+    "*.md": "default"
+  }
 }

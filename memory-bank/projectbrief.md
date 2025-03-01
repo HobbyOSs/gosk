@@ -19,3 +19,6 @@ GOSKは、Go言語を用いたコンパイラプロジェクトであり、x86�
 ## 目標
 - 高性能なコード解析
 - 拡張可能なアーキテクチャ
+
+## GitHubリポジトリ
+https://github.com/HobbyOSs/gosk

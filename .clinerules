@@ -135,8 +135,6 @@ flowchart TD
 - **既知の課題**  
 - **プロジェクト決定の履歴**  
 - **ツールの使用パターン**  
-  - ファイル編集にはMCPのfilesystemを使用すること
-  - MCPのfilesystemを実行する際のパスは絶対パスを指定すること
   - コードの検索調査にはMCPのcommand-executorで`git grep <対象コード>`やfindを使用すること
 
 ```mermaid
