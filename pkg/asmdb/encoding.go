@@ -4,7 +4,11 @@ import (
 	"log"
 )
 
-func (e *Encoding) GetOutputSize() int {
+type OutputSizeOptions struct {
+	ImmSize int // 即値サイズ
+}
+
+func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 	outputSize := 0
 
 	// Log the start of the calculation
@@ -34,8 +38,12 @@ func (e *Encoding) GetOutputSize() int {
 
 	// Calculate size based on Immediate
 	if e.Immediate != nil {
-		log.Printf("debug: [pass1] bytes immediate %d", e.Immediate.Size)
-		outputSize += e.Immediate.Size
+		var immSize int = e.Immediate.Size
+		if options != nil && options.ImmSize > 0 {
+			immSize = options.ImmSize
+		}
+		log.Printf("debug: [pass1] bytes immediate %d", immSize)
+		outputSize += immSize
 	}
 
 	// Calculate size based on DataOffset
