@@ -65,7 +65,10 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 
 	allOutputSize := lo.FlatMap(forms, func(f InstructionForm, _ int) []int {
 		return lo.Map(f.Encodings, func(e Encoding, _ int) int {
-			return e.GetOutputSize()
+			options := &OutputSizeOptions{
+				ImmSize: operands.DetectImmediateSize(),
+			}
+			return e.GetOutputSize(options)
 		})
 	})
 	// メモリーアドレス表現にあるoffset値について

@@ -29,6 +29,30 @@ func (b *OperandImpl) FromString(text string) Operands {
 	return &OperandImpl{Internal: text}
 }
 
+func (b *OperandImpl) DetectImmediateSize() int {
+	parser := getParser()
+	inst, err := parser.ParseString("", b.Internal)
+	if err != nil || len(inst.Operands) == 0 {
+		return 0
+	}
+
+	size := 0
+	for _, parsed := range inst.Operands {
+		if parsed.Imm != "" {
+			s := getImmediateSizeFromValue(parsed.Imm)
+			switch s {
+			case CodeIMM8:
+				size = 1
+			case CodeIMM16:
+				size = 2
+			case CodeIMM32:
+				size = 4
+			}
+		}
+	}
+	return size
+}
+
 type Instruction struct {
 	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
 }
@@ -39,8 +63,8 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
 	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
-	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
-	{Name: "Mem", Pattern: `\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
+	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
+	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
@@ -70,18 +94,19 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, CodeM16)
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
-		case parsed.Mem != "":
-			if size := getMemorySizeFromPrefix(parsed.Mem); size != "" {
-				types = append(types, size)
-			} else {
-				types = append(types, CodeM)
-			}
+		case parsed.MemPrefix != "" && parsed.Addr != "":
+			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" ["+parsed.Addr+"]"))
+		case parsed.MemPrefix != "" && parsed.Mem != "":
+			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
 		case parsed.Imm != "":
 			if size := getImmediateSizeFromValue(parsed.Imm); size != "" {
 				types = append(types, size)
 			} else {
 				types = append(types, CodeIMM)
 			}
+		case parsed.MemPrefix != "" && parsed.Imm != "":
+			// BYTE 8 のようなケースに対応
+			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" ["+parsed.Imm+"]"))
 		case parsed.Seg != "":
 			types = append(types, CodeR16)
 		case parsed.Rel != "":
@@ -92,12 +117,8 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			}
 		case parsed.Addr != "":
 			types = append(types, CodeM32)
-		case parsed.Mem != "":
-			if size := getMemorySizeFromPrefix(parsed.Mem); size != "" {
-				types = append(types, size)
-			} else {
-				types = append(types, CodeM)
-			}
+		case parsed.MemPrefix != "" && parsed.Mem != "":
+			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
 		default:
 			types = append(types, OperandType("unknown"))
 		}

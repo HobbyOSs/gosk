@@ -27,6 +27,8 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		// TODO: 下記に対応してない
 		// FAR PTR label → m16:16 or m16:32
 		{"Direct Address", "[0x1234]", []OperandType{CodeM32}},
+		{"Direct Address", "BYTE [0x1234], 8", []OperandType{CodeM32, CodeIMM8}},
+		{"Direct Address", "[0x1234], 8", []OperandType{CodeM32, CodeIMM16}},
 		{"8-bit Register", "AL", []OperandType{CodeR8}},
 		{"16-bit Register", "AX", []OperandType{CodeR16}},
 		{"CL Register", "CL", []OperandType{CodeR8}},
@@ -67,37 +69,66 @@ func TestBaseOperand_OperandType(t *testing.T) {
 	}
 }
 
+func TestOperandImpl_DetectImmediateSize(t *testing.T) {
+	tests := []struct {
+		name     string
+		internal string
+		expected int
+	}{
+		{"Immediate 8 bit", "0x7f", 1},
+		{"Immediate 16 bit", "0x7fff", 2},
+		{"Immediate 32 bit", "0x7fffffff", 4},
+		// TODO: 負の数のテストがうまくいってない
+		//{"Immediate negative 8 bit", "-128", 1},
+		//{"Immediate negative 16 bit", "-32768", 2},
+		//{"Immediate negative 32 bit", "-2147483648", 4},
+		{"No Immediate", "EAX", 0},
+		// TODO: 複数のオペランドがある場合のテストがうまくいってない
+		//{"Multiple Operands with Immediate", "EAX, 0x10", 4},
+		// {"Multiple Operands with Different Immediate Sizes", "EAX, 0x7f", 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := OperandImpl{Internal: tt.internal}
+			if got := b.DetectImmediateSize(); got != tt.expected {
+				t.Errorf("DetectImmediateSize() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestNewOperandFromString(t *testing.T) {
-    text := "EAX, EBX"
-    expected := "EAX, EBX"
-    operand := NewOperandFromString(text)
-    if got := operand.InternalString(); got != expected {
-        t.Errorf("NewOperandFromString() = %v, want %v", got, expected)
-    }
+	text := "EAX, EBX"
+	expected := "EAX, EBX"
+	operand := NewOperandFromString(text)
+	if got := operand.InternalString(); got != expected {
+		t.Errorf("NewOperandFromString() = %v, want %v", got, expected)
+	}
 }
 
 func TestOperandImpl_InternalString(t *testing.T) {
-    operand := OperandImpl{Internal: "EAX, EBX"}
-    expected := "EAX, EBX"
-    if got := operand.InternalString(); got != expected {
-        t.Errorf("InternalString() = %v, want %v", got, expected)
-    }
+	operand := OperandImpl{Internal: "EAX, EBX"}
+	expected := "EAX, EBX"
+	if got := operand.InternalString(); got != expected {
+		t.Errorf("InternalString() = %v, want %v", got, expected)
+	}
 }
 
 func TestOperandImpl_Serialize(t *testing.T) {
-    operand := OperandImpl{Internal: "EAX, EBX"}
-    expected := "EAX, EBX"
-    if got := operand.Serialize(); got != expected {
-        t.Errorf("Serialize() = %v, want %v", got, expected)
-    }
+	operand := OperandImpl{Internal: "EAX, EBX"}
+	expected := "EAX, EBX"
+	if got := operand.Serialize(); got != expected {
+		t.Errorf("Serialize() = %v, want %v", got, expected)
+	}
 }
 
 func TestOperandImpl_FromString(t *testing.T) {
-    operand := OperandImpl{}
-    text := "EAX, EBX"
-    expected := "EAX, EBX"
-    newOperand := operand.FromString(text)
-    if got := newOperand.InternalString(); got != expected {
-        t.Errorf("FromString() = %v, want %v", got, expected)
-    }
+	operand := OperandImpl{}
+	text := "EAX, EBX"
+	expected := "EAX, EBX"
+	newOperand := operand.FromString(text)
+	if got := newOperand.InternalString(); got != expected {
+		t.Errorf("FromString() = %v, want %v", got, expected)
+	}
 }

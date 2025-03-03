@@ -20,6 +20,7 @@ type ParsedOperand struct {
 	Imm    string `| @Imm`
 	Seg    string `| @Seg`
 	Rel    string `| @Rel`
+	MemPrefix string `@MemPrefix`
 }
 
 type Operands interface {
@@ -28,4 +29,5 @@ type Operands interface {
 	Serialize() string
 	FromString(text string) Operands
 	CalcOffsetByteSize() int
+	DetectImmediateSize() int
 }
