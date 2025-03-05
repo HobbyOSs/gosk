@@ -66,7 +66,7 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
 	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
-	{Name: "Rel", Pattern: `\b(?:SHORT|FAR PTR)?\s*\w+\b`},
+	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*\w+`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 	{Name: "Comma", Pattern: `,`},
@@ -109,16 +109,20 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" ["+parsed.Imm+"]"))
 		case parsed.Seg != "":
 			types = append(types, CodeR16)
+		case parsed.MemPrefix != "" && parsed.Mem != "":
+			// BYTE [0x0fff] みたいなパターン、プレフィックスのサイズで確定する
+			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
+		case parsed.Addr != "":
+			types = append(types, CodeM)
+		case parsed.Mem != "":
+			types = append(types, CodeM)
 		case parsed.Rel != "":
+			// ラベル指定
 			if len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" {
 				types = append(types, CodeREL8)
 			} else {
 				types = append(types, CodeREL32)
 			}
-		case parsed.Addr != "":
-			types = append(types, CodeM32)
-		case parsed.MemPrefix != "" && parsed.Mem != "":
-			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
 		default:
 			types = append(types, OperandType("unknown"))
 		}

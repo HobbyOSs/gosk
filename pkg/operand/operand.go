@@ -13,14 +13,14 @@ func equalOperandTypes(a, b []OperandType) bool {
 }
 
 type ParsedOperand struct {
-	SegMem string `@SegMem`
-	Reg    string `| @Reg`
-	Addr   string `| @Addr`
-	Mem    string `| @Mem`
-	Imm    string `| @Imm`
-	Seg    string `| @Seg`
-	Rel    string `| @Rel`
-	MemPrefix string `@MemPrefix`
+	SegMem    string `@SegMem`
+	Reg       string `| @Reg`
+	Addr      string `| @Addr`
+	Mem       string `| @Mem`
+	Imm       string `| @Imm`
+	Seg       string `| @Seg`
+	Rel       string `| @Rel`
+	MemPrefix string `| @MemPrefix`
 }
 
 type Operands interface {

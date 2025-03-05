@@ -13,12 +13,12 @@ func TestGetOutputSize(t *testing.T) {
 	if instr, exists := instrs["NOP"]; exists {
 		assert.NotEmpty(t, instr.Forms)
 		encoding := instr.Forms[0].Encodings[0]
-		assert.Equal(t, 1, encoding.GetOutputSize(), "Expected output size for NOP is 1")
+		assert.Equal(t, 1, encoding.GetOutputSize(&OutputSizeOptions{}), "Expected output size for NOP is 1")
 	}
 
 	if instr, exists := instrs["CLI"]; exists {
 		assert.NotEmpty(t, instr.Forms)
 		encoding := instr.Forms[0].Encodings[0]
-		assert.Equal(t, 1, encoding.GetOutputSize(), "Expected output size for CLI is 1")
+		assert.Equal(t, 1, encoding.GetOutputSize(&OutputSizeOptions{}), "Expected output size for CLI is 1")
 	}
 }

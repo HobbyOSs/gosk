@@ -27,7 +27,7 @@ func TestFindForms(t *testing.T) {
 	forms, err := db.FindForms("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
 	assert.NoError(t, err)
 	assert.NotEmpty(t, forms)
-	assert.Equal(t, 2, forms[0].Encodings[0].GetOutputSize())
+	assert.Equal(t, 2, forms[0].Encodings[0].GetOutputSize(&OutputSizeOptions{}))
 
 	forms, err = db.FindForms("MOV", operand.NewOperandFromString("NONEXISTENT"))
 	assert.NoError(t, err)
