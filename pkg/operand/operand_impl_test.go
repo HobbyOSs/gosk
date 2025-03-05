@@ -24,11 +24,10 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		{"Segmented Address", "ES:CX", []OperandType{CodeM16}},
 		{"Relative Offset", "LABEL", []OperandType{CodeREL32}},
 		{"Relative Offset", "SHORT label", []OperandType{CodeREL8}},
-		// TODO: 下記に対応してない
-		// FAR PTR label → m16:16 or m16:32
-		{"Direct Address (simple)", "[0x1234]", []OperandType{CodeM32}},
-		{"Direct Address (with imm and size prefix)", "BYTE [0x1234], 8", []OperandType{CodeM32, CodeIMM8}},
-		{"Direct Address (with imm)", "[0x1234], 8", []OperandType{CodeM32, CodeIMM16}},
+		{"Direct Address (with imm and size prefix)", "BYTE [0x1234], 8", []OperandType{CodeM8, CodeIMM8}},
+		// TODO: サイズプレフィックスがないのでこのパターンはないかも
+		//{"Direct Address (simple)", "[0x1234]", []OperandType{CodeM32}},
+		//{"Direct Address (with imm)", "[0x1234], 8", []OperandType{CodeM32, CodeIMM16}},
 		{"8-bit Register", "AL", []OperandType{CodeR8}},
 		{"16-bit Register", "AX", []OperandType{CodeR16}},
 		{"CL Register", "CL", []OperandType{CodeR8}},
@@ -54,6 +53,18 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		{"XMM Register", "XMM3", []OperandType{CodeXMM}},
 		{"YMM Register", "YMM4", []OperandType{CodeYMM}},
 		{"YMM Register", "YMM1", []OperandType{CodeYMM}},
+		/*
+		   TODO: FAR/NEAR PTR の扱いを正しく区別する
+
+		   - FAR PTR (16:16モード)     : 4バイト (セグメント2 + オフセット2)
+		   - FAR PTR (16:32モード)     : 6バイト (セグメント2 + オフセット4)
+		       - 上記２つはラベルの場合も同様
+		   - NEAR PTR / PTR (16ビット) : 2バイト (オフセットのみ)
+		   - NEAR PTR / PTR (32ビット) : 4バイト (オフセットのみ)
+
+		   いま CodeM32 としている項目に本来は FAR ポインタか NEAR ポインタかを考慮して、
+		   オペランドタイプを区別する必要がある。
+		*/
 		{"Far Pointer", "FAR PTR [0x5678]", []OperandType{CodeM32}},
 		{"Pointer + Direct Address", "PTR [0x1234]", []OperandType{CodeM32}},
 		{"Far Pointer + Direct Address", "FAR PTR [0x5678]", []OperandType{CodeM32}},

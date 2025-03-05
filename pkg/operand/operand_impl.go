@@ -57,15 +57,35 @@ type Instruction struct {
 	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
 }
 
+type ParsedOperand struct {
+	SegMem string `@SegMem`
+	Reg    string `| @Reg`
+	Addr   *Addr  `| @@`
+	Mem    *Mem   `| @@`
+	Imm    string `| @Imm`
+	Seg    string `| @Seg`
+	Rel    string `| @Rel`
+}
+
+type Mem struct {
+	Prefix *string `parser:"@MemSizePrefix?"`
+	Mem    string  `parser:"@Mem"`
+}
+
+type Addr struct {
+	Prefix *string `parser:"@MemSizePrefix?"`
+	Addr   string  `parser:"@Addr"`
+}
+
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Comma", Pattern: `,`},
-	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
+	{Name: "SegMem", Pattern: `(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)`}, // このパターンは特別にアドレスとして扱う
 	{Name: "Colon", Pattern: `:`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
-	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
-	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
-	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
-	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
+	{Name: "MemSizePrefix", Pattern: `(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)`},
+	{Name: "Seg", Pattern: `(CS|DS|ES|FS|GS|SS)`},
+	{Name: "Reg", Pattern: `([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
+	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
 	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*\w+`},
@@ -94,27 +114,17 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, CodeM16)
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
-		case parsed.MemPrefix != "" && parsed.Addr != "":
-			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" ["+parsed.Addr+"]"))
-		case parsed.MemPrefix != "" && parsed.Mem != "":
-			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
+		case parsed.Addr != nil && parsed.Addr.Prefix != nil:
+			types = append(types, getMemorySizeFromPrefix(*parsed.Addr.Prefix+" "+parsed.Addr.Addr))
+		case parsed.Mem != nil && parsed.Mem.Prefix != nil:
+			types = append(types, getMemorySizeFromPrefix(*parsed.Mem.Prefix+" "+parsed.Mem.Mem))
 		case parsed.Imm != "":
-			if size := getImmediateSizeFromValue(parsed.Imm); size != "" {
-				types = append(types, size)
-			} else {
-				types = append(types, CodeIMM)
-			}
-		case parsed.MemPrefix != "" && parsed.Imm != "":
-			// BYTE 8 のようなケースに対応
-			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" ["+parsed.Imm+"]"))
+			types = append(types, CodeIMM)
 		case parsed.Seg != "":
 			types = append(types, CodeR16)
-		case parsed.MemPrefix != "" && parsed.Mem != "":
-			// BYTE [0x0fff] みたいなパターン、プレフィックスのサイズで確定する
-			types = append(types, getMemorySizeFromPrefix(parsed.MemPrefix+" "+parsed.Mem))
-		case parsed.Addr != "":
+		case parsed.Addr != nil:
 			types = append(types, CodeM)
-		case parsed.Mem != "":
+		case parsed.Mem != nil:
 			types = append(types, CodeM)
 		case parsed.Rel != "":
 			// ラベル指定
@@ -129,7 +139,7 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 	}
 
 	// サイズ未確定のimm/memを他のオペランドから決定
-	types = resolveOperandSizes(types)
+	types = resolveOperandSizes(types, inst.Operands)
 
 	return types
 }
@@ -215,8 +225,8 @@ func getImmediateSizeFromValue(imm string) OperandType {
 }
 
 // オペランドサイズを解決する
-func resolveOperandSizes(types []OperandType) []OperandType {
-	regSize := getRegisterSizeFromTypes(types)
+func resolveOperandSizes(types []OperandType, operands []*ParsedOperand) []OperandType {
+	regSize := getOperandSizeFromTypes(types, operands)
 
 	for i, t := range types {
 		switch t {
@@ -230,15 +240,27 @@ func resolveOperandSizes(types []OperandType) []OperandType {
 }
 
 // タイプリストからレジスタサイズを取得
-func getRegisterSizeFromTypes(types []OperandType) OperandType {
-	for _, t := range types {
+func getOperandSizeFromTypes(types []OperandType, operands []*ParsedOperand) OperandType {
+	for i, t := range types {
 		switch t {
-		case CodeR8:
+		case CodeR8, CodeM8:
 			return CodeR8
-		case CodeR16:
+		case CodeR16, CodeM16:
 			return CodeR16
-		case CodeR32:
+		case CodeR32, CodeM32:
 			return CodeR32
+		case CodeM:
+			if operands[i].Addr != nil {
+				size := calcMemOffsetSize(operands[i].Addr.Addr)
+				switch size {
+				case 1:
+					return CodeR8
+				case 2:
+					return CodeR16
+				default:
+					return CodeR32
+				}
+			}
 		default:
 			return CodeR32
 		}
@@ -291,8 +313,8 @@ func (b *OperandImpl) CalcOffsetByteSize() int {
 	var total int
 	for _, op := range inst.Operands {
 		// 例: op.Mem == "[EBX+16]" とか op.Mem == "[0x0ff0]" とかが入る
-		if op.Mem != "" {
-			size := calcMemOffsetSize(op.Mem)
+		if op.Mem != nil {
+			size := calcMemOffsetSize(op.Mem.Mem)
 			total += size
 		}
 	}
