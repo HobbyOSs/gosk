@@ -58,18 +58,18 @@ type Instruction struct {
 }
 
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
+	{Name: "Comma", Pattern: `,`},
 	{Name: "SegMem", Pattern: `\b(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)\b`}, // このパターンは特別にアドレスとして扱う
 	{Name: "Colon", Pattern: `:`},
+	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 	{Name: "Seg", Pattern: `\b(CS|DS|ES|FS|GS|SS)\b`},
 	{Name: "Reg", Pattern: `\b([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])\b`},
 	{Name: "MemPrefix", Pattern: `\b(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)\b`},
 	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
 	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
-	{Name: "Imm", Pattern: `(?:0x[a-fA-F0-9]+|-?\d+)`},
+	{Name: "Imm", Pattern: `(0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*\w+`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
-	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
-	{Name: "Comma", Pattern: `,`},
 })
 
 func getParser() *participle.Parser[Instruction] {
