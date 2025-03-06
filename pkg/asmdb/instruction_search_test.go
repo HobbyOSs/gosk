@@ -21,22 +21,22 @@ func TestFindInstruction(t *testing.T) {
 	assert.Nil(t, instr)
 }
 
-func TestFindForm(t *testing.T) {
+func TestFindEncoding(t *testing.T) {
 	db := NewInstructionDB()
 
-	form, err := db.FindForm("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
+	encoding, err := db.FindEncoding("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
 	assert.NoError(t, err)
-	assert.NotNil(t, form)
-	assert.Equal(t, 2, form.Encodings[0].GetOutputSize(&OutputSizeOptions{}))
+	assert.NotNil(t, encoding)
+	assert.Equal(t, 2, encoding.GetOutputSize(&OutputSizeOptions{}))
 
-	form, err = db.FindForm("MOV", operand.NewOperandFromString("NONEXISTENT"))
+	encoding, err = db.FindEncoding("MOV", operand.NewOperandFromString("NONEXISTENT"))
 	assert.Error(t, err)
-	assert.Nil(t, form)
-	assert.Contains(t, err.Error(), "no matching form found")
+	assert.Nil(t, encoding)
+	assert.Contains(t, err.Error(), "no matching encoding found")
 
-	form, err = db.FindForm("NONEXISTENT", operand.NewOperandFromString("EAX, 0"))
+	encoding, err = db.FindEncoding("NONEXISTENT", operand.NewOperandFromString("EAX, 0"))
 	assert.Error(t, err)
-	assert.Nil(t, form)
+	assert.Nil(t, encoding)
 	assert.Contains(t, err.Error(), "instruction not found")
 }
 
@@ -53,27 +53,18 @@ func TestFindMinOutputSize(t *testing.T) {
 		operands := operand.NewOperandFromString("AX, 0x1234")
 		t.Logf("Operand types: %v", operands.OperandTypes())
 
-		form, err := db.FindForm("MOV", operands)
+		encoding, err := db.FindEncoding("MOV", operands)
 		if err != nil {
-			t.Logf("Error finding form: %v", err)
+			t.Logf("Error finding encoding: %v", err)
 		}
-		if form != nil {
-			t.Logf("Found form operands: %v", form.Operands)
-			t.Logf("Found form encodings: %v", form.Encodings)
+		if encoding != nil {
+			t.Logf("Found encoding: %v", encoding)
 		}
 
 		assert.NoError(t, err)
-		assert.NotNil(t, form)
-		// 0xB8+rw formが選択されるべき（より短いため）
-		// B8+rwのエンコーディングを探す
-		foundB8 := false
-		for _, enc := range form.Encodings {
-			if enc.Opcode.Byte == "B8" {
-				foundB8 = true
-				break
-			}
-		}
-		assert.True(t, foundB8, "B8+rw encoding should be found")
+		assert.NotNil(t, encoding)
+		// 0xB8+rw encodingが選択されるべき（より短いため）
+		assert.Equal(t, "B8", encoding.Opcode.Byte, "B8+rw encoding should be selected")
 	})
 
 	// TODO: Fix memory operand with WORD prefix test
