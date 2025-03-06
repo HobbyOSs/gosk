@@ -30,3 +30,77 @@
 ## コンポーネント間の関係
 - フロントエンドはASTを生成し、バックエンドに渡す
 - バックエンドはASTを基に中間表現を生成し、最終コードを出力
+
+## アセンブラ命令実装のルーチン
+
+### Pass1での命令実装
+1. **機械語サイズの計算**
+   - `pkg/asmdb`を使用して命令のサイズを計算
+   - プレフィックスバイトのサイズを考慮
+   - オフセットサイズを計算に含める
+
+2. **Ocodeの生成**
+   - `env.Client.Emit`を使用してOcodeを出力
+   - オペランドの正確な解析と変換
+
+### Ocode実装
+1. **命令の定義**
+   - `pkg/ocode/ocode.go`にiota定数として命令を追加
+   - 命令の種類に応じた適切な名前付け
+
+2. **機械語生成の実装**
+   - `internal/codegen/x86gen.go`に命令の処理を追加
+   - asmdbを使用して正確な機械語を生成
+   - ModR/Mの適切な生成
+
+### 実装手順
+1. **Pass1の実装**
+   ```go
+   // handlers.goに関数を登録
+   opcodeEvalFns["NEW_INST"] = processNEW_INST
+
+   // 命令処理関数の実装
+   func processNEW_INST(env *Pass1, tokens []*token.ParseToken) {
+       // 1. オペランドの解析
+       // 2. asmdbでサイズ計算
+       // 3. Ocodeの生成
+   }
+   ```
+
+2. **Ocodeの定義**
+   ```go
+   // ocode.goに追加
+   const (
+       // 既存の定義
+       OpExisting OcodeKind = iota
+       // 新規命令
+       OpNEW_INST
+   )
+   ```
+
+3. **機械語生成**
+   ```go
+   // x86gen.goに実装
+   func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
+       switch oc.Kind {
+       case ocode.OpNEW_INST:
+           return handleNEW_INST(oc.Operands), nil
+       }
+   }
+   ```
+
+### 実装時の注意点
+1. **asmdbの活用**
+   - 命令の正確な機械語表現の取得
+   - プレフィックスバイトの適切な処理
+   - オペランドサイズの正確な計算
+
+2. **テスト駆動開発**
+   - 各命令の基本的なテストケース作成
+   - エッジケースの考慮
+   - 他の命令との相互作用の確認
+
+3. **ドキュメント化**
+   - 実装した命令の仕様と制限事項の記録
+   - テストケースの説明
+   - 既知の問題点の記録
