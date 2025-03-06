@@ -1,10 +1,11 @@
 package operand
 
 import (
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/HobbyOSs/gosk/internal/ast"
 
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -201,32 +202,43 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 	return types
 }
 
+var (
+	regR8Pattern  = regexp.MustCompile(`^[ABCD][HL]$`)
+	regR16Pattern = regexp.MustCompile(`^[ABCD]X$`)
+	regR32Pattern = regexp.MustCompile(`^E[ABCD]X$`)
+)
+
 // レジスタ名からタイプを取得
 func getRegisterType(reg string) OperandType {
+	// Prefixで判定できるもの
 	switch {
-	case len(reg) >= 3 && reg[0] == 'E': // EAX, EBX etc
-		return CodeR32
-	case len(reg) == 2 && reg[1] == 'L': // AL, BL etc
-		return CodeR8
-	case len(reg) == 2 && reg[1] == 'X': // AX, BX etc
-		return CodeR16
-	case len(reg) >= 3 && reg[:3] == "XMM":
+	case strings.HasPrefix(reg, "XMM"):
 		return CodeXMM
-	case len(reg) >= 3 && reg[:3] == "YMM":
+	case strings.HasPrefix(reg, "YMM"):
 		return CodeYMM
-	case len(reg) >= 3 && reg[:3] == "ZMM":
+	case strings.HasPrefix(reg, "ZMM"):
 		return CodeZMM
-	case len(reg) >= 2 && reg[:2] == "MM":
+	case strings.HasPrefix(reg, "MM"):
 		return CodeMM
-	case len(reg) >= 2 && reg[:2] == "CR":
+	case strings.HasPrefix(reg, "CR"):
 		return CodeCR
-	case len(reg) >= 2 && reg[:2] == "DR":
+	case strings.HasPrefix(reg, "DR"):
 		return CodeDR
-	case len(reg) >= 2 && reg[:2] == "TR":
+	case strings.HasPrefix(reg, "TR"):
 		return CodeTR
-	default:
-		return CodeR32
 	}
+
+	// 正規表現で判定するもの
+	switch {
+	case regR32Pattern.MatchString(reg):
+		return CodeR32
+	case regR8Pattern.MatchString(reg):
+		return CodeR8
+	case regR16Pattern.MatchString(reg):
+		return CodeR16
+	}
+
+	return CodeR32
 }
 
 // メモリプレフィックスからサイズを取得

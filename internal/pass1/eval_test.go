@@ -99,11 +99,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// 	text:        "IMUL ECX, 4608",
 		// 	expectedLOC: 7,
 		// },
-		// {
-		// 	bitMode:     ast.MODE_16BIT,
-		// 	text:        "MOV BYTE [ 0x0ff0 ], CH",
-		// 	expectedLOC: 4,
-		// },
+		{
+			bitMode:     ast.MODE_16BIT,
+			text:        "MOV BYTE [ 0x0ff0 ], CH",
+			expectedLOC: 4,
+		},
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
 		// 	text:        "SUB ECX, 128",
@@ -114,11 +114,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// 	text:        "MOV ECX, [EBX+16]",
 		// 	expectedLOC: 5,
 		// },
-		// {
-		// 	bitMode:     ast.MODE_32BIT,
-		// 	text:        "MOV AX, SS",
-		// 	expectedLOC: 3,
-		// },
+		{
+			bitMode:     ast.MODE_32BIT,
+			text:        "MOV AX, SS",
+			expectedLOC: 3,
+		},
 	}
 
 	for _, tt := range tests {
