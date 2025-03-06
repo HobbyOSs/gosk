@@ -17,6 +17,7 @@
 - `pkg/asmdb/instruction_search.go`の機械語サイズ計算機能を改善
   - GetPrefixSize関数を追加してプレフィックスバイトのサイズ計算を実装
   - FindMinOutputSizeメソッドでプレフィックスサイズを計算に含めるように修正
+  - FindFormsをFindFormに変更し、最小サイズの機械語を一意に選択するように改善
 
 ## 次のステップ
 1. 算術命令の実装を段階的に進める

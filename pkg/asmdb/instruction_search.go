@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/HobbyOSs/gosk/pkg/operand"
-	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 )
 
@@ -42,19 +41,43 @@ func (db *InstructionDB) FindInstruction(opcode string) (*Instruction, bool) {
 	return &instr, true
 }
 
-func (db *InstructionDB) FindForms(opcode string, operands operand.Operands) ([]InstructionForm, error) {
+func (db *InstructionDB) FindForm(opcode string, operands operand.Operands) (*InstructionForm, error) {
 	instr, found := db.FindInstruction(opcode)
 	if !found {
 		return nil, errors.New("instruction not found")
 	}
 
-	var matchedForms []InstructionForm
-	for _, form := range instr.Forms {
-		if matchOperands(form.Operands, operands) {
-			matchedForms = append(matchedForms, form)
+	var (
+		minForm *InstructionForm
+		minSize = -1
+	)
+
+	for i := range instr.Forms {
+		form := &instr.Forms[i]
+		if !matchOperands(form.Operands, operands) {
+			continue
+		}
+
+		// 各エンコーディングのサイズを計算し、最小のものを見つける
+		for _, e := range form.Encodings {
+			options := &OutputSizeOptions{
+				ImmSize: operands.DetectImmediateSize(),
+			}
+			size := e.GetOutputSize(options)
+
+			// より小さいサイズのエンコーディングを見つけた場合に更新
+			if minForm == nil || size < minSize {
+				minForm = form
+				minSize = size
+			}
 		}
 	}
-	return matchedForms, nil
+
+	if minForm == nil {
+		return nil, errors.New("no matching form found")
+	}
+
+	return minForm, nil
 }
 
 // GetPrefixSize はプレフィックスバイトのサイズを計算します
@@ -70,29 +93,25 @@ func (db *InstructionDB) GetPrefixSize(operands operand.Operands) int {
 }
 
 func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Operands) (int, error) {
-	forms, err := db.FindForms(opcode, operands)
+	form, err := db.FindForm(opcode, operands)
 	if err != nil {
 		return 0, err
 	}
 
-	allOutputSize := lo.FlatMap(forms, func(f InstructionForm, _ int) []int {
-		return lo.Map(f.Encodings, func(e Encoding, _ int) int {
-			options := &OutputSizeOptions{
-				ImmSize: operands.DetectImmediateSize(),
-			}
-			return e.GetOutputSize(options)
-		})
-	})
+	// 選択されたFormの中で最小のエンコーディングサイズを計算
+	minSize := -1
+	for _, e := range form.Encodings {
+		options := &OutputSizeOptions{
+			ImmSize: operands.DetectImmediateSize(),
+		}
+		size := e.GetOutputSize(options)
+		if minSize == -1 || size < minSize {
+			minSize = size
+		}
+	}
 
-	// プレフィックスサイズを計算
-	prefixSize := db.GetPrefixSize(operands)
-
-	// メモリーアドレス表現にあるoffset値について
-	// 機械語サイズの計算をして足し込む
-	offsetByteSize := operands.CalcOffsetByteSize()
-
-	// 最小値を取得し、プレフィックスサイズとオフセットサイズを加算
-	return lo.Min(allOutputSize) + prefixSize + offsetByteSize, nil
+	// プレフィックスとオフセットのサイズを加算
+	return minSize + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize(), nil
 }
 
 func matchOperands(formOperands *[]Operand, queryOperands operand.Operands) bool {
