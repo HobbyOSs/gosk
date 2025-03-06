@@ -47,6 +47,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 		return handleDD(oc.Operands), nil
 	case ocode.OpRESB:
 		return handleRESB(oc.Operands, currentBufferSize), nil
+	case ocode.OpMOV:
+		return handleMOV(oc.Operands), nil
 	default:
 		return handleNoParamOpcode(oc), nil
 	}
