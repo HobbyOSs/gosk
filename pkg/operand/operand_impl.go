@@ -198,21 +198,24 @@ func getRegisterType(reg string) OperandType {
 }
 
 // メモリプレフィックスからサイズを取得
-func getMemorySizeFromPrefix(mem string) OperandType {
+func getMemorySizeFromPrefix(_mem string) OperandType {
+
+	mem := strings.ToUpper(strings.TrimSpace(_mem))
+
 	switch {
-	case len(mem) >= 5 && mem[:5] == "BYTE ":
+	case strings.HasPrefix(mem, "BYTE"):
 		return CodeM8
-	case len(mem) >= 6 && mem[:6] == "WORD ":
+	case strings.HasPrefix(mem, "WORD"):
 		return CodeM16
-	case len(mem) >= 7 && mem[:7] == "DWORD ":
+	case strings.HasPrefix(mem, "DWORD"):
 		return CodeM32
-	case len(mem) >= 7 && mem[:7] == "QWORD ":
+	case strings.HasPrefix(mem, "QWORD"):
 		return CodeM64
-	case len(mem) >= 8 && mem[:8] == "XMMWORD":
+	case strings.HasPrefix(mem, "XMMWORD"):
 		return CodeM128
-	case len(mem) >= 8 && mem[:8] == "YMMWORD":
+	case strings.HasPrefix(mem, "YMMWORD"):
 		return CodeM256
-	case len(mem) >= 8 && mem[:8] == "ZMMWORD":
+	case strings.HasPrefix(mem, "ZMMWORD"):
 		return CodeM512
 	default:
 		return ""
