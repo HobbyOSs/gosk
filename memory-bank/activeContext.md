@@ -8,7 +8,9 @@
 ## 直近の変更点
 - `internal/pass1/eval_test.go`のテストケース拡充
 - `internal/token/parse_token.go`のトークン解析処理の改善
-- `pkg/operand/operand_impl.go`のオペランド実装の更新
+- `pkg/operand/operand_impl.go`にx86のprefix bytes判定機能を実装
+  - オペランドサイズプレフィックス(66h)の判定
+  - アドレスサイズプレフィックス(67h)の判定
 
 ## 次のステップ
 1. Pass1の評価処理の網羅的なテスト実装

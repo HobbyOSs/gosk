@@ -356,6 +356,69 @@ func getImmediateTypeFromRegisterSize(regSize OperandType) OperandType {
 	}
 }
 
+// Require66h はオペランドサイズプレフィックスが必要かどうかを判定する
+func (b *OperandImpl) Require66h() bool {
+	types := b.OperandTypes()
+	if len(types) == 0 {
+		return false
+	}
+
+	switch b.BitMode {
+	case ast.MODE_16BIT:
+		// 16bitモードで32bitレジスタを使用する場合
+		for _, t := range types {
+			if t == CodeR32 || t == CodeM32 {
+				return true
+			}
+		}
+		// 16bitモードで32bit即値を使用する場合
+		if len(types) == 1 {
+			parser := getParser()
+			inst, err := parser.ParseString("", b.Internal)
+			if err == nil && len(inst.Operands) == 1 && inst.Operands[0].Imm != "" {
+				imm := getImmediateSizeFromValue(inst.Operands[0].Imm)
+				if imm == CodeIMM32 {
+					return true
+				}
+			}
+		}
+	case ast.MODE_32BIT:
+		// 32bitモードで16bitレジスタを使用する場合
+		for _, t := range types {
+			if t == CodeR16 || t == CodeM16 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Require67h はアドレスサイズプレフィックスが必要かどうかを判定する
+func (b *OperandImpl) Require67h() bool {
+	types := b.OperandTypes()
+	if len(types) == 0 {
+		return false
+	}
+
+	switch b.BitMode {
+	case ast.MODE_16BIT:
+		// 16bitモードで32bitメモリアクセスを行う場合
+		for _, t := range types {
+			if t == CodeM32 {
+				return true
+			}
+		}
+	case ast.MODE_32BIT:
+		// 32bitモードで16bitメモリアクセスを行う場合
+		for _, t := range types {
+			if t == CodeM16 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 var reBaseOffset = regexp.MustCompile(`^\[\s*([A-Za-z0-9]+)\s*(?:\+|\-)\s*([0-9A-Fa-fx]+)\s*\]$`)
 var reDirect = regexp.MustCompile(`^\[\s*([0-9A-Fa-fx]+)\s*\]$`)
 
