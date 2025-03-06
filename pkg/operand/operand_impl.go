@@ -36,17 +36,32 @@ func (b *OperandImpl) DetectImmediateSize() int {
 		return 0
 	}
 
-	size := 0
+	if len(inst.Operands) == 1 {
+		parsed := inst.Operands[0]
+		if parsed.Imm != "" {
+			s := getImmediateSizeFromValue(parsed.Imm)
+			switch s {
+			case CodeIMM8:
+				return 1
+			case CodeIMM16:
+				return 2
+			case CodeIMM32:
+				return 4
+			}
+		}
+		return 0
+	}
+
 	for _, parsed := range inst.Operands {
 		if parsed.Addr != nil && parsed.Addr.Prefix != nil {
 			t := getMemorySizeFromPrefix(*parsed.Addr.Prefix + " " + parsed.Addr.Addr)
 			switch t {
 			case CodeM8:
-				size = 1
+				return 1
 			case CodeM16:
-				size = 2
+				return 2
 			case CodeM32:
-				size = 4
+				return 4
 			}
 			break
 		}
@@ -54,28 +69,28 @@ func (b *OperandImpl) DetectImmediateSize() int {
 			t := getMemorySizeFromPrefix(*parsed.Mem.Prefix + " " + parsed.Mem.Mem)
 			switch t {
 			case CodeM8:
-				size = 1
+				return 1
 			case CodeM16:
-				size = 2
+				return 2
 			case CodeM32:
-				size = 4
+				return 4
 			}
 			break
 		}
-		if parsed.Imm != "" {
-			s := getImmediateSizeFromValue(parsed.Imm)
-			switch s {
-			case CodeIMM8:
-				size = 1
-			case CodeIMM16:
-				size = 2
-			case CodeIMM32:
-				size = 4
+		if parsed.Reg != "" {
+			t := getRegisterType(parsed.Reg)
+			switch t {
+			case CodeR8:
+				return 1
+			case CodeR16:
+				return 2
+			case CodeR32:
+				return 4
 			}
 			break
 		}
 	}
-	return size
+	return 0
 }
 
 type Instruction struct {
