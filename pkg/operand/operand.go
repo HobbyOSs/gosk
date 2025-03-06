@@ -1,5 +1,7 @@
 package operand
 
+import "github.com/HobbyOSs/gosk/internal/ast"
+
 func equalOperandTypes(a, b []OperandType) bool {
 	if len(a) != len(b) {
 		return false
@@ -19,4 +21,6 @@ type Operands interface {
 	FromString(text string) Operands
 	CalcOffsetByteSize() int
 	DetectImmediateSize() int
+	WithBitMode(mode ast.BitMode) Operands
+	GetBitMode() ast.BitMode
 }

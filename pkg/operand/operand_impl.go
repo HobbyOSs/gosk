@@ -1,6 +1,7 @@
 package operand
 
 import (
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,10 +14,11 @@ var operandTypesCache = make(map[string][]OperandType)
 
 type OperandImpl struct {
 	Internal string
+	BitMode  ast.BitMode
 }
 
 func NewOperandFromString(text string) Operands {
-	return &OperandImpl{Internal: text}
+	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT}
 }
 
 func (b *OperandImpl) InternalString() string {
@@ -28,7 +30,15 @@ func (b *OperandImpl) Serialize() string {
 }
 
 func (b *OperandImpl) FromString(text string) Operands {
-	return &OperandImpl{Internal: text}
+	return &OperandImpl{Internal: text, BitMode: b.BitMode}
+}
+
+func (b *OperandImpl) WithBitMode(mode ast.BitMode) Operands {
+	return &OperandImpl{Internal: b.Internal, BitMode: mode}
+}
+
+func (b *OperandImpl) GetBitMode() ast.BitMode {
+	return b.BitMode
 }
 
 func (b *OperandImpl) DetectImmediateSize() int {
