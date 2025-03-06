@@ -74,6 +74,7 @@ const (
 	CodeER          OperandType = "{er}"
 	CodeTR          OperandType = "tr"
 	CodeDR          OperandType = "dr"
+	CodeSREG        OperandType = "sreg"
 )
 
 var typeMap = map[string]OperandType{
@@ -146,6 +147,7 @@ var typeMap = map[string]OperandType{
 	"cr":           CodeCR,
 	"tr":           CodeTR,
 	"dr":           CodeDR,
+	"sreg":         CodeSREG,
 }
 
 func (ot OperandType) String() string {

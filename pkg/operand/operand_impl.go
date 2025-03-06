@@ -178,7 +178,7 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		case parsed.Imm != "":
 			types = append(types, CodeIMM)
 		case parsed.Seg != "":
-			types = append(types, CodeR16)
+			types = append(types, CodeSREG)
 		case parsed.Addr != nil:
 			types = append(types, CodeM)
 		case parsed.Mem != nil:
