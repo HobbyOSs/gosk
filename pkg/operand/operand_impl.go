@@ -38,6 +38,30 @@ func (b *OperandImpl) DetectImmediateSize() int {
 
 	size := 0
 	for _, parsed := range inst.Operands {
+		if parsed.Addr != nil && parsed.Addr.Prefix != nil {
+			t := getMemorySizeFromPrefix(*parsed.Addr.Prefix + " " + parsed.Addr.Addr)
+			switch t {
+			case CodeM8:
+				size = 1
+			case CodeM16:
+				size = 2
+			case CodeM32:
+				size = 4
+			}
+			break
+		}
+		if parsed.Mem != nil && parsed.Mem.Prefix != nil {
+			t := getMemorySizeFromPrefix(*parsed.Mem.Prefix + " " + parsed.Mem.Mem)
+			switch t {
+			case CodeM8:
+				size = 1
+			case CodeM16:
+				size = 2
+			case CodeM32:
+				size = 4
+			}
+			break
+		}
 		if parsed.Imm != "" {
 			s := getImmediateSizeFromValue(parsed.Imm)
 			switch s {
@@ -48,6 +72,7 @@ func (b *OperandImpl) DetectImmediateSize() int {
 			case CodeIMM32:
 				size = 4
 			}
+			break
 		}
 	}
 	return size
@@ -312,9 +337,13 @@ func (b *OperandImpl) CalcOffsetByteSize() int {
 
 	var total int
 	for _, op := range inst.Operands {
-		// 例: op.Mem == "[EBX+16]" とか op.Mem == "[0x0ff0]" とかが入る
+		// 例: op.Mem == "[EBX+16]" とか op.Addr == "[0x0ff0]" とかが入る
 		if op.Mem != nil {
 			size := calcMemOffsetSize(op.Mem.Mem)
+			total += size
+		}
+		if op.Addr != nil {
+			size := calcMemOffsetSize(op.Addr.Addr)
 			total += size
 		}
 	}

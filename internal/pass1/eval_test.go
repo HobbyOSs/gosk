@@ -74,7 +74,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		{
 			// 0xc7, 0x06, 0xf4, 0x0f, 0x40, 0x01
 			bitMode:     ast.MODE_16BIT,
-			text:        "MOV [ 0x0ff4 ], 320",
+			text:        "MOV WORD [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
 		// {

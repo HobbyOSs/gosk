@@ -31,7 +31,7 @@ func NewParseToken(tokenType TokenType, v ast.Exp) *ParseToken {
 }
 
 func (p *ParseToken) AsString() string {
-	// TODO: ast.Expの型で分岐する
+	// 内部的にast.Expの型で分岐する
 	return p.Data.TokenLiteral()
 }
 

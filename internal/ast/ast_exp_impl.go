@@ -73,7 +73,12 @@ type MemoryAddrExp struct {
 
 func (m MemoryAddrExp) expressionNode() {}
 func (m MemoryAddrExp) TokenLiteral() string {
-	str := "[ "
+	var str = ""
+	if m.DataType != None {
+		str += string(m.DataType)
+		str += " "
+	}
+	str += "[ "
 	str += m.Left.TokenLiteral()
 	if m.Right != nil {
 		str += " : "
