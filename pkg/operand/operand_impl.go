@@ -9,6 +9,8 @@ import (
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
+var operandTypesCache = make(map[string][]OperandType)
+
 type OperandImpl struct {
 	Internal string
 }
@@ -141,6 +143,10 @@ func getParser() *participle.Parser[Instruction] {
 }
 
 func (b *OperandImpl) OperandTypes() []OperandType {
+	if cached, exists := operandTypesCache[b.Internal]; exists {
+		return cached
+	}
+
 	parser := getParser()
 	inst, err := parser.ParseString("", b.Internal)
 	if err != nil || len(inst.Operands) == 0 {
@@ -181,6 +187,7 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 	// サイズ未確定のimm/memを他のオペランドから決定
 	types = resolveOperandSizes(types, inst.Operands)
 
+	operandTypesCache[b.Internal] = types
 	return types
 }
 
