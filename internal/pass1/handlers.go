@@ -67,6 +67,23 @@ func init() {
 
 	// MOV
 	opcodeEvalFns["MOV"] = processMOV
+
+	// Interrupt Instructions
+	opcodeEvalFns["INT"] = processNoParam
+
+	// Arithmetic Instructions
+	opcodeEvalFns["ADD"] = processADD
+	opcodeEvalFns["ADC"] = processADC
+	opcodeEvalFns["SUB"] = processSUB
+	opcodeEvalFns["SBB"] = processSBB
+	opcodeEvalFns["CMP"] = processCMP
+	opcodeEvalFns["INC"] = processINC
+	opcodeEvalFns["DEC"] = processDEC
+	opcodeEvalFns["NEG"] = processNEG
+	opcodeEvalFns["MUL"] = processMUL
+	opcodeEvalFns["IMUL"] = processIMUL
+	opcodeEvalFns["DIV"] = processDIV
+	opcodeEvalFns["IDIV"] = processIDIV
 }
 
 func popAndPush(env *Pass1) {

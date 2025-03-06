@@ -41,6 +41,13 @@ func Dump(by []byte) string {
 	return hexdump
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func viewString(b []byte) string {
 	r := []rune(string(b))
 	for i := range r {
