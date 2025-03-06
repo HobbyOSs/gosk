@@ -77,13 +77,13 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV WORD [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
-		// {
-		// 	// MOV DWORD [VRAM],0x000a0000  ; VRAM=0x0ff8
-		// 	// 0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00
-		// 	bitMode:     ast.MODE_16BIT,
-		// 	text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
-		// 	expectedLOC: 9,
-		// },
+		{
+			// MOV DWORD [VRAM],0x000a0000  ; VRAM=0x0ff8
+			// 0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00
+			bitMode:     ast.MODE_16BIT,
+			text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
+			expectedLOC: 9,
+		},
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
 		// 	text:        "MOV CL, 0x0ff0",

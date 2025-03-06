@@ -57,6 +57,18 @@ func (db *InstructionDB) FindForms(opcode string, operands operand.Operands) ([]
 	return matchedForms, nil
 }
 
+// GetPrefixSize はプレフィックスバイトのサイズを計算します
+func (db *InstructionDB) GetPrefixSize(operands operand.Operands) int {
+	size := 0
+
+	// operand size prefix (0x66)のみ必要
+	if operands.Require66h() {
+		size += 1
+	}
+
+	return size
+}
+
 func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Operands) (int, error) {
 	forms, err := db.FindForms(opcode, operands)
 	if err != nil {
@@ -71,12 +83,16 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 			return e.GetOutputSize(options)
 		})
 	})
+
+	// プレフィックスサイズを計算
+	prefixSize := db.GetPrefixSize(operands)
+
 	// メモリーアドレス表現にあるoffset値について
 	// 機械語サイズの計算をして足し込む
 	offsetByteSize := operands.CalcOffsetByteSize()
 
-	// 最小値を取得
-	return lo.Min(allOutputSize) + offsetByteSize, nil
+	// 最小値を取得し、プレフィックスサイズとオフセットサイズを加算
+	return lo.Min(allOutputSize) + prefixSize + offsetByteSize, nil
 }
 
 func matchOperands(formOperands *[]Operand, queryOperands operand.Operands) bool {

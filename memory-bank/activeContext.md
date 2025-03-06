@@ -11,6 +11,9 @@
 - `pkg/operand/operand_impl.go`にx86のprefix bytes判定機能を実装
   - オペランドサイズプレフィックス(66h)の判定
   - アドレスサイズプレフィックス(67h)の判定
+- `pkg/asmdb/instruction_search.go`の機械語サイズ計算機能を改善
+  - GetPrefixSize関数を追加してプレフィックスバイトのサイズ計算を実装
+  - FindMinOutputSizeメソッドでプレフィックスサイズを計算に含めるように修正
 
 ## 次のステップ
 1. Pass1の評価処理の網羅的なテスト実装
