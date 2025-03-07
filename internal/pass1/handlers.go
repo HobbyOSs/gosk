@@ -69,7 +69,7 @@ func init() {
 	opcodeEvalFns["MOV"] = processMOV
 
 	// Interrupt Instructions
-	opcodeEvalFns["INT"] = processNoParam
+	opcodeEvalFns["INT"] = processINT
 
 	// Arithmetic Instructions
 	opcodeEvalFns["ADD"] = processADD

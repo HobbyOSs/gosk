@@ -27,12 +27,12 @@
     - [ ] 相対アドレス計算
     - [ ] ジャンプ先アドレスの解決
 
-- [ ] 4. システム命令の実装
-  - [ ] INT命令
-    - [ ] 割り込み番号の処理
-    - [ ] BIOS呼び出しの対応
-  - [ ] HLT命令
-    - [ ] CPU停止状態の生成
+- [x] 4. システム命令の実装
+  - [x] INT命令
+    - [x] 割り込み番号の処理
+    - [x] BIOS呼び出しの対応
+  - [x] HLT命令
+    - [x] CPU停止状態の生成
 
 - [ ] 5. テスト有効化と検証
   - [ ] 各命令のユニットテスト実行
@@ -99,3 +99,38 @@
 - オペランドの種別判定の精度向上
 - スタックマシンベースの設計の最適化
 - `ocode`中間言語の実装の継続
+
+## Ocodeの使い方
+### 基本的な使い方
+1. **Ocodeの生成**
+   - `env.Client.Emit`を使用して命令を出力
+   - 引数は文字列形式で渡す
+   - 例：`env.Client.Emit("INT 0x10")`
+
+2. **パラメータを持つ命令の場合**
+   - パラメータはカンマ区切りで指定
+   - 例：`env.Client.Emit("MOV AX,0")`
+
+3. **実装パターン**
+   - パラメータなし命令（HLT等）
+     ```go
+     func processNoParam(env *Pass1, tokens []*token.ParseToken) {
+         env.LOC += 1  // 機械語サイズを加算
+         // Emitは呼び出し元で実行
+     }
+     ```
+   - パラメータあり命令（INT等）
+     ```go
+     func processINT(env *Pass1, tokens []*token.ParseToken) {
+         env.LOC += 2  // 機械語サイズを加算
+         args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
+             return token.AsString()
+         })
+         env.Client.Emit(fmt.Sprintf("INT %s", strings.Join(args, ",")))
+     }
+     ```
+
+4. **注意点**
+   - パラメータなし命令は`handlers.go`のTraverseAST内のOpcodeStmtケースでEmitを実行
+   - パラメータあり命令は各処理関数内でEmitを実行
+   - 機械語サイズの計算は必須（env.LOCに加算）

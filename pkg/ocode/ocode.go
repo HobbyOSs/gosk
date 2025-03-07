@@ -98,6 +98,7 @@ const (
 	OpICEBP                     // ICEBP
 	OpIDIV                      // IDIV
 	OpIMUL                      // IMUL
+	OpINT                       // INT
 	OpINTO                      // INTO
 	OpINVD                      // INVD
 	OpIRET                      // IRET

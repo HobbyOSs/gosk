@@ -41,6 +41,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x00, 0x00, 0x00},
 		},
+		{
+			name: "INT",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpINT, Operands: []string{"0x10"}},
+			},
+			expected: []byte{0xCD, 0x10}, // INT 0x10 = CD 10
+		},
 	}
 
 	for _, tt := range tests {
