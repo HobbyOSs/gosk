@@ -99,6 +99,7 @@ const (
 	OpIDIV                      // IDIV
 	OpIMUL                      // IMUL
 	OpINT                       // INT
+	OpJMP                       // JMP
 	OpINTO                      // INTO
 	OpINVD                      // INVD
 	OpIRET                      // IRET
