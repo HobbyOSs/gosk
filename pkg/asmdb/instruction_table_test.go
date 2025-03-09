@@ -42,33 +42,23 @@ func TestSegmentRegisterLookup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get MOV instruction: %v", err)
 	}
-	if instruction == nil {
-		t.Fatal("MOV instruction not found")
-	}
-
-	t.Logf("MOV instruction: %+v", instruction)
+	assert.NotNil(t, instruction, "MOV instruction not found")
 
 	// セグメントレジスタを含むオペランドの組み合わせを探す
 	found := false
-	for i, form := range instruction.Forms {
-		t.Logf("Form %d: %+v", i, form)
+	for _, form := range instruction.Forms {
 		if form.Operands == nil {
-			t.Logf("Form %d: Operands is nil", i)
 			continue
 		}
 		operands := *form.Operands
-		t.Logf("Form %d: Operands: %+v", i, operands)
 		if len(operands) == 2 &&
 			((operands[0].Type == "r16" && operands[1].Type == "sreg") ||
 				(operands[0].Type == "sreg" && operands[1].Type == "r16")) {
 			found = true
-			t.Logf("Form %d: Found matching operands", i)
 			break
 		}
 	}
 
 	// 見つからなかった場合はテストを失敗とする
-	if !found {
-		t.Fatal("MOV instruction with segment register operands not found")
-	}
+	assert.True(t, found, "MOV instruction with segment register operands not found")
 }

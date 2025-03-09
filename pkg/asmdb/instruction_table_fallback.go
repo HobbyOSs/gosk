@@ -1,15 +1,20 @@
 package asmdb
 
+// Bool is a helper function that returns a pointer to a boolean value.
+func Bool(b bool) *bool {
+	return &b
+}
+
 // addImulFallbackEncodings adds fallback encodings for IMUL instructions.
 // This function is called from instruction_table.go:init().
 func addImulFallbackEncodings() {
-	instructionData.Instructions["IMUL r16, imm8"] = Instruction{
-		Summary: "Multiply r16 by imm8",
+	instructionData.Instructions["IMUL"] = Instruction{
+		Summary: "Multiply",
 		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "r16", Input: new(bool), Output: new(bool)},
-					{Type: "imm8", Input: new(bool), Output: new(bool)},
+					{Type: "r16", Input: Bool(true), Output: Bool(true)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -19,18 +24,10 @@ func addImulFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["IMUL r16, imm8"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["IMUL r16, imm8"].Forms[0].Operands)[1].Input = false
-
-	instructionData.Instructions["IMUL r32, imm8"] = Instruction{
-		Summary: "Multiply r32 by imm8",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "r32", Input: new(bool), Output: new(bool)},
-					{Type: "imm8", Input: new(bool), Output: new(bool)},
+					{Type: "r32", Input: Bool(true), Output: Bool(true)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -40,18 +37,10 @@ func addImulFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["IMUL r32, imm8"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["IMUL r32, imm8"].Forms[0].Operands)[1].Input = false
-
-	instructionData.Instructions["IMUL r16, imm16"] = Instruction{
-		Summary: "Multiply r16 by imm16",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "r16", Input: new(bool), Output: new(bool)},
-					{Type: "imm16", Input: new(bool), Output: new(bool)},
+					{Type: "r16", Input: Bool(true), Output: Bool(true)},
+					{Type: "imm16", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -61,18 +50,10 @@ func addImulFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["IMUL r16, imm16"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["IMUL r16, imm16"].Forms[0].Operands)[1].Input = false
-
-	instructionData.Instructions["IMUL r32, imm32"] = Instruction{
-		Summary: "Multiply r32 by imm32",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "r32", Input: new(bool), Output: new(bool)},
-					{Type: "imm32", Input: new(bool), Output: new(bool)},
+					{Type: "r32", Input: Bool(true), Output: Bool(true)},
+					{Type: "imm32", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -84,20 +65,18 @@ func addImulFallbackEncodings() {
 			},
 		},
 	}
-	*(*instructionData.Instructions["IMUL r32, imm32"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["IMUL r32, imm32"].Forms[0].Operands)[1].Input = false
 }
 
 // addOutFallbackEncodings adds fallback encodings for OUT instructions.
 // This function is called from instruction_table.go:init().
 func addOutFallbackEncodings() {
-	instructionData.Instructions["OUT imm8, al"] = Instruction{
+	instructionData.Instructions["OUT"] = Instruction{
 		Summary: "Output to Port",
 		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "imm8", Input: new(bool), Output: new(bool)},
-					{Type: "al", Input: new(bool), Output: new(bool)},
+					{Type: "al", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -106,18 +85,10 @@ func addOutFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["OUT imm8, al"].Forms[0].Operands)[0].Input = false
-	*(*instructionData.Instructions["OUT imm8, al"].Forms[0].Operands)[1].Output = false
-
-	instructionData.Instructions["OUT imm8, ax"] = Instruction{
-		Summary: "Output to Port",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "imm8", Input: new(bool), Output: new(bool)},
-					{Type: "ax", Input: new(bool), Output: new(bool)},
+					{Type: "ax", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -126,18 +97,10 @@ func addOutFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["OUT imm8, ax"].Forms[0].Operands)[0].Input = false
-	*(*instructionData.Instructions["OUT imm8, ax"].Forms[0].Operands)[1].Output = false
-
-	instructionData.Instructions["OUT imm8, eax"] = Instruction{
-		Summary: "Output to Port",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "imm8", Input: new(bool), Output: new(bool)},
-					{Type: "eax", Input: new(bool), Output: new(bool)},
+					{Type: "eax", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -146,18 +109,10 @@ func addOutFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["OUT imm8, eax"].Forms[0].Operands)[0].Input = false
-	*(*instructionData.Instructions["OUT imm8, eax"].Forms[0].Operands)[1].Output = false
-
-	instructionData.Instructions["OUT dx, al"] = Instruction{
-		Summary: "Output to Port",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "dx", Input: new(bool), Output: new(bool)},
-					{Type: "al", Input: new(bool), Output: new(bool)},
+					{Type: "dx", Input: Bool(false), Output: Bool(false)},
+					{Type: "al", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -165,18 +120,21 @@ func addOutFallbackEncodings() {
 					},
 				},
 			},
-		},
-	}
-	*(*instructionData.Instructions["OUT dx, al"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["OUT dx, al"].Forms[0].Operands)[1].Output = false
-
-	instructionData.Instructions["OUT dx, ax"] = Instruction{
-		Summary: "Output to Port",
-		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "dx", Input: new(bool), Output: new(bool)},
-					{Type: "ax", Input: new(bool), Output: new(bool)},
+					{Type: "dx", Input: Bool(false), Output: Bool(false)},
+					{Type: "ax", Input: Bool(true), Output: Bool(false)},
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "EF"},
+					},
+				},
+			},
+			{
+				Operands: &[]Operand{
+					{Type: "dx", Input: Bool(false), Output: Bool(false)},
+					{Type: "eax", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
@@ -186,27 +144,6 @@ func addOutFallbackEncodings() {
 			},
 		},
 	}
-	*(*instructionData.Instructions["OUT dx, ax"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["OUT dx, ax"].Forms[0].Operands)[1].Output = false
-
-	instructionData.Instructions["OUT dx, eax"] = Instruction{
-		Summary: "Output to Port",
-		Forms: []InstructionForm{
-			{
-				Operands: &[]Operand{
-					{Type: "dx", Input: new(bool), Output: new(bool)},
-					{Type: "eax", Input: new(bool), Output: new(bool)},
-				},
-				Encodings: []Encoding{
-					{
-						Opcode: Opcode{Byte: "EF"},
-					},
-				},
-			},
-		},
-	}
-	*(*instructionData.Instructions["OUT dx, eax"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["OUT dx, eax"].Forms[0].Operands)[1].Output = false
 }
 
 func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
@@ -216,8 +153,8 @@ func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
 	newMOVInstructionForms := append(currentMOVInstructionForms,
 		InstructionForm{
 			Operands: &[]Operand{
-				{Type: "r16", Input: new(bool), Output: new(bool)},
-				{Type: "sreg", Input: new(bool), Output: new(bool)},
+				{Type: "r16", Input: Bool(false), Output: Bool(true)},
+				{Type: "sreg", Input: Bool(true), Output: Bool(false)},
 			},
 			Encodings: []Encoding{
 				{
@@ -228,8 +165,8 @@ func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
 		},
 		InstructionForm{
 			Operands: &[]Operand{
-				{Type: "sreg", Input: new(bool), Output: new(bool)},
-				{Type: "r16", Input: new(bool), Output: new(bool)},
+				{Type: "sreg", Input: Bool(false), Output: Bool(true)},
+				{Type: "r16", Input: Bool(true), Output: Bool(false)},
 			},
 			Encodings: []Encoding{
 				{

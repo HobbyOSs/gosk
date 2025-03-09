@@ -54,20 +54,12 @@
 ## 直近の変更点
 - `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
 - `pkg/asmdb/instruction_table_fallback.go` に `addImulFallbackEncodings` 関数と `addOutFallbackEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
+- `pkg/asmdb/instruction_table_test.go` の `TestSegmentRegisterLookup` 関数からログ出力を削除し、`assert` を使用してコードを簡潔にした。
 
 ## 次のステップ
 (特になし)
 
 ## アクティブな決定事項と考慮事項
-- x86_64.jsonの制限事項
-  - セグメントレジスタ関連の命令（MOV SS,AX など）の定義が不足している可能性
-  - 一時的な対応として、セグメントレジスタ関連の命令は後回しにし、基本的な命令から実装を進める
-  - 実装順序：
-    1. レジスタ間MOV（AX, BX等）
-    2. 即値のMOV（MOV AX, 0等）
-    3. メモリ参照のMOV（[SI]等）
-    4. セグメントレジスタ関連（要json-x86-64の拡張）
-
 - アセンブラ命令実装のルーチンを定義し、systemPatterns.mdに記録
   - Pass1での命令実装手順
   - Ocodeの実装手順
