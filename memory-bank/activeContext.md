@@ -50,6 +50,12 @@
 
 ## 直近の変更点
 
+- `pkg/asmdb/instruction_search.go` のmatchOperands関数を修正し、セグメントレジスタ（sreg）をr16として扱えるようにした
+  - MOV AX, SSのような命令で、SSがsregでありかつr16である場合に対応
+  - JSONにsregが定義されていない場合でも、r16として適切に処理できるように改善
+- FindEncoding関数をリファクタリングし、コードをよりシンプルにした
+- 詳細なコメントを追加し、特にセグメントレジスタの処理について説明を加えた
+
 - `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
 - `pkg/asmdb/instruction_table_fallback.go` に `addImulFallbackEncodings` 関数と `addOutFallbackEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
 - `pkg/asmdb/instruction_table_test.go` の `TestSegmentRegisterLookup` 関数からログ出力を削除し、`assert` を使用してコードを簡潔にした。

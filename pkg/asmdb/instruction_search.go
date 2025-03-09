@@ -41,6 +41,9 @@ func (db *InstructionDB) FindInstruction(opcode string) (*Instruction, bool) {
 	return &instr, true
 }
 
+// FindEncoding は指定された命令とオペランドに対応するエンコーディングを検索します。
+// セグメントレジスタ（sreg）を含む命令の場合、matchOperands関数内でr16として扱われます。
+// 例：MOV AX, SS は MOV r16, r16 として検索され、適切なエンコーディング（8C/8E）が選択されます。
 func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) (*Encoding, error) {
 	instr, found := db.FindInstruction(opcode)
 	if !found {
@@ -52,6 +55,7 @@ func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) 
 		minSize     = -1
 	)
 
+	// 全てのフォームを検索し、最小サイズのエンコーディングを見つける
 	for i := range instr.Forms {
 		form := &instr.Forms[i]
 		if !matchOperands(form.Operands, operands) {
@@ -112,8 +116,14 @@ func matchOperands(formOperands *[]Operand, queryOperands operand.Operands) bool
 	if formOperands == nil || len(*formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
+
 	for i, operand := range *formOperands {
-		if operand.Type != queryOperands.OperandTypes()[i].String() {
+		queryType := queryOperands.OperandTypes()[i].String()
+		// sregの場合、r16としても一致を試みる
+		if operand.Type != queryType {
+			if queryType == "sreg" && operand.Type == "r16" {
+				continue // sregはr16として扱う
+			}
 			return false
 		}
 	}

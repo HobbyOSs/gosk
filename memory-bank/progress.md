@@ -53,7 +53,12 @@
         - Pass1: processJMP 関数実装 (internal/pass1/pass1_inst_jmp.go)
         - Ocode: OpJMP 定義 (pkg/ocode/ocode.go)
         - 機械語生成: handleJMP 関数実装 (internal/codegen/x86gen_jmp.go)
-- asmdbのセグメントレジスタ対応 (MOV r16, Sreg, MOV Sreg, r16)
+- asmdbのセグメントレジスタ対応の改善
+  - MOV r16, Sreg, MOV Sreg, r16のサポート
+  - セグメントレジスタをr16として扱う機能を実装
+  - matchOperands関数でsreg→r16の変換を処理
+  - FindEncoding関数のリファクタリングとコメントの追加
+  - コードの可読性とメンテナンス性の向上
 - asmdbのIMUL命令とOUT命令のフォールバック実装を追加
 
 ## まだ構築が必要な部分

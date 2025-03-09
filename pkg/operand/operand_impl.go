@@ -230,12 +230,12 @@ func getRegisterType(reg string) OperandType {
 
 	// 正規表現で判定するもの
 	switch {
-	case regR32Pattern.MatchString(reg):
-		return CodeR32
 	case regR8Pattern.MatchString(reg):
 		return CodeR8
 	case regR16Pattern.MatchString(reg):
 		return CodeR16
+	case regR32Pattern.MatchString(reg):
+		return CodeR32
 	}
 
 	return CodeR32
