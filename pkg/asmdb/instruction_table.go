@@ -113,7 +113,10 @@ func init() {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	addSegmentRegisterEncodings() // ここで呼び出す
+	// fallbacks
+	addSegmentRegisterEncodings()
+	addImulFallbackEncodings()
+	addOutFallbackEncodings()
 }
 
 func GetInstructionByOpcode(opcode string) (*Instruction, error) {

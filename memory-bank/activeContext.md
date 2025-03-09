@@ -53,6 +53,7 @@
 
 ## 直近の変更点
 - `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
+- `pkg/asmdb/instruction_table_fallback.go` に `addImulFallbackEncodings` 関数と `addOutFallbackEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
 
 ## 次のステップ
 (特になし)

@@ -53,6 +53,7 @@
     - Ocode: OpJMP 定義 (pkg/ocode/ocode.go)
     - 機械語生成: handleJMP 関数実装 (internal/codegen/x86gen_jmp.go)
 - asmdbのセグメントレジスタ対応 (MOV r16, Sreg, MOV Sreg, r16)
+- asmdbのIMUL命令とOUT命令のフォールバック実装を追加
 
 ## まだ構築が必要な部分
 - Day02の実装
