@@ -67,6 +67,36 @@
    - `internal/codegen/x86gen.go`に命令の処理を追加
    - asmdbを使用して正確な機械語を生成
    - ModR/Mの適切な生成
+   - 機械語生成の標準パターン：
+     ```go
+     // 1. 空のスライスから開始
+     machineCode := make([]byte, 0)
+
+     // 2. プレフィックスの追加（必要な場合）
+     if ops.Require66h() {
+         machineCode = append(machineCode, 0x66)
+     }
+
+     // 3. オペコードの追加
+     opcodeByte, err := strconv.ParseUint(encoding.Opcode.Byte, 16, 8)
+     if err != nil {
+         return nil, fmt.Errorf("failed to parse opcode byte: %v", err)
+     }
+     machineCode = append(machineCode, byte(opcodeByte))
+
+     // 4. ModR/Mの追加（必要な場合）
+     if encoding.ModRM != nil {
+         modrm := generateModRMByte(encoding.ModRM)
+         machineCode = append(machineCode, modrm)
+     }
+
+     // 5. 即値の追加（必要な場合）
+     if encoding.Immediate != nil {
+         if imm, err := getImmediateValue(operands[1], encoding.Immediate.Size); err == nil {
+             machineCode = append(machineCode, imm...)
+         }
+     }
+     ```
 
 ### 実装手順
 1. **Pass1の実装**
