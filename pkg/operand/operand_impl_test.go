@@ -17,7 +17,7 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		{"General Register", " EAX", []OperandType{CodeR32}},
 		{"Memory Address", "[EBX]", []OperandType{CodeM32}},
 		{"Immediate Value", "0x10", []OperandType{CodeIMM32}},
-		{"Segment Register", " CS", []OperandType{CodeR16}},
+		{"Segment Register", " CS", []OperandType{CodeSREG}},
 		{"Segmented Address", " DS:SI", []OperandType{CodeM16}},
 		{"Segmented Address", "DS:BX ", []OperandType{CodeM16}},
 		{"Segmented Address", "ES:DI", []OperandType{CodeM16}},

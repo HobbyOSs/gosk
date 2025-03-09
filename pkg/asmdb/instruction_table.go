@@ -113,8 +113,8 @@ func init() {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	// fallbacks
-	addSegmentRegisterEncodings()
+	// fallback
+	addMovSegmentRegisterEncodings(&instructionData)
 	addImulFallbackEncodings()
 	addOutFallbackEncodings()
 }

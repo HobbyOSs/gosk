@@ -5,7 +5,7 @@ package asmdb
 func addImulFallbackEncodings() {
 	instructionData.Instructions["IMUL r16, imm8"] = Instruction{
 		Summary: "Multiply r16 by imm8",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "r16", Input: new(bool), Output: new(bool)},
@@ -13,8 +13,8 @@ func addImulFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode:  Opcode{Byte: "6B"},
-						ModRM:   &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						Opcode:    Opcode{Byte: "6B"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
 						Immediate: &Immediate{Size: 1, Value: "#1"},
 					},
 				},
@@ -26,7 +26,7 @@ func addImulFallbackEncodings() {
 
 	instructionData.Instructions["IMUL r32, imm8"] = Instruction{
 		Summary: "Multiply r32 by imm8",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "r32", Input: new(bool), Output: new(bool)},
@@ -34,8 +34,8 @@ func addImulFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode:  Opcode{Byte: "6B"},
-						ModRM:   &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						Opcode:    Opcode{Byte: "6B"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
 						Immediate: &Immediate{Size: 1, Value: "#1"},
 					},
 				},
@@ -47,7 +47,7 @@ func addImulFallbackEncodings() {
 
 	instructionData.Instructions["IMUL r16, imm16"] = Instruction{
 		Summary: "Multiply r16 by imm16",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "r16", Input: new(bool), Output: new(bool)},
@@ -55,8 +55,8 @@ func addImulFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode:  Opcode{Byte: "69"},
-						ModRM:   &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						Opcode:    Opcode{Byte: "69"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
 						Immediate: &Immediate{Size: 2, Value: "#1"},
 					},
 				},
@@ -68,7 +68,7 @@ func addImulFallbackEncodings() {
 
 	instructionData.Instructions["IMUL r32, imm32"] = Instruction{
 		Summary: "Multiply r32 by imm32",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "r32", Input: new(bool), Output: new(bool)},
@@ -76,8 +76,8 @@ func addImulFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode:  Opcode{Byte: "69"},
-						ModRM:   &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						Opcode:    Opcode{Byte: "69"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
 						Immediate: &Immediate{Size: 4, Value: "#1"},
 					},
 				},
@@ -93,7 +93,7 @@ func addImulFallbackEncodings() {
 func addOutFallbackEncodings() {
 	instructionData.Instructions["OUT imm8, al"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "imm8", Input: new(bool), Output: new(bool)},
@@ -101,7 +101,7 @@ func addOutFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode: Opcode{Byte: "E6"},
+						Opcode:    Opcode{Byte: "E6"},
 						Immediate: &Immediate{Size: 1, Value: "#0"},
 					},
 				},
@@ -113,7 +113,7 @@ func addOutFallbackEncodings() {
 
 	instructionData.Instructions["OUT imm8, ax"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "imm8", Input: new(bool), Output: new(bool)},
@@ -121,7 +121,7 @@ func addOutFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode: Opcode{Byte: "E7"},
+						Opcode:    Opcode{Byte: "E7"},
 						Immediate: &Immediate{Size: 1, Value: "#0"},
 					},
 				},
@@ -133,7 +133,7 @@ func addOutFallbackEncodings() {
 
 	instructionData.Instructions["OUT imm8, eax"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "imm8", Input: new(bool), Output: new(bool)},
@@ -141,7 +141,7 @@ func addOutFallbackEncodings() {
 				},
 				Encodings: []Encoding{
 					{
-						Opcode: Opcode{Byte: "E7"},
+						Opcode:    Opcode{Byte: "E7"},
 						Immediate: &Immediate{Size: 1, Value: "#0"},
 					},
 				},
@@ -153,7 +153,7 @@ func addOutFallbackEncodings() {
 
 	instructionData.Instructions["OUT dx, al"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "dx", Input: new(bool), Output: new(bool)},
@@ -172,7 +172,7 @@ func addOutFallbackEncodings() {
 
 	instructionData.Instructions["OUT dx, ax"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "dx", Input: new(bool), Output: new(bool)},
@@ -191,7 +191,7 @@ func addOutFallbackEncodings() {
 
 	instructionData.Instructions["OUT dx, eax"] = Instruction{
 		Summary: "Output to Port",
-		Forms:   []InstructionForm{
+		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
 					{Type: "dx", Input: new(bool), Output: new(bool)},
@@ -209,45 +209,40 @@ func addOutFallbackEncodings() {
 	*(*instructionData.Instructions["OUT dx, eax"].Forms[0].Operands)[1].Output = false
 }
 
-func addSegmentRegisterEncodings() {
-	// セグメントレジスタのエンコーディングを追加
-	instructionData.Instructions["MOV r16, Sreg"] = Instruction{
-		Summary: "Move segment register to r16",
-		Forms: []InstructionForm{
-			{
-				Operands: &[]Operand{
-					{Type: "r16", Input: new(bool), Output: new(bool)},
-					{Type: "sreg", Input: new(bool), Output: new(bool)},
-				},
-				Encodings: []Encoding{
-					{
-						Opcode: Opcode{Byte: "8C"},
-						ModRM:  &Modrm{Mode: "11", Reg: "#1", Rm: "#0"},
-					},
+func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
+	// "MOV" 命令の既存の Forms を取得
+	currentMOVInstructionForms := instructionData.Instructions["MOV"].Forms
+	// 新しい Forms を追加
+	newMOVInstructionForms := append(currentMOVInstructionForms,
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "r16", Input: new(bool), Output: new(bool)},
+				{Type: "sreg", Input: new(bool), Output: new(bool)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "8C"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#1", Rm: "#0"},
 				},
 			},
 		},
-	}
-    *(*instructionData.Instructions["MOV r16, Sreg"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["MOV r16, Sreg"].Forms[0].Operands)[1].Input = false
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "sreg", Input: new(bool), Output: new(bool)},
+				{Type: "r16", Input: new(bool), Output: new(bool)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "8E"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+	)
 
-	instructionData.Instructions["MOV Sreg, r16"] = Instruction{
-		Summary: "Move r16 to segment register",
-		Forms: []InstructionForm{
-			{
-				Operands: &[]Operand{
-					{Type: "sreg", Input: new(bool), Output: new(bool)},
-					{Type: "r16", Input: new(bool), Output: new(bool)},
-				},
-				Encodings: []Encoding{
-					{
-						Opcode: Opcode{Byte: "8E"},
-						ModRM:  &Modrm{Mode: "11", Reg: "#0", Rm: "#1"},
-					},
-				},
-			},
-		},
+	// 更新された Forms で "MOV" 命令を更新
+	instructionData.Instructions["MOV"] = Instruction{
+		Summary: instructionData.Instructions["MOV"].Summary,
+		Forms:   newMOVInstructionForms,
 	}
-	*(*instructionData.Instructions["MOV Sreg, r16"].Forms[0].Operands)[0].Output = false
-	*(*instructionData.Instructions["MOV Sreg, r16"].Forms[0].Operands)[1].Input = false
 }
