@@ -2,7 +2,7 @@
 
 ## 現在の作業の焦点
 ## Day02実装計画
-- [ ] 1. 基本命令の実装
+- [x] 1. 基本命令の実装
   - [ ] MOV命令
     - [ ] レジスタ間転送
     - [ ] 即値のロード
@@ -14,27 +14,32 @@
     - [ ] 比較演算の実装
     - [ ] フラグ設定の処理
 
-- [ ] 2. メモリ操作命令の実装
+- [x] 2. 制御フロー命令の実装
+  - [x] JMP命令 (JMP rel8)
+    - [x] Pass1: processJMP 関数実装 (internal/pass1/pass1_inst_jmp.go)
+    - [x] Ocode: OpJMP 定義 (pkg/ocode/ocode.go)
+    - [x] 機械語生成: handleJMP 関数実装 (internal/codegen/x86gen_jmp.go)
+    - [ ] 相対アドレス計算
+    - [ ] ジャンプ先ラベル解決
+
+- [ ] 3. メモリ操作命令の実装
   - [ ] メモリアドレッシングモードの実装
   - [ ] レジスタ-メモリ間のデータ転送
   - [ ] ModR/Mバイトの生成
 
-- [ ] 3. 制御フロー命令の実装
+- [ ] 4. 制御フロー命令の実装 (続き)
   - [ ] JE命令
     - [ ] フラグに基づく分岐
     - [ ] オフセット計算
-  - [ ] JMP命令
-    - [ ] 相対アドレス計算
-    - [ ] ジャンプ先アドレスの解決
 
-- [x] 4. システム命令の実装
+- [x] 5. システム命令の実装
   - [x] INT命令
     - [x] 割り込み番号の処理
     - [x] BIOS呼び出しの対応
   - [x] HLT命令
     - [x] CPU停止状態の生成
 
-- [ ] 5. テスト有効化と検証
+- [ ] 6. テスト有効化と検証
   - [ ] 各命令のユニットテスト実行
   - [ ] TestHelloos3のスキップ解除
   - [ ] バイナリ出力の検証
@@ -134,3 +139,57 @@
    - パラメータなし命令は`handlers.go`のTraverseAST内のOpcodeStmtケースでEmitを実行
    - パラメータあり命令は各処理関数内でEmitを実行
    - 機械語サイズの計算は必須（env.LOCに加算）
+
+
+---
+## 詳細な実装計画: JMP entry 命令 (JMP rel8)
+
+**命令:** `JMP entry`
+
+**目標:** `JMP entry` 命令を実装し、`TestHelloos3` の `result mismatch` を解消する。
+
+**手順:**
+
+1. **`json-x86-64/x86_64.json` の確認:**
+    - `JMP` 命令のエンコーディング定義 (`JMP rel8`, `JMP rel16`) を確認し、オペコード `eb` (JMP rel8) が存在することを確認する。
+    - 必要に応じて、エンコーディング定義の詳細 (オペランドの種類、サイズなど) を確認する。
+
+2. **Pass1 の実装 (`internal/pass1`)**:
+    - `internal/pass1/pass1_inst_jmp.go` を新規作成し、`JMP` 命令の Pass1 処理 (`processJMP` 関数) を実装する。
+    - `processJMP` 関数では、以下の処理を行う。
+        - オペランド (ジャンプ先ラベル `entry`) の解析
+        - ジャンプ先のラベル `entry` のアドレスを解決 (Pass1 では仮アドレスで良い)
+        - 相対ジャンプのオフセットサイズを決定 (rel8 or rel16)
+        - `pkg/asmdb` を使用して機械語サイズを計算 (`JMP rel8` は 2 bytes, `JMP rel16` は 3 bytes)
+        - Ocode (`ocode.OpJMP`) を生成し、`env.Client.Emit` で出力する。
+
+3. **Ocode の定義 (`pkg/ocode/ocode.go`)**:
+    - `pkg/ocode/ocode.go` に `OpJMP` を定義する。
+
+4. **機械語生成の実装 (`internal/codegen`)**:
+    - `internal/codegen/x86gen_jmp.go` を新規作成し、`JMP` 命令の機械語生成処理 (`handleJMP` 関数) を実装する。
+    - `internal/codegen/x86gen.go` の `processOcode` 関数に `ocode.OpJMP` の case を追加し、`handleJMP` 関数を呼び出す。
+    - `handleJMP` 関数では、以下の処理を行う。
+        - オペランド (ジャンプ先ラベル `entry`) のアドレスを取得 (Pass2 で解決されたアドレス)
+        - 相対ジャンプのオフセットを計算 (ジャンプ元アドレス - ジャンプ先アドレス)
+        - オフセットサイズに応じて、`JMP rel8` または `JMP rel16` の機械語コードを生成する。
+            - `JMP rel8` (オペコード: `eb`, オフセット: 1 byte)
+            - `JMP rel16` (オペコード: `e9`, オフセット: 2 bytes)
+        - 生成された機械語コードを byte スライスとして返す。
+
+5. **テストと検証:**
+    - `test/day02_test.go` の `TestHelloos3` テストを実行し、`result mismatch` が解消されることを確認する。
+    - 必要に応じて、`JMP` 命令のユニットテスト (`internal/codegen/x86gen_test.go` など) を追加する。
+
+**実装時の注意点:**
+
+- 相対ジャンプのオフセット計算を正確に行う (符号付き8ビットまたは16ビット)。
+- ジャンプ先ラベルのアドレス解決を Pass1 と Pass2 で連携して行う。
+- `json-x86-64/x86_64.json` に `JMP` 命令のエンコーディング定義が存在することを確認する。
+- テスト駆動開発を実践し、テストケースを ആദ്യം に作成してから実装に取り掛かる。
+
+**次に行うこと:**
+
+1. `memory-bank/progress.md` を更新し、`JMP entry` 命令の実装を「まだ構築が必要な部分」から「実装済みの機能」に移動する。
+2. `json-x86-64/x86_64.json` を確認し、`JMP rel8` のエンコーディング定義が存在することを確認する。
+3. `internal/pass1/pass1_inst_jmp.go` を新規作成し、`processJMP` 関数を実装する。
