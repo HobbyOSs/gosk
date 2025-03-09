@@ -52,11 +52,12 @@
     - Pass1: processJMP 関数実装 (internal/pass1/pass1_inst_jmp.go)
     - Ocode: OpJMP 定義 (pkg/ocode/ocode.go)
     - 機械語生成: handleJMP 関数実装 (internal/codegen/x86gen_jmp.go)
+- asmdbのセグメントレジスタ対応 (MOV r16, Sreg, MOV Sreg, r16)
 
 ## まだ構築が必要な部分
 - Day02の実装
   - 基本命令
-    - [ ] MOV命令（レジスタ間、即値、セグメントレジスタ）
+    - [ ] MOV命令（レジスタ間、即値）
     - [ ] ADD命令（フラグ更新）
     - [ ] CMP命令（比較演算、フラグ設定）
   - メモリ操作

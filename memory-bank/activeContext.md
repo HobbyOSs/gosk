@@ -52,33 +52,10 @@
 - オペランド実装の改善
 
 ## 直近の変更点
-- テストスイートの構造を明確化（day01からday20までの段階的実装）
-- 算術命令の基本実装を追加（`internal/pass1/pass1_inst_arithmetic.go`）
-- 算術命令のテストを一時的にスキップ（`test/arithmetic_test.go`）
-- `internal/pass1/eval_test.go`のテストケース拡充
-- `internal/token/parse_token.go`のトークン解析処理の改善
-- `pkg/operand/operand_impl.go`にx86のprefix bytes判定機能を実装
-  - オペランドサイズプレフィックス(66h)の判定
-  - アドレスサイズプレフィックス(67h)の判定
-- `pkg/asmdb/instruction_search.go`の機械語サイズ計算機能を改善
-  - GetPrefixSize関数を追加してプレフィックスバイトのサイズ計算を実装
-  - FindMinOutputSizeメソッドでプレフィックスサイズを計算に含めるように修正
-  - FindFormをFindEncodingに変更し、最小サイズのエンコーディングを直接選択するように改善
+- `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
 
 ## 次のステップ
-1. day02からday20までの命令を段階的に実装
-   - 各dayのテストケースを解析
-   - 必要な命令を特定
-   - 命令の実装順序を決定
-2. 算術命令の実装を段階的に進める
-   - Ocodeの定義
-   - 機械語生成の実装
-   - ModR/Mの生成
-   - テストケースの修正
-3. Pass1の評価処理の網羅的なテスト実装
-4. トークン解析の完全性の確認と最適化
-5. オペランド実装の完成度向上
-6. スタックマシン関連の構造の継続的な改善
+(特になし)
 
 ## アクティブな決定事項と考慮事項
 - x86_64.jsonの制限事項

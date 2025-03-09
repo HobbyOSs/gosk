@@ -112,6 +112,8 @@ func init() {
 	if err := json.Unmarshal(data, &instructionData); err != nil {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
+
+	addSegmentRegisterEncodings() // ここで呼び出す
 }
 
 func GetInstructionByOpcode(opcode string) (*Instruction, error) {
