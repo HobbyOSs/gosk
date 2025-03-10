@@ -15,3 +15,7 @@
 
 ## 依存関係
 - Go標準ライブラリ
+
+## 関連情報
+[implementation_details.md](./implementation_details.md)
+[technical_notes.md](./technical_notes.md)

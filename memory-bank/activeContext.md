@@ -51,38 +51,19 @@
     - [ ] バイナリ出力の検証
 
 ## 直近の変更点
-
-- `internal/codegen/x86gen_utils.go`に`ResolveOpcode`関数を追加
-  - オペコードとレジスタ番号から最終的なオペコードを生成
-  - `Opcode.Addend`に基づいてレジスタ番号を選択
-  - エラーハンドリングを実装
-- `internal/codegen/x86gen_utils.go`に`GetRegisterNumber`関数を追加
-  - レジスタ名からレジスタ番号（0-7）への変換
-  - 8/16/32ビットレジスタの対応付け
-  - エラーハンドリングを実装
-- `internal/codegen/x86gen_mov.go`を改善
-  - レジスタ名から番号への変換ロジックを`GetRegisterNumber`に移動
-  - `ResolveOpcode`関数を使用してオペコードを生成
-  - コードの可読性と保守性を向上
-- `internal/codegen/x86gen_arithmetic.go`を改善
-  - `handleADD` 関数内で `ResolveOpcode` 関数と `GetRegisterNumber` 関数を使用するように修正
-  - `x86gen.go` の `processOcode` 関数に `ocode.OpADD` のケースを追加し、`handleADD` 関数を呼び出すように修正
-- `internal/codegen/x86gen_int.go`の`GenerateX86INT`関数を`handleINT`にリネーム
-- `internal/codegen/x86gen_utils.go`の`GenerateModRM`関数を修正
-  - オペランドを引数として受け取るように変更
-  - `GetRegisterNumber`関数を使用してレジスタ番号を取得
-- `internal/codegen/x86gen_utils.go`の`GetRegisterNumber`関数を修正
-  - セグメントレジスタに対応する番号を返すように修正
-  - `case`を番号ごとにまとめ、可読性を向上
-- `internal/codegen/x86gen_mov.go`の`handleMOV`関数を修正
-  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
-- `internal/codegen/x86gen_arithmetic.go`の`handleADD`関数を修正
-  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
+- オペコード生成処理の改善 (`internal/codegen/x86gen_utils.go`)
+  - `ResolveOpcode` 関数と `GetRegisterNumber` 関数を追加
+  - `x86gen_mov.go` と `x86gen_arithmetic.go` でこれらの関数を使用するように修正
+- `GenerateX86INT` 関数を `handleINT` にリネーム
+- `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
 
 ## 次のステップ
 
 ## アクティブな決定事項と考慮事項
+- コードの重複を避け、保守性を向上させるために、オペコード生成処理を集約
+- レジスタ名から番号への変換を共通化
+- エラーハンドリングを適切に実装
 
-- オペコード生成処理を`x86gen_utils.go`に集約することで、コードの重複を避け、保守性を向上
-- レジスタ名から番号への変換を共通化し、一貫性のある処理を実現
-- エラーハンドリングを適切に実装し、デバッグ情報を提供
+## 関連情報
+[implementation_details.md](./implementation_details.md)
+[technical_notes.md](./technical_notes.md)

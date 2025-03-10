@@ -105,28 +105,41 @@ flowchart TD
 ## **ドキュメントの更新**
 
 Memory Bankの更新が必要となるのは以下の場合：
-1. **新しいプロジェクトパターンを発見した時**  
-2. **大きな変更を実装した後**  
-3. **ユーザーから「update memory bank」を指示された場合（すべてのファイルを確認する必要あり）**  
-4. **コンテキストの明確化が必要な時**  
+1. **新しいプロジェクトパターンを発見した時**
+2. **大きな変更を実装した後**
+3. **ユーザーから「update memory bank」を指示された場合（すべてのファイルを確認する必要あり）**
+4. **コンテキストの明確化が必要な時**
 
 ```mermaid
 flowchart TD
     Start[更新プロセス]
-    
+
     subgraph Process
         P1[すべてのファイルを確認]
-        P2[現在の状態を記録]
-        P3[次のステップを明確化]
-        P4[.clinerulesを更新]
-        
-        P1 --> P2 --> P3 --> P4
+        P2[Memory Bank ファイルを精査]
+        P3[詳細情報を詳細ファイルに移動]
+        P4[基本ファイルを簡潔化]
+        P5[現在の状態を記録]
+        P6[次のステップを明確化]
+        P7[.clinerulesを更新]
+
+        P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7
     end
-    
+
     Start --> Process
 ```
 
-**注意**：  
+**更新手順**:
+
+1. **すべてのファイルを確認**: Memory Bank内のすべてのファイルを読み込み、内容を確認します。
+2. **Memory Bank ファイルの精査**: 基本ファイル (`projectbrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`) の内容を精査し、詳細すぎる情報を特定します。
+3. **詳細情報の移動**: 特定された詳細情報を、詳細情報ファイル (`implementation_details.md`, `technical_notes.md`) に移動します。
+4. **基本ファイルの簡潔化**: 基本ファイルの内容を、概要レベルの情報に絞り込み、簡潔に保ちます。
+5.  **現在の状態を記録**: `activeContext.md`と`progress.md`を更新し、現在の状態を反映させます。
+6.  **次のステップを明確化**: `activeContext.md`で次のステップを定義します。
+7.  **.clinerulesを更新**: 必要に応じて、`.clinerules`を更新します。
+
+**注意**：
 - 「update memory bank」が指示された場合
   - 私は**すべてのMemory Bankファイルを確認しなければならない**
   - たとえ更新が不要でも、すべてのファイルを精査する。特に`activeContext.md`と`progress.md`は現在の状態を追跡するため、重点的に確認する
@@ -199,6 +212,25 @@ flowchart TD
   3. パッケージ全体をテストするときは `go test ./...`
 - **ファイル直接指定（例：`go test -v test/***_test.go`）は行わない**
 - **上記手順を守らずにテストを実行しようとした場合は、必ず修正を促すこと**
+
+#### Memory Bank リンク作成と更新
+
+- **目的:**
+  - Memory Bank の基本ファイルから詳細情報ファイルへのリンクを作成し、作業時に詳細情報を参照しやすくする。
+
+- **手順:**
+  1. `filesystem` MCP サーバーの `read_multiple_files` ツールを使用して、Memory Bank ディレクトリ内のすべての Markdown ファイルを読み取る。
+  2. ファイル内容を解析し、基本ファイルと詳細情報ファイルを区別する。
+     - 基本ファイル: `projectbrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`
+     - 詳細情報ファイル: `implementation_details.md`, `technical_notes.md`
+  3. 各基本ファイルの末尾に「関連情報」セクションを追加する（既に存在する場合は追加しない）。
+  4. 詳細情報ファイルへの Markdown リンクを「関連情報」セクションに追加する。リンク形式は `[ファイル名](./ファイル名)` とする。
+  5. 更新した内容を `write_to_file` ツールで書き戻す。
+
+- **リンクの更新が必要なケース:**
+  - Memory Bank に新しい詳細情報ファイルが追加された場合
+  - 詳細情報ファイルの名前や場所が変更された場合
+  - 基本ファイルの内容が大幅に変更され、関連情報が変化した場合
 
 #### JSONデータ調査
 

@@ -124,22 +124,14 @@
   - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
 
 ## 現在の進捗状況
-
-- `internal/codegen/x86gen_arithmetic.go` の `handleADD` 関数を `x86gen_mov.go` の `handleMOV` 関数と平仄を合わせた
-- `GenerateX86INT` 関数を `handleINT` にリネーム
-- `internal/codegen/x86gen_utils.go`の`GenerateModRM`関数と`GetRegisterNumber`関数の修正が完了
-- `internal/codegen/x86gen_mov.go`の`handleMOV`関数と`internal/codegen/x86gen_arithmetic.go`の`handleADD`関数の修正が完了
+- オペコード生成処理の改善と関連関数の修正が完了
 
 ## 既知の問題
 
 - day02以降のテストケースが未実装
-    - 必要な命令の実装が必要
-    - テストケースの有効化が必要
-- 算術命令の実装が進行中
-    - ADD命令の機械語生成が完了
-    - 他の算術命令の実装が必要
-    - フラグ更新の処理が必要
-    - テストケースの修正が必要
-- トークン解析の一部ケースで最適化の余地あり
-- オペランドの種別判定の精度向上が必要
-- スタックマシン関連の構造に改善の余地あり
+- 算術命令の実装が進行中（ADD命令は完了）
+- トークン解析、オペランド判定、スタックマシン関連の構造に改善の余地あり
+
+## 関連情報
+[implementation_details.md](./implementation_details.md)
+[technical_notes.md](./technical_notes.md)
