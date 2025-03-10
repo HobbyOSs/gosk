@@ -111,13 +111,13 @@ type Instruction struct {
 }
 
 type ParsedOperand struct {
-	SegMem string `@SegMem`
-	Reg    string `| @Reg`
-	Addr   *Addr  `| @@`
-	Mem    *Mem   `| @@`
-	Imm    string `| @Imm`
-	Seg    string `| @Seg`
-	Rel    string `| @Rel`
+	SegMem string `parser:"@SegMem"`
+	Reg    string `parser:"| @Reg"`
+	Addr   *Addr  `parser:"| @@"`
+	Mem    *Mem   `parser:"| @@"`
+	Imm    string `parser:"| @Imm"`
+	Seg    string `parser:"| @Seg"`
+	Rel    string `parser:"| @Rel"`
 }
 
 type Mem struct {

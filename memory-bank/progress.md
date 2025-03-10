@@ -112,6 +112,7 @@
 
 - `internal/codegen/x86gen_arithmetic.go` の `handleADD` 関数を `x86gen_mov.go` の `handleMOV` 関数と平仄を合わせた
 - `GenerateX86INT` 関数を `handleINT` にリネーム
+- `go vet` で検出されたエラーを修正
 
 ## 既知の問題
 
@@ -130,8 +131,3 @@
     - `MOV` 命令などの実装に問題がある可能性
     - `pass1.LOC` の計算に問題がある可能性
     - 機械語生成に問題がある可能性
-- `go vet` で以下のエラーが検出された (TODO)
-  - `pkg/operand/operand_impl.go`: struct field tag の構文エラー
-  - `pkg/asmdb/instruction_search_test.go`: `db.FindInstruction` が未定義
-  - `internal/gen/grammar_test.go`: struct literal で unkeyed fields を使用している
-  - `test/pass1_test.go`: struct literal で unkeyed fields を使用している

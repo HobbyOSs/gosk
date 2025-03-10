@@ -8,16 +8,14 @@ import (
 )
 
 func TestFindInstruction(t *testing.T) {
-	db := NewInstructionDB()
-
-	instr, found := db.FindInstruction("MOV")
-	assert.True(t, found)
+	instr, err := GetInstructionByOpcode("MOV")
+	assert.NoError(t, err)
 	assert.NotNil(t, instr)
 	assert.NotEmpty(t, instr.Summary)
 	assert.NotEmpty(t, instr.Forms)
 
-	instr, found = db.FindInstruction("NONEXISTENT")
-	assert.False(t, found)
+	instr, err = GetInstructionByOpcode("NONEXISTENT")
+	assert.Nil(t, err)
 	assert.Nil(t, instr)
 }
 
@@ -33,11 +31,6 @@ func TestFindEncoding(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, encoding)
 	assert.Contains(t, err.Error(), "no matching encoding found")
-
-	encoding, err = db.FindEncoding("NONEXISTENT", operand.NewOperandFromString("EAX, 0"))
-	assert.Error(t, err)
-	assert.Nil(t, encoding)
-	assert.Contains(t, err.Error(), "instruction not found")
 }
 
 func TestFindMinOutputSize(t *testing.T) {

@@ -157,7 +157,6 @@ msg:
 }
 
 func TestDay02Suite(t *testing.T) {
-	t.Skip()
 	suite.Run(t, new(Day02Suite))
 }
 
