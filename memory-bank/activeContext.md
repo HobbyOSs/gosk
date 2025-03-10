@@ -50,15 +50,19 @@
 
 ## 直近の変更点
 
-- `pkg/asmdb/instruction_search.go` のmatchOperands関数を修正し、セグメントレジスタ（sreg）をr16として扱えるようにした
-  - MOV AX, SSのような命令で、SSがsregでありかつr16である場合に対応
-  - JSONにsregが定義されていない場合でも、r16として適切に処理できるように改善
-- FindEncoding関数をリファクタリングし、コードをよりシンプルにした
-- 詳細なコメントを追加し、特にセグメントレジスタの処理について説明を加えた
-
-- `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
-- `pkg/asmdb/instruction_table_fallback.go` に `addImulFallbackEncodings` 関数と `addOutFallbackEncodings` 関数を追加し、`pkg/asmdb/instruction_table.go` の `init()` 関数から呼び出すようにした。
-- `pkg/asmdb/instruction_table_test.go` の `TestSegmentRegisterLookup` 関数からログ出力を削除し、`assert` を使用してコードを簡潔にした。
+- `pkg/asmdb/instruction_search.go` の `matchOperands` 関数を修正し、セグメントレジスタ (sreg) を r16 として扱えるようにした
+  - `FindEncoding` 関数で、条件を緩和してセグメントレジスタを r16 として扱えるように変更
+  - `MOV AX, SS` のような命令に対応
+- `pkg/asmdb/instruction_search.go` から `NewInstructionDB` および `FindInstruction` 関数を削除
+- `internal/codegen/x86gen_arithmetic.go` と `internal/codegen/x86gen_mov.go` から ModR/M 生成関連の関数を削除し、`internal/codegen/x86gen_utils.go` に `GenerateModRM` 関数を新規追加
+- `internal/codegen/x86gen_test.go` に `MOV SS, AX` のテストケースを追加
+- `pkg/asmdb/instruction_table_fallback.go` の `addMovSegmentRegisterEncodings` 関数の `ModRM` の定義を修正
+- FindEncoding関数をリファクタリング
+- 詳細なコメントを追加
+- `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数、`addImulFallbackEncodings` 関数、`addOutFallbackEncodings` 関数を追加
+- `pkg/asmdb/instruction_table_test.go` の `TestSegmentRegisterLookup` 関数を簡潔に修正
+- JMP命令の実装が進行中
+- `go.mod` と `go.sum` から `github.com/tidwall/gjson`, `github.com/tidwall/match`, `github.com/tidwall/pretty` を削除
 
 ## 次のステップ
 
