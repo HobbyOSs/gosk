@@ -68,14 +68,18 @@
   - `handleADD` 関数内で `ResolveOpcode` 関数と `GetRegisterNumber` 関数を使用するように修正
   - `x86gen.go` の `processOcode` 関数に `ocode.OpADD` のケースを追加し、`handleADD` 関数を呼び出すように修正
 - `internal/codegen/x86gen_int.go`の`GenerateX86INT`関数を`handleINT`にリネーム
+- `internal/codegen/x86gen_utils.go`の`GenerateModRM`関数を修正
+  - オペランドを引数として受け取るように変更
+  - `GetRegisterNumber`関数を使用してレジスタ番号を取得
+- `internal/codegen/x86gen_utils.go`の`GetRegisterNumber`関数を修正
+  - セグメントレジスタに対応する番号を返すように修正
+  - `case`を番号ごとにまとめ、可読性を向上
+- `internal/codegen/x86gen_mov.go`の`handleMOV`関数を修正
+  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
+- `internal/codegen/x86gen_arithmetic.go`の`handleADD`関数を修正
+  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
 
 ## 次のステップ
-
-- `go vet` で検出されたエラーの修正
-  - `pkg/operand/operand_impl.go`: struct field tag の構文エラー
-  - `pkg/asmdb/instruction_search_test.go`: `db.FindInstruction` が未定義
-  - `internal/gen/grammar_test.go`: struct literal で unkeyed fields を使用している
-  - `test/pass1_test.go`: struct literal で unkeyed fields を使用している
 
 ## アクティブな決定事項と考慮事項
 

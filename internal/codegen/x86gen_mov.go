@@ -63,11 +63,15 @@ func handleMOV(operands []string) []byte {
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
 		log.Printf("debug: ModRM: %+v", encoding.ModRM)
-		modrm := GenerateModRM(encoding.ModRM.Mode, encoding.ModRM.Reg, encoding.ModRM.Rm)
+		modrm, err := getModRMFromOperands(operands, encoding)
+		if err != nil {
+			log.Printf("error: Failed to generate ModR/M: %v", err)
+			return nil
+		}
 		machineCode = append(machineCode, modrm)
 	}
 
-	// 即値の追加（必要な場合）
+	// 即値の追加(必要な場合)
 	if encoding.Immediate != nil {
 		if imm, err := getImmediateValue(operands[1], encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)

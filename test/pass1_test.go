@@ -27,12 +27,12 @@ func buildImmExpFromValue(value any) *ast.ImmExp {
 	var factor ast.Factor
 	switch v := value.(type) {
 	case int:
-		factor = &ast.NumberFactor{ast.BaseFactor{}, v}
+		factor = &ast.NumberFactor{BaseFactor: ast.BaseFactor{}, Value: v}
 	case string:
 		if strings.HasPrefix(v, "0x") {
-			factor = &ast.HexFactor{ast.BaseFactor{}, v}
+			factor = &ast.HexFactor{BaseFactor: ast.BaseFactor{}, Value: v}
 		} else {
-			factor = &ast.IdentFactor{ast.BaseFactor{}, v}
+			factor = &ast.IdentFactor{BaseFactor: ast.BaseFactor{}, Value: v}
 		}
 	}
 

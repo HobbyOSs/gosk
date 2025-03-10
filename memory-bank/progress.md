@@ -112,7 +112,23 @@
 
 - `internal/codegen/x86gen_arithmetic.go` の `handleADD` 関数を `x86gen_mov.go` の `handleMOV` 関数と平仄を合わせた
 - `GenerateX86INT` 関数を `handleINT` にリネーム
-- `go vet` で検出されたエラーを修正
+- `internal/codegen/x86gen_utils.go`の`GenerateModRM`関数を修正
+  - オペランドを引数として受け取るように変更
+  - `GetRegisterNumber`関数を使用してレジスタ番号を取得
+- `internal/codegen/x86gen_utils.go`の`GetRegisterNumber`関数を修正
+  - セグメントレジスタに対応する番号を返すように修正
+  - `case`を番号ごとにまとめ、可読性を向上
+- `internal/codegen/x86gen_mov.go`の`handleMOV`関数を修正
+  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
+- `internal/codegen/x86gen_arithmetic.go`の`handleADD`関数を修正
+  - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
+
+## 現在の進捗状況
+
+- `internal/codegen/x86gen_arithmetic.go` の `handleADD` 関数を `x86gen_mov.go` の `handleMOV` 関数と平仄を合わせた
+- `GenerateX86INT` 関数を `handleINT` にリネーム
+- `internal/codegen/x86gen_utils.go`の`GenerateModRM`関数と`GetRegisterNumber`関数の修正が完了
+- `internal/codegen/x86gen_mov.go`の`handleMOV`関数と`internal/codegen/x86gen_arithmetic.go`の`handleADD`関数の修正が完了
 
 ## 既知の問題
 
@@ -127,7 +143,3 @@
 - トークン解析の一部ケースで最適化の余地あり
 - オペランドの種別判定の精度向上が必要
 - スタックマシン関連の構造に改善の余地あり
-- `TestHelloos3` が失敗する
-    - `MOV` 命令などの実装に問題がある可能性
-    - `pass1.LOC` の計算に問題がある可能性
-    - 機械語生成に問題がある可能性
