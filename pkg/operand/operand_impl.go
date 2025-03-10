@@ -137,7 +137,7 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 	{Name: "MemSizePrefix", Pattern: `(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)`},
 	{Name: "Seg", Pattern: `(CS|DS|ES|FS|GS|SS)`},
-	{Name: "Reg", Pattern: `([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
+	{Name: "Reg", Pattern: `([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|SP|BP|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
 	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
 	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(0x[a-fA-F0-9]+|-?\d+)`},
@@ -204,7 +204,7 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 
 var (
 	regR8Pattern  = regexp.MustCompile(`^[ABCD][HL]$`)
-	regR16Pattern = regexp.MustCompile(`^[ABCD]X$`)
+	regR16Pattern = regexp.MustCompile(`^(?:[ABCD]X|SP|BP)$`)
 	regR32Pattern = regexp.MustCompile(`^E[ABCD]X$`)
 )
 

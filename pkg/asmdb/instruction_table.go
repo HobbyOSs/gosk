@@ -114,7 +114,7 @@ func init() {
 	}
 
 	// fallback
-	addMovSegmentRegisterEncodings(&instructionData)
+	addMovFallbackEncodings(&instructionData)
 	addImulFallbackEncodings()
 	addOutFallbackEncodings()
 }

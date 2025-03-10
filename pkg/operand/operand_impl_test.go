@@ -30,8 +30,12 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		//{"Direct Address (with imm)", "[0x1234], 8", []OperandType{CodeM32, CodeIMM16}},
 		{"8-bit Register", "AL", []OperandType{CodeR8}},
 		{"16-bit Register", "AX", []OperandType{CodeR16}},
+		{"SP Register", "SP", []OperandType{CodeR16}},
+		{"BP Register", "BP", []OperandType{CodeR16}},
 		{"CL Register", "CL", []OperandType{CodeR8}},
 		{"Complex Memory", "[RAX+4]", []OperandType{CodeM32}},
+		{"Memory with SP", "[SP+2]", []OperandType{CodeM32}},
+		{"Memory with BP", "[BP-4]", []OperandType{CodeM32}},
 		// TODO: まだ未対応
 		// {"DWORD PTR", "DWORD PTR [ECX]", []OperandType{CodeM32}},
 		{"Immediate 10", "10", []OperandType{CodeIMM32}},

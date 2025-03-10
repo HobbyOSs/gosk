@@ -50,6 +50,14 @@
 
 ## 直近の変更点
 
+- `pkg/operand/operand_impl.go`の修正
+  - 16ビット汎用レジスタSP, BPのパースを追加
+  - `Reg`パターンにSP, BPを追加
+  - `regR16Pattern`の正規表現パターンにSP, BPを含めるように修正
+- `pkg/operand/operand_impl_test.go`にテストケースを追加
+  - SPレジスタのテスト
+  - BPレジスタのテスト
+  - メモリアドレッシングでSP, BPを使用するケース
 - `pkg/asmdb/instruction_search.go` の `matchOperands` 関数を修正し、セグメントレジスタ (sreg) を r16 として扱えるようにした
   - `FindEncoding` 関数で、条件を緩和してセグメントレジスタを r16 として扱えるように変更
   - `MOV AX, SS` のような命令に対応

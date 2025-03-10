@@ -55,7 +55,6 @@ func handleADD(operands []string) ([]byte, error) {
 	return machineCode, nil
 }
 
-
 var opcodeHandlers = make(map[ocode.OcodeKind]OpcodeHandler)
 
 func init() {
