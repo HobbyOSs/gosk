@@ -6,7 +6,7 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
-func GenerateX86INT(ocode ocode.Ocode) []byte {
+func handleINT(ocode ocode.Ocode) []byte {
 	// INT命令は2バイトの命令
 	// 1バイト目: 0xCD (INT命令のオペコード)
 	// 2バイト目: 割り込み番号

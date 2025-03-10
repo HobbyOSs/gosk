@@ -64,14 +64,18 @@
   - レジスタ名から番号への変換ロジックを`GetRegisterNumber`に移動
   - `ResolveOpcode`関数を使用してオペコードを生成
   - コードの可読性と保守性を向上
+- `internal/codegen/x86gen_arithmetic.go`を改善
+  - `handleADD` 関数内で `ResolveOpcode` 関数と `GetRegisterNumber` 関数を使用するように修正
+  - `x86gen.go` の `processOcode` 関数に `ocode.OpADD` のケースを追加し、`handleADD` 関数を呼び出すように修正
+- `internal/codegen/x86gen_int.go`の`GenerateX86INT`関数を`handleINT`にリネーム
 
 ## 次のステップ
 
-- MOV命令の実装を完了させる
-  - レジスタ間転送のテストを追加
-  - 即値のロードのテストを追加
-  - セグメントレジスタの設定のテストを追加
-- TestHelloos3のスキップを解除し、テストを通す
+- `go vet` で検出されたエラーの修正
+  - `pkg/operand/operand_impl.go`: struct field tag の構文エラー
+  - `pkg/asmdb/instruction_search_test.go`: `db.FindInstruction` が未定義
+  - `internal/gen/grammar_test.go`: struct literal で unkeyed fields を使用している
+  - `test/pass1_test.go`: struct literal で unkeyed fields を使用している
 
 ## アクティブな決定事項と考慮事項
 

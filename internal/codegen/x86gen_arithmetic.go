@@ -6,11 +6,8 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/operand"
 )
-
-type OpcodeHandler = func([]string) ([]byte, error)
 
 // handleADD はADD命令の機械語を生成します
 func handleADD(operands []string) ([]byte, error) {
@@ -33,11 +30,26 @@ func handleADD(operands []string) ([]byte, error) {
 	}
 
 	// オペコードの追加
-	opcodeByte, err := strconv.ParseUint(encoding.Opcode.Byte, 16, 8)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse opcode byte: %v", err)
+	// Addendから処理すべきオペランドのインデックスを取得
+	var regNum int
+	if encoding.Opcode.Addend != nil {
+		operandIndex, err := strconv.Atoi(strings.TrimPrefix(*encoding.Opcode.Addend, "#"))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse addend: %v", err)
+		}
+
+		// operandsからレジスタ名を取得し、番号に変換
+		regNum, err = GetRegisterNumber(operands[operandIndex])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get register number: %v", err)
+		}
 	}
-	machineCode = append(machineCode, byte(opcodeByte))
+
+	opcode, err := ResolveOpcode(encoding.Opcode, regNum)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve opcode: %v", err)
+	}
+	machineCode = append(machineCode, opcode)
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
@@ -53,11 +65,4 @@ func handleADD(operands []string) ([]byte, error) {
 	}
 
 	return machineCode, nil
-}
-
-var opcodeHandlers = make(map[ocode.OcodeKind]OpcodeHandler)
-
-func init() {
-	// ADD命令のハンドラを登録
-	opcodeHandlers[ocode.OpADD] = handleADD
 }
