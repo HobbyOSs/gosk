@@ -2,6 +2,15 @@
 
 ## 現在の作業の焦点
 
+### オペコード生成処理の改善
+- [x] オペコード生成処理を`x86gen_utils.go`に集約
+  - [x] `ResolveOpcode`関数の実装
+    - オペコードとレジスタ番号から最終的なオペコードを生成
+    - `Opcode.Addend`に基づいてレジスタ番号を選択
+  - [x] `GetRegisterNumber`関数の実装
+    - レジスタ名からレジスタ番号（0-7）への変換
+    - 8/16/32ビットレジスタの対応付け
+
 ## Day02実装計画
 
 - [x] 1. 基本命令の実装
@@ -41,154 +50,31 @@
     - [ ] TestHelloos3のスキップ解除
     - [ ] バイナリ出力の検証
 
-- day20までのアセンブラ命令実装の完了
-    - 各dayのテストケースに対応する命令の実装
-- 算術命令（ADD, ADC, SUB, SBB, CMP, INC, DEC, NEG, MUL, IMUL, DIV, IDIV）の実装
-- Pass1の評価処理の改善とテスト強化
-- トークン解析の最適化
-- オペランド実装の改善
-
 ## 直近の変更点
 
-- `pkg/operand/operand_impl.go`の修正
-  - 16ビット汎用レジスタSP, BPのパースを追加
-  - `Reg`パターンにSP, BPを追加
-  - `regR16Pattern`の正規表現パターンにSP, BPを含めるように修正
-- `pkg/operand/operand_impl_test.go`にテストケースを追加
-  - SPレジスタのテスト
-  - BPレジスタのテスト
-  - メモリアドレッシングでSP, BPを使用するケース
-- `pkg/asmdb/instruction_search.go` の `matchOperands` 関数を修正し、セグメントレジスタ (sreg) を r16 として扱えるようにした
-  - `FindEncoding` 関数で、条件を緩和してセグメントレジスタを r16 として扱えるように変更
-  - `MOV AX, SS` のような命令に対応
-- `pkg/asmdb/instruction_search.go` から `NewInstructionDB` および `FindInstruction` 関数を削除
-- `internal/codegen/x86gen_arithmetic.go` と `internal/codegen/x86gen_mov.go` から ModR/M 生成関連の関数を削除し、`internal/codegen/x86gen_utils.go` に `GenerateModRM` 関数を新規追加
-- `internal/codegen/x86gen_test.go` に `MOV SS, AX` のテストケースを追加
-- `pkg/asmdb/instruction_table_fallback.go` の `addMovSegmentRegisterEncodings` 関数の `ModRM` の定義を修正
-- FindEncoding関数をリファクタリング
-- 詳細なコメントを追加
-- `pkg/asmdb/instruction_table_fallback.go` に `addSegmentRegisterEncodings` 関数、`addImulFallbackEncodings` 関数、`addOutFallbackEncodings` 関数を追加
-- `pkg/asmdb/instruction_table_test.go` の `TestSegmentRegisterLookup` 関数を簡潔に修正
-- JMP命令の実装が進行中
-- `go.mod` と `go.sum` から `github.com/tidwall/gjson`, `github.com/tidwall/match`, `github.com/tidwall/pretty` を削除
+- `internal/codegen/x86gen_utils.go`に`ResolveOpcode`関数を追加
+  - オペコードとレジスタ番号から最終的なオペコードを生成
+  - `Opcode.Addend`に基づいてレジスタ番号を選択
+  - エラーハンドリングを実装
+- `internal/codegen/x86gen_utils.go`に`GetRegisterNumber`関数を追加
+  - レジスタ名からレジスタ番号（0-7）への変換
+  - 8/16/32ビットレジスタの対応付け
+  - エラーハンドリングを実装
+- `internal/codegen/x86gen_mov.go`を改善
+  - レジスタ名から番号への変換ロジックを`GetRegisterNumber`に移動
+  - `ResolveOpcode`関数を使用してオペコードを生成
+  - コードの可読性と保守性を向上
 
 ## 次のステップ
 
-(特になし)
+- MOV命令の実装を完了させる
+  - レジスタ間転送のテストを追加
+  - 即値のロードのテストを追加
+  - セグメントレジスタの設定のテストを追加
+- TestHelloos3のスキップを解除し、テストを通す
 
 ## アクティブな決定事項と考慮事項
 
-- アセンブラ命令実装のルーチンを定義し、systemPatterns.mdに記録
-    - Pass1での命令実装手順
-    - Ocodeの実装手順
-    - 機械語生成の実装手順
-    - 実装時の注意点
-- day20までの命令実装を優先的に進める
-    - 各dayのテストケースを順次有効化
-    - 必要な命令を漏れなく実装
-- 算術命令の実装を段階的に進めるため、テストを一時的にスキップ
-- テスト駆動開発の継続的な実践
-- コードの品質維持のためのlintチェックとテスト実行の徹底
-- オペランドの種別判定の精度向上
-- スタックマシンベースの設計の最適化
-- `ocode`中間言語の実装の継続
-
-## Ocodeの使い方
-
-### 基本的な使い方
-
-1.  **Ocodeの生成**
-    -   `env.Client.Emit`を使用して命令を出力
-    -   引数は文字列形式で渡す
-    -   例：`env.Client.Emit("INT 0x10")`
-2.  **パラメータを持つ命令の場合**
-    -   パラメータはカンマ区切りで指定
-    -   例：`env.Client.Emit("MOV AX,0")`
-3.  **実装パターン**
-    -   パラメータなし命令（HLT等）
-
-        ```go
-        func processNoParam(env *Pass1, tokens []*token.ParseToken) {
-            env.LOC += 1  // 機械語サイズを加算
-            // Emitは呼び出し元で実行
-        }
-        ```
-    -   パラメータあり命令（INT等）
-
-        ```go
-        func processINT(env *Pass1, tokens []*token.ParseToken) {
-            env.LOC += 2  // 機械語サイズを加算
-            args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-                return token.AsString()
-            })
-            env.Client.Emit(fmt.Sprintf("INT %s", strings.Join(args, ",")))
-        }
-        ```
-4.  **注意点**
-    -   パラメータなし命令は`handlers.go`のTraverseAST内のOpcodeStmtケースでEmitを実行
-    -   パラメータあり命令は各処理関数内でEmitを実行
-    -   機械語サイズの計算は必須（env.LOCに加算）
-
----
-
-## 詳細な実装計画: JMP entry 命令 (JMP rel8)
-
-**命令:** `JMP entry`
-
-**目標:** `JMP entry` 命令を実装し、`TestHelloos3` の `result mismatch` を解消する。
-
-**設計構想:**
-
--   **2パスアセンブラ:** forward reference問題を解決するため、pass1とpass2の2パスアセンブラ設計を採用する。
-    -   **Pass1:**
-        -   ラベルを仮のものとして扱い、`SymTable` に記録する。
-        -   コード生成 (`codegen`) に対して `Emit` できる値は、プレースホルダー (`go template` 記法など) にしておく。
-    -   **Pass2:**
-        -   Pass2フェーズの開始時に、プレースホルダーを実際のアドレスに変換する。
-
-**手順:**
-
-1.  **`json-x86-64/x86_64.json` の確認:**
-
-    -   `JMP` 命令のエンコーディング定義 (`JMP rel8`, `JMP rel16`) を確認し、オペコード `eb` (JMP rel8) が存在することを確認する。
-    -   必要に応じて、エンコーディング定義の詳細 (オペランドの種類、サイズなど) を確認する。
-2.  **Pass1 の実装 (`internal/pass1`)**:
-
-    -   `internal/pass1/pass1_inst_jmp.go` を新規作成し、`JMP` 命令の Pass1 処理 (`processJMP` 関数) を実装する。
-    -   `processJMP` 関数では、以下の処理を行う。
-        -   オペランド (ジャンプ先ラベル `entry`) の解析
-        -   **ラベル `entry` を `SymTable` に登録し、仮アドレスを割り当てる。**
-        -   相対ジャンプのオフセットサイズを決定 (rel8 or rel16)
-        -   `pkg/asmdb` を使用して機械語サイズを計算 (`JMP rel8` は 2 bytes, `JMP rel16` は 3 bytes)
-        -   Ocode (`ocode.OpJMP`) を生成し、`env.Client.Emit` で出力する。**この際、ジャンプ先アドレスはプレースホルダーとして出力する。**
-3.  **Ocode の定義 (`pkg/ocode/ocode.go`)**:
-
-    -   `pkg/ocode/ocode.go` に `OpJMP` を定義する。
-4.  **Pass2 の実装 (`internal/pass2`)**:
-
-    -   **Pass2フェーズ (`internal/pass2/eval.go` など) で、`SymTable` に登録されたラベルのアドレスを確定する。**
-    -   **プレースホルダーを実際のアドレスに置き換える処理を実装する。**
-5.  **機械語生成の実装 (`internal/codegen`)**:
-
-    -   `internal/codegen/x86gen_jmp.go` を新規作成し、`JMP` 命令の機械語生成処理 (`handleJMP` 関数) を実装する。
-    -   `internal/codegen/x86gen.go` の `processOcode` 関数に `ocode.OpJMP` の case を追加し、`handleJMP` 関数を呼び出す。
-    -   `handleJMP` 関数では、以下の処理を行う。
-        -   **Pass2 で解決されたジャンプ先ラベル `entry` のアドレスを `SymTable` から取得する。**
-        -   相対ジャンプのオフセットを計算 (ジャンプ元アドレス - ジャンプ先アドレス)
-        -   オフセットサイズに応じて、`JMP rel8` または `JMP rel16` の機械語コードを生成する。
-            -   `JMP rel8` (オペコード: `eb`, オフセット: 1 byte)
-            -   `JMP rel16` (オペコード: `e9`, オフセット: 2 bytes)
-        -   生成された機械語コードを byte スライスとして返す。
-6.  **テストと検証:**
-
-    -   `test/day02_test.go` の `TestHelloos3` テストを実行し、`result mismatch` が解消されることを確認する。
-    -   必要に応じて、`JMP` 命令のユニットテスト (`internal/codegen/x86gen_test.go` など) を追加する。
-
-#### 実装時の注意点:
-
--   相対ジャンプのオフセット計算を正確に行う (符号付き8ビットまたは16ビット)。
--   **Pass1 と Pass2 で `SymTable` を共有し、ラベルのアドレス解決を連携して行う。**
--   **Pass1 で生成する Ocode にプレースホルダーを含める。**
--   **Pass2 でプレースホルダーを実際のアドレスに置き換える処理を実装する。**
--   `json-x86-64/x86_64.json` に `JMP` 命令のエンコーディング定義が存在することを確認する。
--   テスト駆動開発を実践し、テストケースを ആദ്യം に作成してから実装に取り掛かる。
+- オペコード生成処理を`x86gen_utils.go`に集約することで、コードの重複を避け、保守性を向上
+- レジスタ名から番号への変換を共通化し、一貫性のある処理を実現
+- エラーハンドリングを適切に実装し、デバッグ情報を提供

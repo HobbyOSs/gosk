@@ -151,45 +151,6 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 	currentMOVInstructionForms := instructionData.Instructions["MOV"].Forms
 	// 新しい Forms を追加
 	newMOVInstructionForms := append(currentMOVInstructionForms,
-		// B0+ rb MOV r8, imm8 - imm8をr8に転送
-		InstructionForm{
-			Operands: &[]Operand{
-				{Type: "r8", Input: Bool(false), Output: Bool(true)},
-				{Type: "imm8", Input: Bool(true), Output: Bool(false)},
-			},
-			Encodings: []Encoding{
-				{
-					Opcode:    Opcode{Byte: "B0"},
-					Immediate: &Immediate{Size: 1, Value: "#1"},
-				},
-			},
-		},
-		// B8+ rw MOV r16, imm16 - imm16をr16に転送
-		InstructionForm{
-			Operands: &[]Operand{
-				{Type: "r16", Input: Bool(false), Output: Bool(true)},
-				{Type: "imm16", Input: Bool(true), Output: Bool(false)},
-			},
-			Encodings: []Encoding{
-				{
-					Opcode:    Opcode{Byte: "B8"},
-					Immediate: &Immediate{Size: 2, Value: "#1"},
-				},
-			},
-		},
-		// B8+ rd MOV r32, imm32 - imm32をr32に転送
-		InstructionForm{
-			Operands: &[]Operand{
-				{Type: "r32", Input: Bool(false), Output: Bool(true)},
-				{Type: "imm32", Input: Bool(true), Output: Bool(false)},
-			},
-			Encodings: []Encoding{
-				{
-					Opcode:    Opcode{Byte: "B8"},
-					Immediate: &Immediate{Size: 4, Value: "#1"},
-				},
-			},
-		},
 		InstructionForm{
 			Operands: &[]Operand{
 				{Type: "r16", Input: Bool(false), Output: Bool(true)},

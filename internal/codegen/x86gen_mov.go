@@ -36,12 +36,29 @@ func handleMOV(operands []string) []byte {
 	}
 
 	// オペコードの追加
-	opcodeByte, err := strconv.ParseUint(encoding.Opcode.Byte, 16, 8)
+	// Addendから処理すべきオペランドのインデックスを取得
+	var regNum int
+	if encoding.Opcode.Addend != nil {
+		operandIndex, err := strconv.Atoi(strings.TrimPrefix(*encoding.Opcode.Addend, "#"))
+		if err != nil {
+			log.Printf("error: Failed to parse addend: %v", err)
+			return nil
+		}
+
+		// operandsからレジスタ名を取得し、番号に変換
+		regNum, err = GetRegisterNumber(operands[operandIndex])
+		if err != nil {
+			log.Printf("error: %v", err)
+			return nil
+		}
+	}
+
+	opcode, err := ResolveOpcode(encoding.Opcode, regNum)
 	if err != nil {
-		log.Printf("error: Failed to parse opcode byte: %v", err)
+		log.Printf("error: Failed to resolve opcode: %v", err)
 		return nil
 	}
-	machineCode = append(machineCode, byte(opcodeByte))
+	machineCode = append(machineCode, opcode)
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
