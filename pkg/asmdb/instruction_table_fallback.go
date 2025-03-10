@@ -159,7 +159,7 @@ func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
 			Encodings: []Encoding{
 				{
 					Opcode: Opcode{Byte: "8C"},
-					ModRM:  &Modrm{Mode: "11", Reg: "#1", Rm: "#0"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#2", Rm: "#1"},
 				},
 			},
 		},
@@ -171,7 +171,7 @@ func addMovSegmentRegisterEncodings(instructionData *InstructionData) {
 			Encodings: []Encoding{
 				{
 					Opcode: Opcode{Byte: "8E"},
-					ModRM:  &Modrm{Mode: "11", Reg: "#0", Rm: "#1"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#2", Rm: "#0"},
 				},
 			},
 		},

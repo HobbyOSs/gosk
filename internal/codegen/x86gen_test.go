@@ -55,6 +55,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0xb8, 0x00, 0x00},
 		},
+		{
+			name: "MOV SS, AX",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"SS", "AX"}},
+			},
+			expected: []byte{0x8e, 0xd0},
+		},
 	}
 
 	for _, tt := range tests {

@@ -42,9 +42,9 @@ type Vex struct {
 }
 
 type Modrm struct {
-	Mode string `json:"mode"`
-	Rm   string `json:"rm"`
-	Reg  string `json:"reg"`
+	Mode string `json:"mode"` // 想定値 "11", "00", "01", "10"
+	Rm   string `json:"rm"`   // 想定値 "#1", "#2", ...
+	Reg  string `json:"reg"`  // 想定値 "#1", "#2", ...
 }
 
 type Operand struct {

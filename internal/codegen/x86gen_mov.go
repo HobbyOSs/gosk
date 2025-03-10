@@ -45,7 +45,8 @@ func handleMOV(operands []string) []byte {
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
-		modrm := generateModRM(encoding.ModRM)
+		log.Printf("debug: ModRM: %+v", encoding.ModRM)
+		modrm := GenerateModRM(encoding.ModRM.Mode, encoding.ModRM.Reg, encoding.ModRM.Rm)
 		machineCode = append(machineCode, modrm)
 	}
 
@@ -59,32 +60,6 @@ func handleMOV(operands []string) []byte {
 	log.Printf("debug: Generated machine code: % x", machineCode)
 
 	return machineCode
-}
-
-// generateModRM generates ModR/M byte based on ModRM encoding
-func generateModRM(modrm *asmdb.Modrm) byte {
-	// ModR/Mバイトの生成
-	// |  mod  |  reg  |  r/m  |
-	// | 7 6 | 5 4 3 | 2 1 0 |
-
-	// modeの解析（2ビット）
-	var mode byte
-	switch modrm.Mode {
-	case "11":
-		mode = 0b11000000
-	default:
-		mode = 0
-	}
-
-	// regの解析（3ビット）
-	reg, _ := strconv.ParseUint(modrm.Reg, 2, 3)
-	regBits := byte(reg) << 3
-
-	// r/mの解析（3ビット）
-	rm, _ := strconv.ParseUint(modrm.Rm, 2, 3)
-	rmBits := byte(rm)
-
-	return mode | regBits | rmBits
 }
 
 // getImmediateValue extracts immediate value from operand

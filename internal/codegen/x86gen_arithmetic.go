@@ -41,7 +41,7 @@ func handleADD(operands []string) ([]byte, error) {
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
-		modrm := generateModRMByte(encoding.ModRM)
+		modrm := GenerateModRM(encoding.ModRM.Mode, encoding.ModRM.Reg, encoding.ModRM.Rm)
 		machineCode = append(machineCode, modrm)
 	}
 
@@ -55,23 +55,6 @@ func handleADD(operands []string) ([]byte, error) {
 	return machineCode, nil
 }
 
-// generateModRMByte はModR/Mバイトを生成します
-func generateModRMByte(modrm *asmdb.Modrm) byte {
-	// ModR/Mバイトの構造:
-	// |  Mod (2)  |  Reg (3)  |  R/M (3)  |
-
-	// デフォルトはレジスタ直接アドレッシング（Mod = 11b）
-	mod := byte(0b11000000)
-
-	// レジスタコードを取得
-	regCode, _ := strconv.ParseInt(modrm.Reg, 0, 8)
-	reg := byte(regCode) << 3
-
-	rmCode, _ := strconv.ParseInt(modrm.Rm, 0, 8)
-	rm := byte(rmCode)
-
-	return mod | reg | rm
-}
 
 var opcodeHandlers = make(map[ocode.OcodeKind]OpcodeHandler)
 
