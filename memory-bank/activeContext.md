@@ -2,14 +2,14 @@
 
 ## 現在の作業の焦点
 
-### オペコード生成処理の改善
-- [x] オペコード生成処理を`x86gen_utils.go`に集約
-  - [x] `ResolveOpcode`関数の実装
-    - オペコードとレジスタ番号から最終的なオペコードを生成
-    - `Opcode.Addend`に基づいてレジスタ番号を選択
-  - [x] `GetRegisterNumber`関数の実装
-    - レジスタ名からレジスタ番号（0-7）への変換
-    - 8/16/32ビットレジスタの対応付け
+### オペランド処理の改善
+- [x] `pkg/operand` パッケージの `OperandImpl` 構造体に `ForceImm8` フィールドを追加
+- [x] `NewOperandFromString` 関数を修正し、`ForceImm8` フィールドを初期化 (デフォルト: false)
+- [x] `WithForceImm8` メソッドを追加し、`ForceImm8` フィールドを設定可能に
+- [x] `OperandTypes` メソッドを修正し、`ForceImm8` フラグが true の場合は即値のタイプを `CodeIMM8` に設定
+- [x] `TestBaseOperand_OperandType` 関数に、`ForceImm8` フラグをテストするための新しいテストケースを追加
+- [x] 既存の `"Immediate Value", "SI,1", []OperandType{CodeR16, CodeIMM8}}` テストケースの名前を `"Immediate Value force imm8"` に変更し、`ForceImm8` フィールドを true に設定
+- [x] `resolveOperandSizes` 関数をレシーバメソッドに変更し、`ForceImm8` フラグを考慮するように修正
 
 ## Day02実装計画
 
@@ -51,18 +51,14 @@
     - [ ] バイナリ出力の検証
 
 ## 直近の変更点
-- オペコード生成処理の改善 (`internal/codegen/x86gen_utils.go`)
-  - `ResolveOpcode` 関数と `GetRegisterNumber` 関数を追加
-  - `x86gen_mov.go` と `x86gen_arithmetic.go` でこれらの関数を使用するように修正
-- `GenerateX86INT` 関数を `handleINT` にリネーム
-- `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
+- `pkg/operand` パッケージの `OperandImpl` 構造体と関連メソッド、テストを修正
 
 ## 次のステップ
+- `.clinerules`の更新
 
 ## アクティブな決定事項と考慮事項
-- コードの重複を避け、保守性を向上させるために、オペコード生成処理を集約
-- レジスタ名から番号への変換を共通化
-- エラーハンドリングを適切に実装
+- `ForceImm8` フラグを追加することで、特殊な即値オペランドの扱いを制御する
+- テストケースを追加し、`ForceImm8` フラグの動作を確認する
 
 ## 関連情報
 [implementation_details.md](./implementation_details.md)

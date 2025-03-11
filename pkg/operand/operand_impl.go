@@ -14,12 +14,17 @@ import (
 var operandTypesCache = make(map[string][]OperandType)
 
 type OperandImpl struct {
-	Internal string
-	BitMode  ast.BitMode
+	Internal  string
+	BitMode   ast.BitMode
+	ForceImm8 bool
 }
 
 func NewOperandFromString(text string) Operands {
-	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT}
+	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT, ForceImm8: false}
+}
+
+func (b *OperandImpl) WithForceImm8(force bool) Operands {
+	return &OperandImpl{Internal: b.Internal, BitMode: b.BitMode, ForceImm8: force}
 }
 
 func (b *OperandImpl) InternalString() string {
@@ -176,7 +181,11 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		case parsed.Mem != nil && parsed.Mem.Prefix != nil:
 			types = append(types, getMemorySizeFromPrefix(*parsed.Mem.Prefix+" "+parsed.Mem.Mem))
 		case parsed.Imm != "":
-			types = append(types, CodeIMM)
+			if b.ForceImm8 {
+				types = append(types, CodeIMM8)
+			} else {
+				types = append(types, CodeIMM)
+			}
 		case parsed.Seg != "":
 			types = append(types, CodeSREG)
 		case parsed.Addr != nil:
@@ -194,9 +203,8 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, OperandType("unknown"))
 		}
 	}
-
 	// サイズ未確定のimm/memを他のオペランドから決定
-	types = resolveOperandSizes(types, inst.Operands)
+	types = b.resolveOperandSizes(types, inst.Operands)
 
 	operandTypesCache[b.Internal] = types
 	return types
@@ -204,8 +212,8 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 
 var (
 	regR8Pattern  = regexp.MustCompile(`^[ABCD][HL]$`)
-	regR16Pattern = regexp.MustCompile(`^(?:[ABCD]X|SP|BP)$`)
-	regR32Pattern = regexp.MustCompile(`^E[ABCD]X$`)
+	regR16Pattern = regexp.MustCompile(`^(?:[ABCD]X|SP|BP|SI|DI)$`)
+	regR32Pattern = regexp.MustCompile(`^E[ABCD]X|ESI|EDI$`)
 )
 
 // レジスタ名からタイプを取得
@@ -297,7 +305,7 @@ func getImmediateSizeFromValue(imm string) OperandType {
 }
 
 // オペランドサイズを解決する
-func resolveOperandSizes(types []OperandType, operands []*ParsedOperand) []OperandType {
+func (b *OperandImpl) resolveOperandSizes(types []OperandType, operands []*ParsedOperand) []OperandType {
 	regSize := getOperandSizeFromTypes(types, operands)
 
 	for i, t := range types {
@@ -305,7 +313,9 @@ func resolveOperandSizes(types []OperandType, operands []*ParsedOperand) []Opera
 		case CodeM:
 			types[i] = getMemoryTypeFromRegisterSize(regSize)
 		case CodeIMM, CodeIMM4, CodeIMM8, CodeIMM16, CodeIMM32:
-			types[i] = getImmediateTypeFromRegisterSize(regSize)
+			if !b.ForceImm8 {
+				types[i] = getImmediateTypeFromRegisterSize(regSize)
+			}
 		}
 	}
 	return types
