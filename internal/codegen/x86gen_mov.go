@@ -17,7 +17,8 @@ func handleMOV(operands []string) []byte {
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ","))
+	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
+		WithForceRelAsImm(true)
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()
@@ -73,7 +74,12 @@ func handleMOV(operands []string) []byte {
 
 	// 即値の追加(必要な場合)
 	if encoding.Immediate != nil {
-		if imm, err := getImmediateValue(operands[1], encoding.Immediate.Size); err == nil {
+		immIndex, err := parseIndex(encoding.Immediate.Value)
+		if err != nil {
+			log.Printf("error: invalid Immediate.Value format")
+			return nil
+		}
+		if imm, err := getImmediateValue(operands[immIndex], encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
 		}
 	}
@@ -89,7 +95,7 @@ func getImmediateValue(operand string, size int) ([]byte, error) {
 	if strings.HasPrefix(operand, "0x") {
 		value, err := strconv.ParseUint(operand[2:], 16, size*8)
 		if err != nil {
-			return nil, err
+			return make([]byte, size), nil
 		}
 		return intToBytes(value, size), nil
 	}
@@ -97,7 +103,7 @@ func getImmediateValue(operand string, size int) ([]byte, error) {
 	// 10進数の場合
 	value, err := strconv.ParseInt(operand, 10, size*8)
 	if err != nil {
-		return nil, err
+		return make([]byte, size), nil
 	}
 	return intToBytes(uint64(value), size), nil
 }

@@ -14,13 +14,19 @@ import (
 var operandTypesCache = make(map[string][]OperandType)
 
 type OperandImpl struct {
-	Internal  string
-	BitMode   ast.BitMode
-	ForceImm8 bool
+	Internal      string
+	BitMode       ast.BitMode
+	ForceImm8     bool
+	ForceRelAsImm bool
 }
 
 func NewOperandFromString(text string) Operands {
-	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT, ForceImm8: false}
+	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT, ForceImm8: false, ForceRelAsImm: false}
+}
+
+func (b *OperandImpl) WithForceRelAsImm(force bool) Operands {
+	b.ForceRelAsImm = force
+	return b
 }
 
 func (b *OperandImpl) WithForceImm8(force bool) Operands {
@@ -196,10 +202,14 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, CodeM)
 		case parsed.Rel != "":
 			// ラベル指定
-			if len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" {
-				types = append(types, CodeREL8)
+			if b.ForceRelAsImm {
+				types = append(types, CodeIMM) // ForceRelAsImm が true なら Imm として扱う
 			} else {
-				types = append(types, CodeREL32)
+				if len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" {
+					types = append(types, CodeREL8)
+				} else {
+					types = append(types, CodeREL32)
+				}
 			}
 		default:
 			types = append(types, OperandType("unknown"))

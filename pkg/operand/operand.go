@@ -23,6 +23,7 @@ type Operands interface {
 	DetectImmediateSize() int
 	WithBitMode(mode ast.BitMode) Operands
 	WithForceImm8(force bool) Operands
+	WithForceRelAsImm(force bool) Operands
 	GetBitMode() ast.BitMode
 	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
 	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
