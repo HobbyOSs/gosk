@@ -77,7 +77,9 @@
 - `pkg/operand` パッケージの改善
   - `OperandImpl` 構造体に `ForceImm8` フィールドを追加
   - `NewOperandFromString` 関数を修正し、`ForceImm8` フィールドを初期化 (デフォルト: false)
-  - `WithForceImm8` メソッドを追加し、`ForceImm8` フィールドを設定可能に
+  - `WithForceImm8` メソッドを追加し、`ForceImm8` フィールドを設定可能に (レシーバを直接変更する実装)
+  - `WithBitMode` メソッドを修正 (レシーバを直接変更する実装)
+  - `Operands` インターフェースに `WithForceImm8` メソッドを追加
   - `OperandTypes` メソッドを修正し、`ForceImm8` フラグが true の場合は即値のタイプを `CodeIMM8` に設定
   - `TestBaseOperand_OperandType` 関数に、`ForceImm8` フラグをテストするための新しいテストケースを追加
   - 既存の `"Immediate Value", "SI,1", []OperandType{CodeR16, CodeIMM8}}` テストケースの名前を `"Immediate Value force imm8"` に変更し、`ForceImm8` フィールドを true に設定
@@ -130,7 +132,8 @@
   - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
 - `internal/codegen/x86gen_arithmetic.go`の`handleADD`関数を修正
   - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
-- オペランドの特殊な即値パターン(`ForceImm8`)に対応
+- オペランドの特殊な即値パターン(`ForceImm8`)に対応 (WithForceImm8メソッドの修正を含む)
+- `pkg/operand` パッケージの `WithBitMode` メソッドを修正し、`Operands` インターフェースに `WithForceImm8` メソッドを追加
 
 ## 既知の問題
 

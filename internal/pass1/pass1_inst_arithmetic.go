@@ -17,7 +17,9 @@ func processArithmeticInst(env *Pass1, tokens []*token.ParseToken, instName stri
 
 	operands := operand.
 		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode)
+		WithBitMode(env.BitMode).
+		WithForceImm8(true)
+
 	size, _ := env.AsmDB.FindMinOutputSize(instName, operands)
 	env.LOC += int32(size)
 	env.Client.Emit(fmt.Sprintf("%s %s\n", instName, strings.Join(args, ",")))

@@ -24,7 +24,8 @@ func NewOperandFromString(text string) Operands {
 }
 
 func (b *OperandImpl) WithForceImm8(force bool) Operands {
-	return &OperandImpl{Internal: b.Internal, BitMode: b.BitMode, ForceImm8: force}
+	b.ForceImm8 = force
+	return b
 }
 
 func (b *OperandImpl) InternalString() string {
@@ -40,7 +41,8 @@ func (b *OperandImpl) FromString(text string) Operands {
 }
 
 func (b *OperandImpl) WithBitMode(mode ast.BitMode) Operands {
-	return &OperandImpl{Internal: b.Internal, BitMode: mode}
+	b.BitMode = mode
+	return b
 }
 
 func (b *OperandImpl) GetBitMode() ast.BitMode {
@@ -313,7 +315,9 @@ func (b *OperandImpl) resolveOperandSizes(types []OperandType, operands []*Parse
 		case CodeM:
 			types[i] = getMemoryTypeFromRegisterSize(regSize)
 		case CodeIMM, CodeIMM4, CodeIMM8, CodeIMM16, CodeIMM32:
-			if !b.ForceImm8 {
+			if b.ForceImm8 {
+				types[i] = CodeIMM8
+			} else {
 				types[i] = getImmediateTypeFromRegisterSize(regSize)
 			}
 		}

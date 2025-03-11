@@ -5,7 +5,9 @@
 ### オペランド処理の改善
 - [x] `pkg/operand` パッケージの `OperandImpl` 構造体に `ForceImm8` フィールドを追加
 - [x] `NewOperandFromString` 関数を修正し、`ForceImm8` フィールドを初期化 (デフォルト: false)
-- [x] `WithForceImm8` メソッドを追加し、`ForceImm8` フィールドを設定可能に
+- [x] `WithForceImm8` メソッドを追加し、`ForceImm8` フィールドを設定可能に (レシーバを直接変更する実装)
+- [x] `WithBitMode` メソッドを修正 (レシーバを直接変更する実装)
+- [x] `Operands` インターフェースに `WithForceImm8` メソッドを追加
 - [x] `OperandTypes` メソッドを修正し、`ForceImm8` フラグが true の場合は即値のタイプを `CodeIMM8` に設定
 - [x] `TestBaseOperand_OperandType` 関数に、`ForceImm8` フラグをテストするための新しいテストケースを追加
 - [x] 既存の `"Immediate Value", "SI,1", []OperandType{CodeR16, CodeIMM8}}` テストケースの名前を `"Immediate Value force imm8"` に変更し、`ForceImm8` フィールドを true に設定
@@ -51,10 +53,10 @@
     - [ ] バイナリ出力の検証
 
 ## 直近の変更点
-- `pkg/operand` パッケージの `OperandImpl` 構造体と関連メソッド、テストを修正
+- `pkg/operand` パッケージの `OperandImpl` 構造体と関連メソッド、テストを修正 (`WithForceImm8` メソッド、`WithBitMode` メソッドの変更、`Operands` インターフェースへの `WithForceImm8` メソッド追加を含む)
 
 ## 次のステップ
-- `.clinerules`の更新
+- Memory Bankの更新 (`progress.md`の更新)
 
 ## アクティブな決定事項と考慮事項
 - `ForceImm8` フラグを追加することで、特殊な即値オペランドの扱いを制御する

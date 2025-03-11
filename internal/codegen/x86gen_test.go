@@ -76,6 +76,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0xbc, 0x00, 0x7c},
 		},
+		{
+			name: "ADD SI,1",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpADD, Operands: []string{"SI", "1"}},
+			},
+			expected: []byte{0x83, 0xc6, 0x01},
+		},
 	}
 
 	for _, tt := range tests {

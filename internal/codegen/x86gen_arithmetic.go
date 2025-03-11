@@ -12,7 +12,9 @@ import (
 // handleADD はADD命令の機械語を生成します
 func handleADD(operands []string) ([]byte, error) {
 	// オペランドを解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ","))
+	ops := operand.
+		NewOperandFromString(strings.Join(operands, ",")).
+		WithForceImm8(true)
 
 	// asmdbからエンコーディング情報を取得
 	db := asmdb.NewInstructionDB()
