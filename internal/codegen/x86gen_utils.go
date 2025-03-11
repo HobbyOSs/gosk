@@ -9,23 +9,73 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 )
 
-// GenerateModRM generates ModR/M byte based on mode, reg, and rm.
-func GenerateModRM(modeStr string, regOperand string, rmOperand string) byte {
-	// ModR/Mバイトの生成
+// GenerateModRM generates ModR/M byte based on encoding information.
+func GenerateModRM(operands []string, modRM *asmdb.Encoding) (byte, error) {
+	if modRM == nil || modRM.ModRM == nil {
+		return 0, nil
+	}
+
+	modRMDef := modRM.ModRM
+	if modRMDef == nil {
+		return 0, nil
+	}
+
+	if strings.HasPrefix(modRMDef.Reg, "#") {
+		// ModR/M の reg フィールドがオペランドの場合
+		regIndex, err := parseIndex(modRMDef.Reg)
+		if err != nil {
+			return 0, fmt.Errorf("invalid ModRM.Reg format")
+		}
+		rmIndex, err := parseIndex(modRMDef.Rm)
+		if err != nil {
+			return 0, fmt.Errorf("invalid ModRM.RM format")
+		}
+
+		if regIndex < 0 || regIndex >= len(operands) {
+			return 0, fmt.Errorf("ModRM.Reg index out of range")
+		}
+		if rmIndex < 0 || rmIndex >= len(operands) {
+			return 0, fmt.Errorf("ModRM.RM index out of range")
+		}
+
+		regOperand := operands[regIndex]
+		rmOperand := operands[rmIndex]
+		return ModRMByOperand(modRMDef.Mode, regOperand, rmOperand), nil
+	} else {
+		// ModR/M の reg フィールドが固定値の場合
+		regValue, err := strconv.Atoi(modRMDef.Reg)
+		if err != nil {
+			return 0, fmt.Errorf("failed to parse ModRM.Reg: %v", err)
+		}
+		rmIndex, err := parseIndex(modRMDef.Rm)
+		if err != nil {
+			return 0, fmt.Errorf("invalid ModRM.RM format")
+		}
+		if rmIndex < 0 || rmIndex >= len(operands) {
+			return 0, fmt.Errorf("ModRM.RM index out of range")
+		}
+		rmOperand := operands[rmIndex]
+		return ModRMByValue(modRMDef.Mode, regValue, rmOperand), nil
+	}
+}
+
+// ModRMByOperand generates ModR/M byte based on mode, reg operand, and rm operand.
+func ModRMByOperand(modeStr string, regOperand string, rmOperand string) byte {
+	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
 
 	// modeの解析（2ビット）
 	var mode byte
 	switch modeStr {
-	case "11":
-		mode = 0b11000000
-	case "00":
+	case "#0": // レジスタ間接参照
 		mode = 0b00000000
-	case "01":
+	case "#1": // 8ビット変位レジスタ間接参照
 		mode = 0b01000000
-	case "10":
+	case "#2": // 32ビット変位レジスタ間接参照
 		mode = 0b10000000
+	case "11": // レジスタ
+		mode = 0b11000000
 	default:
 		mode = 0 // デフォルト値
 	}
@@ -55,6 +105,50 @@ func GenerateModRM(modeStr string, regOperand string, rmOperand string) byte {
 
 	result := mode | regBits | rmBits
 	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, result)
+	return result
+}
+
+// ModRMByValue generates ModR/M byte based on mode, fixed reg value, and rm operand.
+func ModRMByValue(modeStr string, regValue int, rmOperand string) byte {
+	// ModR/M バイトの生成
+	// |  mod  |  reg  |  r/m  |
+	// | 7 6 | 5 4 3 | 2 1 0 |
+
+	// modeの解析（2ビット）
+	var mode byte
+	switch modeStr {
+	case "#0": // レジスタ間接参照
+		mode = 0b00000000
+	case "#1": // 8ビット変位レジスタ間接参照
+		mode = 0b01000000
+	case "#2": // 32ビット変位レジスタ間接参照
+		mode = 0b10000000
+	case "11": // レジスタ
+		mode = 0b11000000
+	default:
+		mode = 0 // デフォルト値
+	}
+
+	// regの解析（3ビット）
+	regBits := byte(regValue) << 3
+
+	// r/mの解析（3ビット）
+	// メモリの場合は0として扱う
+	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
+		// TODO: メモリオペランドの解析
+		rmBits := byte(0)
+		return mode | regBits | rmBits
+	}
+
+	rm, err := GetRegisterNumber(rmOperand)
+	if err != nil {
+		log.Printf("error: Failed to get register number for rm: %v", err)
+		return 0
+	}
+	rmBits := byte(rm)
+
+	result := mode | regBits | rmBits
+	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, result)
 	return result
 }
 
@@ -106,12 +200,20 @@ func ResolveOpcode(op asmdb.Opcode, regNum int) (byte, error) {
 
 // getModRMFromOperands はオペランドからModR/Mバイトを生成する
 func getModRMFromOperands(operands []string, modRM *asmdb.Encoding) (byte, error) {
-	if modRM == nil || modRM.ModRM == nil {
-		return 0, nil
+	modrmByte, err := GenerateModRM(operands, modRM)
+	if err != nil {
+		return 0, err
 	}
-
-	// ModR/M バイトを生成
-	modrmByte := GenerateModRM(modRM.ModRM.Mode, operands[0], operands[1])
-
 	return modrmByte, nil
+}
+
+func parseIndex(indexStr string) (int, error) {
+	if strings.HasPrefix(indexStr, "#") {
+		indexStr = indexStr[1:]
+	}
+	index, err := strconv.Atoi(indexStr)
+	if err != nil {
+		return -1, fmt.Errorf("invalid index format")
+	}
+	return index, nil
 }

@@ -55,11 +55,11 @@ func handleADD(operands []string) ([]byte, error) {
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
-		modrm, err := getModRMFromOperands(operands, encoding)
+		modrmByte, err := GenerateModRM(operands, encoding)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate ModR/M: %v", err)
 		}
-		machineCode = append(machineCode, modrm)
+		machineCode = append(machineCode, modrmByte)
 	}
 
 	// 即値の追加(必要な場合)

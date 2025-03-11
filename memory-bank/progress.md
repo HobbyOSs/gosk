@@ -84,6 +84,12 @@
   - `TestBaseOperand_OperandType` 関数に、`ForceImm8` フラグをテストするための新しいテストケースを追加
   - 既存の `"Immediate Value", "SI,1", []OperandType{CodeR16, CodeIMM8}}` テストケースの名前を `"Immediate Value force imm8"` に変更し、`ForceImm8` フィールドを true に設定
   - `resolveOperandSizes` 関数をレシーバメソッドに変更し、`ForceImm8` フラグを考慮するように修正
+- ModR/Mバイト生成の改善
+  - `ModRMByOperand`と`ModRMByValue`の2つの関数を作成し、用途に応じて使い分け
+  - `GenerateModRM`関数をファサードとして復活させ、`asmdb.Encoding`構造体の情報に基づいて適切な関数を呼び出すように実装
+  - セグメントレジスタ用のMOV命令のエンコーディングを修正
+    - MOV r16, sreg (0x8C): ModRM.Regをセグメントレジスタのインデックス (#1) に設定
+    - MOV sreg, r16 (0x8E): ModRM.Regをセグメントレジスタのインデックス (#0) に設定
 
 ## まだ構築が必要な部分
 
@@ -134,6 +140,12 @@
   - `GenerateModRM`関数の代わりに`getModRMFromOperands`関数を呼び出すように変更
 - オペランドの特殊な即値パターン(`ForceImm8`)に対応 (WithForceImm8メソッドの修正を含む)
 - `pkg/operand` パッケージの `WithBitMode` メソッドを修正し、`Operands` インターフェースに `WithForceImm8` メソッドを追加
+- ModR/Mバイト生成の改善
+  - `ModRMByOperand`と`ModRMByValue`の2つの関数を作成し、用途に応じて使い分け
+  - `GenerateModRM`関数をファサードとして復活させ、`asmdb.Encoding`構造体の情報に基づいて適切な関数を呼び出すように実装
+  - セグメントレジスタ用のMOV命令のエンコーディングを修正
+    - MOV r16, sreg (0x8C): ModRM.Regをセグメントレジスタのインデックス (#1) に設定
+    - MOV sreg, r16 (0x8E): ModRM.Regをセグメントレジスタのインデックス (#0) に設定
 
 ## 既知の問題
 

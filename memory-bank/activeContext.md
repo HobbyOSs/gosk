@@ -2,6 +2,13 @@
 
 ## 現在の作業の焦点
 
+### ModR/Mバイト生成の改善
+- [x] `ModRMByOperand`と`ModRMByValue`の2つの関数を作成し、用途に応じて使い分け
+- [x] `GenerateModRM`関数をファサードとして復活させ、`asmdb.Encoding`構造体の情報に基づいて適切な関数を呼び出すように実装
+- [x] セグメントレジスタ用のMOV命令のエンコーディングを修正
+  - MOV r16, sreg (0x8C): ModRM.Regをセグメントレジスタのインデックス (#1) に設定
+  - MOV sreg, r16 (0x8E): ModRM.Regをセグメントレジスタのインデックス (#0) に設定
+
 ### オペランド処理の改善
 - [x] `pkg/operand` パッケージの `OperandImpl` 構造体に `ForceImm8` フィールドを追加
 - [x] `NewOperandFromString` 関数を修正し、`ForceImm8` フィールドを初期化 (デフォルト: false)
@@ -19,7 +26,7 @@
     - [ ] MOV命令
         - [ ] レジスタ間転送
         - [ ] 即値のロード
-        - [ ] セグメントレジスタの設定
+        - [x] セグメントレジスタの設定
     - [x] ADD命令
         - [x] 即値加算の実装
         - [ ] フラグ更新の処理
@@ -53,14 +60,25 @@
     - [ ] バイナリ出力の検証
 
 ## 直近の変更点
-- `pkg/operand` パッケージの `OperandImpl` 構造体と関連メソッド、テストを修正 (`WithForceImm8` メソッド、`WithBitMode` メソッドの変更、`Operands` インターフェースへの `WithForceImm8` メソッド追加を含む)
+- ModR/Mバイト生成の改善
+  - `ModRMByOperand`と`ModRMByValue`の2つの関数を作成し、用途に応じて使い分け
+  - `GenerateModRM`関数をファサードとして復活させ、`asmdb.Encoding`構造体の情報に基づいて適切な関数を呼び出すように実装
+  - セグメントレジスタ用のMOV命令のエンコーディングを修正
+    - MOV r16, sreg (0x8C): ModRM.Regをセグメントレジスタのインデックス (#1) に設定
+    - MOV sreg, r16 (0x8E): ModRM.Regをセグメントレジスタのインデックス (#0) に設定
 
 ## 次のステップ
-- Memory Bankの更新 (`progress.md`の更新)
+- MOV命令の残りの機能を実装
+  - レジスタ間転送
+  - 即値のロード
+- メモリアドレッシングモードの実装
+- レジスタ-メモリ間のデータ転送の実装
 
 ## アクティブな決定事項と考慮事項
-- `ForceImm8` フラグを追加することで、特殊な即値オペランドの扱いを制御する
-- テストケースを追加し、`ForceImm8` フラグの動作を確認する
+- ModR/Mバイトの生成方法を2つに分割し、用途に応じて使い分ける
+  - `ModRMByOperand`: オペランドからregフィールドを生成
+  - `ModRMByValue`: 固定値でregフィールドを生成
+- `GenerateModRM`関数をファサードとして使用し、`asmdb.Encoding`構造体の情報に基づいて適切な関数を呼び出す
 
 ## 関連情報
 [implementation_details.md](./implementation_details.md)
