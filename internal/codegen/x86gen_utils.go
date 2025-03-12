@@ -92,6 +92,7 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string) byte {
 	// メモリの場合は0として扱う
 	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
 		// TODO: メモリオペランドの解析
+		// https://www.intel.co.jp/content/dam/www/public/ijkk/jp/ja/documents/developer/IA32_Arh_Dev_Man_Vol2A_i.pdf
 		rmBits := byte(0)
 		return mode | regBits | rmBits
 	}
