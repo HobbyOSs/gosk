@@ -19,6 +19,7 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		{"Multiple Operands with Different Types", "[EAX], EBX", []OperandType{CodeM32, CodeR32}, false},
 		{"General Register", " EAX", []OperandType{CodeR32}, false},
 		{"Memory Address", "[EBX]", []OperandType{CodeM32}, false},
+		{"Memory Address", "AL,[ SI ]", []OperandType{CodeR8, CodeM}, false},
 		{"Immediate Value", "0x10", []OperandType{CodeIMM32}, false},
 		{"Immediate Value force imm8", "SI,1", []OperandType{CodeR16, CodeIMM8}, true},
 		{"Segment Register", " CS", []OperandType{CodeSREG}, false},

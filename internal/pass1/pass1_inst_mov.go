@@ -16,8 +16,11 @@ func processMOV(env *Pass1, tokens []*token.ParseToken) {
 
 	operands := operand.
 		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode)
+		WithBitMode(env.BitMode).
+		WithForceRelAsImm(true)
 	size, _ := env.AsmDB.FindMinOutputSize("MOV", operands)
 	env.LOC += int32(size)
-	env.Client.Emit(fmt.Sprintf("MOV %s\n", strings.Join(args, ",")))
+
+	deb := fmt.Sprintf("MOV %s\n", strings.Join(args, ","))
+	env.Client.Emit(deb)
 }
