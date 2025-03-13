@@ -3,6 +3,7 @@ package asmdb
 import (
 	"errors"
 	"log"
+	"regexp"
 
 	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/samber/lo"
@@ -104,6 +105,18 @@ func matchOperands(formOperands *[]Operand, queryOperands operand.Operands, cond
 		return false
 	}
 
+	// アキュムレータレジスタの優先検索
+	internalStrs := queryOperands.InternalStrings()
+	reAcc := regexp.MustCompile(`(?i)^(al|ax|eax)$`)
+
+	for _, str := range internalStrs {
+		if reAcc.MatchString(str) {
+			// アキュムレータレジスタが含まれる場合、優先的に検索
+			return matchOperandsWithAccumulator(formOperands, queryOperands)
+		}
+	}
+
+	// 通常の検索ロジック（既存のコード）
 	if conditionRelaxed {
 		for i, operand := range *formOperands {
 			queryType := queryOperands.OperandTypes()[i].String()
@@ -121,6 +134,24 @@ func matchOperands(formOperands *[]Operand, queryOperands operand.Operands, cond
 	for i, operand := range *formOperands {
 		queryType := queryOperands.OperandTypes()[i].String()
 		if operand.Type != queryType {
+			return false
+		}
+	}
+	return true
+}
+
+func matchOperandsWithAccumulator(formOperands *[]Operand, queryOperands operand.Operands) bool {
+	reAcc := regexp.MustCompile(`^(al|ax|eax)$`)
+	reOp := regexp.MustCompile(`^r(8|16|32)$`)
+
+	// アキュムレータレジスタを優先的にマッチングするロジック
+	for i, operand := range *formOperands {
+		queryType := queryOperands.OperandTypes()[i].String()
+		if operand.Type != queryType {
+			// アキュムレータレジスタの場合、特定の条件でマッチングを試みる
+			if reAcc.MatchString(operand.Type) && reOp.MatchString(queryType) {
+				continue
+			}
 			return false
 		}
 	}

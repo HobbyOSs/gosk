@@ -98,6 +98,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x83, 0xc6, 0x01},
 		},
+		{
+			name: "CMP AL,0",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpCMP, Operands: []string{"AL", "0"}},
+			},
+			expected: []byte{0x3c, 0x00},
+		},
 	}
 
 	for _, tt := range tests {

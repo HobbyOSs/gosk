@@ -38,6 +38,43 @@ func (b *OperandImpl) InternalString() string {
 	return b.Internal
 }
 
+var internalStringsCache = make(map[string][]string)
+
+func (b *OperandImpl) InternalStrings() []string {
+	if cached, exists := internalStringsCache[b.Internal]; exists {
+		return cached
+	}
+
+	parser := getParser()
+	inst, err := parser.ParseString("", b.Internal)
+	if err != nil || len(inst.Operands) == 0 {
+		return []string{}
+	}
+
+	var results []string
+	for _, parsed := range inst.Operands {
+		switch {
+		case parsed.SegMem != "":
+			results = append(results, parsed.SegMem)
+		case parsed.Reg != "":
+			results = append(results, parsed.Reg)
+		case parsed.Addr != nil:
+			results = append(results, parsed.Addr.Addr)
+		case parsed.Mem != nil:
+			results = append(results, parsed.Mem.Mem)
+		case parsed.Imm != "":
+			results = append(results, parsed.Imm)
+		case parsed.Seg != "":
+			results = append(results, parsed.Seg)
+		case parsed.Rel != "":
+			results = append(results, parsed.Rel)
+		}
+	}
+
+	internalStringsCache[b.Internal] = results
+	return results
+}
+
 func (b *OperandImpl) Serialize() string {
 	return b.Internal
 }

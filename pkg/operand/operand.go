@@ -16,6 +16,7 @@ func equalOperandTypes(a, b []OperandType) bool {
 
 type Operands interface {
 	InternalString() string
+	InternalStrings() []string
 	OperandTypes() []OperandType
 	Serialize() string
 	FromString(text string) Operands

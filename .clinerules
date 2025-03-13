@@ -20,7 +20,7 @@ memory-bank/
   │   ├─ activeContext.md      現在の作業焦点、直近の変更点、次のステップ
   │   ├─ progress.md           実装済機能、未実装部分、進捗状況、既知の問題
   ├─ details/
-  │   ├─ implementation_details.md  実装の詳細、注意点、過去の作業履歴
+  │   ├─ implementation_details.md  実装の詳細、注意点
   │   ├─ technical_notes.md       技術的な詳細、外部ツール活用、JSON構造解説
   └─ docs/ (必要に応じて作成)
 ```
@@ -89,16 +89,16 @@ flowchart TD
 
 ### ドキュメント更新時の留意
 
-- 大量・詳細な情報はなるべく `implementation_details.md` や `technical_notes.md` などに記載し、コアファイルは常に簡潔に保つ
+- 実装内容は最初に `activeContext.md` に記載する。
+    - `activeContext.md` は常に「今フォーカス中のタスク・変更点・次のTODO」程度に留める。
+- その後、必要に応じて `progress.md` に移動する（実装済み機能として）。
 - メモリバンクを更新する際は **すべてのコアファイルを精査** し、詳細は `details/` に移動
-- `activeContext.md` は常に「今フォーカス中のタスク・変更点・次のTODO」程度に留める。
-- 過去の履歴は `activeContext.md` に長々と書かず、`implementation_details.md` や別ファイルへ移動する。
-- `implementation_details.md` は長期的な履歴を保持する。
 
 ### メモリバンクのアーカイブ
 
-- ある程度開発が進んだ段階で、履歴ファイルや古い議論をアーカイブ（過去ログ）に移す。
+- 定期的に古い履歴を `archives/` に移動する。`archives/`ディレクトリには、過去の作業履歴、古いバージョンのドキュメントなどを格納する。
   - 例：`progress.md` が長文化してきたら、最新のマイルストーンとTODO一覧だけ残し、古い記録は `memory-bank/archives/progress_archive_YYYYMM.md` などに移動して要点をまとめる。
+  - 例：`activeContext.md` の履歴が長くなってきたら、同様に `memory-bank/archives/activeContext_archive_YYYYMM.md` などに移動する。
   - 例：`.clinerules` でルールが増えてきたら、不要になったルールや既に恒久化したルールを `rules_extras.md` に移動し、一行で「XXの時はこうする」といった最重要部分だけを残す。
 - アーカイブしたファイルへのリンクは、元のファイルから参照できるようにしておく。
 

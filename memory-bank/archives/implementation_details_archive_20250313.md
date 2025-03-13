@@ -211,3 +211,10 @@
   - day02以降のテストケースが未実装
   - 算術命令の実装が進行中（ADD命令は完了）
   - トークン解析、オペランド判定、スタックマシン関連の構造に改善の余地あり
+
+## 2025/3/13 実装手順
+- `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
+- `internal/codegen/x86gen_test.go` にCMP命令のテストケースを追加
+- `pkg/operand/operand.go`に`InternalStrings() []string`メソッドを追加
+- `pkg/operand/operand_impl.go`に`InternalStrings()`メソッドを実装し、キャッシュ処理を追加
+- `pkg/asmdb/instruction_search.go`の`matchOperands`関数を修正してアキュムレータレジスタの優先検索を実装

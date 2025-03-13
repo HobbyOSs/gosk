@@ -12,9 +12,19 @@
 
 ## 直近の変更点
 - `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
+- `internal/codegen/x86gen_test.go` にCMP命令のテストケースを追加
+- `pkg/operand/operand.go`に`InternalStrings() []string`メソッドを追加
+- `pkg/operand/operand_impl.go`に`InternalStrings()`メソッドを実装し、キャッシュ処理を追加
+- `pkg/asmdb/instruction_search.go`の`matchOperands`関数を修正してアキュムレータレジスタの優先検索を実装
+
+## 実装内容
+- `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
+- `internal/codegen/x86gen_test.go` にCMP命令のテストケースを追加
+- `pkg/operand/operand.go`に`InternalStrings() []string`メソッドを追加
+- `pkg/operand/operand_impl.go`に`InternalStrings()`メソッドを実装し、キャッシュ処理を追加
+- `pkg/asmdb/instruction_search.go`の`matchOperands`関数を修正してアキュムレータレジスタの優先検索を実装
 
 ## 次のステップ
-- CMP命令の実装
 - メモリアドレッシングモードの実装
 
 (詳細: [implementation_details.md](../details/implementation_details.md))
