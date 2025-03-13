@@ -1,31 +1,19 @@
 # Active Context
 
 ## 現在の作業の焦点
-- CMP命令の追加
-- テストエラーの修正
+- MOVとJMP命令のオフセット計算
 
 ## Day02実装計画
-- MOV命令 (レジスタ間, 即値)
-- ADD命令 (フラグ更新)
-- CMP命令 (フラグ更新)
-- 他、メモリアドレッシングや制御フロー命令の実装
+- メモリアドレッシング
+- 制御フロー命令 (JMPの相対アドレス計算)
 
 ## 直近の変更点
-- `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
-- `internal/codegen/x86gen_test.go` にCMP命令のテストケースを追加
-- `pkg/operand/operand.go`に`InternalStrings() []string`メソッドを追加
-- `pkg/operand/operand_impl.go`に`InternalStrings()`メソッドを実装し、キャッシュ処理を追加
-- `pkg/asmdb/instruction_search.go`の`matchOperands`関数を修正してアキュムレータレジスタの優先検索を実装
-
-## 実装内容
-- `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
-- `internal/codegen/x86gen_test.go` にCMP命令のテストケースを追加
-- `pkg/operand/operand.go`に`InternalStrings() []string`メソッドを追加
-- `pkg/operand/operand_impl.go`に`InternalStrings()`メソッドを実装し、キャッシュ処理を追加
-- `pkg/asmdb/instruction_search.go`の`matchOperands`関数を修正してアキュムレータレジスタの優先検索を実装
+- progress.mdを更新
+  - MOV命令(レジスタ間, 即値)とADD命令(フラグ更新)を実装済みに追加
+  - まだ必要な実装からMOV, ADDを削除
 
 ## 次のステップ
-- メモリアドレッシングモードの実装
+- MOVとJMP命令のオフセット計算の実装
 
 (詳細: [implementation_details.md](../details/implementation_details.md))
 

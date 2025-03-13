@@ -59,6 +59,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 		return handleINT(oc), nil
 	case ocode.OpJMP:
 		return handleJMP(oc, ctx)
+	case ocode.OpJE:
+		return handleJE(oc, ctx)
 	case ocode.OpADD:
 		return handleADD(oc.Operands, ctx)
 	case ocode.OpCMP:

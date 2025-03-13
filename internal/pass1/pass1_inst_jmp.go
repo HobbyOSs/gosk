@@ -9,10 +9,10 @@ import (
 	"github.com/samber/lo"
 )
 
-func processCalcJcc(env *Pass1, tokens []*token.ParseToken) {
+func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 	// JMP命令のオペランドは1つ (ジャンプ先ラベル)
 	if len(tokens) != 1 {
-		log.Fatalf("JMP instruction requires exactly one operand, got %d", len(tokens))
+		log.Fatalf("%s instruction requires exactly one operand, got %d", instName, len(tokens))
 		return
 	}
 
@@ -36,7 +36,7 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken) {
 			return t.AsString()
 		})
 		// プレースホルダーとしてラベルを使用
-		env.Client.Emit(fmt.Sprintf("JMP %s", strings.Join(args, ",")))
+		env.Client.Emit(fmt.Sprintf("%s %s", instName, strings.Join(args, ",")))
 		return
 	}
 	dataSize := checkUintRange(arg.ToUInt())

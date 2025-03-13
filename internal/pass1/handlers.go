@@ -34,7 +34,9 @@ func init() {
 	jmpFns := lo.SliceToMap(
 		jmpOps,
 		func(op string) (string, opcodeEvalFn) {
-			return op, processCalcJcc
+			return op, func(env *Pass1, tokens []*token.ParseToken) {
+				processCalcJcc(env, tokens, op)
+			}
 		},
 	)
 	opcodeEvalFns = lo.Assign(opcodeEvalFns, jmpFns)

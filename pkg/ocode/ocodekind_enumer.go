@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-const _OcodeKindName = "OpLOpDBOpDWOpDDOpRESBOpMOVOpADDOpAAAOpAADOpAAMOpAASOpADXOpALTEROpAMXOpCBWOpCDQOpCDQEOpCLCOpCLDOpCLIOpCLTSOpCMCOpCPUIDOpCQOOpCSOpCWDOpCWDEOpDAAOpDASOpDIVOpDSOpEMMSOpENTEROpESOpF2XM1OpFABSOpFADDPOpFCHSOpFCLEXOpFCOMOpFCOMPOpFCOMPPOpFCOSOpFDECSTPOpFDISIOpFDIVPOpFDIVRPOpFENIOpFINCSTPOpFINITOpFLD1OpFLDL2EOpFLDL2TOpFLDLG2OpFLDLN2OpFLDPIOpFLDZOpFMULPOpFNCLEXOpFNDISIOpFNENIOpFNINITOpFNOPOpFNSETPMOpFPATANOpFPREMOpFPREM1OpFPTANOpFRNDINTOpFRSTOROpFSOpFSCALEOpFSETPMOpFSINOpFSINCOSOpFSQRTOpFSUBPOpFSUBRPOpFTSTOpFUCOMOpFUCOMPOpFUCOMPPOpFXAMOpFXCHOpFXRSTOROpFXTRACTOpFYL2XOpFYL2XP1OpGETSECOpGSOpHLTOpICEBPOpIDIVOpIMULOpINTOpCMPOpJMPOpINTOOpINVDOpIRETOpIRETDOpIRETQOpJMPEOpLAHFOpLEAVEOpLFENCEOpLOADALLOpLOCKOpMFENCEOpMONITOROpMULOpMWAITOpNOPOpNTAKENOpPAUSEOpPOPAOpPOPADOpPOPFOpPOPFDOpPOPFQOpPUSHAOpPUSHADOpPUSHFOpPUSHFDOpPUSHFQOpRDMSROpRDPMCOpRDTSCOpRDTSCPOpREPOpREPEOpREPNEOpRETFOpRETNOpRSMOpSAHFOpSETALCOpSFENCEOpSSOpSTCOpSTDOpSTIOpSWAPGSOpSYSCALLOpSYSENTEROpSYSEXITOpSYSRETOpTAKENOpUD2OpVMCALLOpVMLAUNCHOpVMRESUMEOpVMXOFFOpWAITOpWBINVDOpWRMSROpXGETBVOpXRSTOROpXSETBV"
+const _OcodeKindName = "OpLOpDBOpDWOpDDOpRESBOpMOVOpADDOpAAAOpAADOpAAMOpAASOpADXOpALTEROpAMXOpCBWOpCDQOpCDQEOpCLCOpCLDOpCLIOpCLTSOpCMCOpCPUIDOpCQOOpCSOpCWDOpCWDEOpDAAOpDASOpDIVOpDSOpEMMSOpENTEROpESOpF2XM1OpFABSOpFADDPOpFCHSOpFCLEXOpFCOMOpFCOMPOpFCOMPPOpFCOSOpFDECSTPOpFDISIOpFDIVPOpFDIVRPOpFENIOpFINCSTPOpFINITOpFLD1OpFLDL2EOpFLDL2TOpFLDLG2OpFLDLN2OpFLDPIOpFLDZOpFMULPOpFNCLEXOpFNDISIOpFNENIOpFNINITOpFNOPOpFNSETPMOpFPATANOpFPREMOpFPREM1OpFPTANOpFRNDINTOpFRSTOROpFSOpFSCALEOpFSETPMOpFSINOpFSINCOSOpFSQRTOpFSUBPOpFSUBRPOpFTSTOpFUCOMOpFUCOMPOpFUCOMPPOpFXAMOpFXCHOpFXRSTOROpFXTRACTOpFYL2XOpFYL2XP1OpGETSECOpGSOpHLTOpICEBPOpIDIVOpIMULOpINTOpCMPOpJMPOpJEOpINTOOpINVDOpIRETOpIRETDOpIRETQOpJMPEOpLAHFOpLEAVEOpLFENCEOpLOADALLOpLOCKOpMFENCEOpMONITOROpMULOpMWAITOpNOPOpNTAKENOpPAUSEOpPOPAOpPOPADOpPOPFOpPOPFDOpPOPFQOpPUSHAOpPUSHADOpPUSHFOpPUSHFDOpPUSHFQOpRDMSROpRDPMCOpRDTSCOpRDTSCPOpREPOpREPEOpREPNEOpRETFOpRETNOpRSMOpSAHFOpSETALCOpSFENCEOpSSOpSTCOpSTDOpSTIOpSWAPGSOpSYSCALLOpSYSENTEROpSYSEXITOpSYSRETOpTAKENOpUD2OpVMCALLOpVMLAUNCHOpVMRESUMEOpVMXOFFOpWAITOpWBINVDOpWRMSROpXGETBVOpXRSTOROpXSETBV"
 
-var _OcodeKindIndex = [...]uint16{0, 3, 7, 11, 15, 21, 26, 31, 36, 41, 46, 51, 56, 63, 68, 73, 78, 84, 89, 94, 99, 105, 110, 117, 122, 126, 131, 137, 142, 147, 152, 156, 162, 169, 173, 180, 186, 193, 199, 206, 212, 219, 227, 233, 242, 249, 256, 264, 270, 279, 286, 292, 300, 308, 316, 324, 331, 337, 344, 352, 360, 367, 375, 381, 390, 398, 405, 413, 420, 429, 437, 441, 449, 457, 463, 472, 479, 486, 494, 500, 507, 515, 524, 530, 536, 545, 554, 561, 570, 578, 582, 587, 594, 600, 606, 611, 616, 621, 627, 633, 639, 646, 653, 659, 665, 672, 680, 689, 695, 703, 712, 717, 724, 729, 737, 744, 750, 757, 763, 770, 777, 784, 792, 799, 807, 815, 822, 829, 836, 844, 849, 855, 862, 868, 874, 879, 885, 893, 901, 905, 910, 915, 920, 928, 937, 947, 956, 964, 971, 976, 984, 994, 1004, 1012, 1018, 1026, 1033, 1041, 1049, 1057}
+var _OcodeKindIndex = [...]uint16{0, 3, 7, 11, 15, 21, 26, 31, 36, 41, 46, 51, 56, 63, 68, 73, 78, 84, 89, 94, 99, 105, 110, 117, 122, 126, 131, 137, 142, 147, 152, 156, 162, 169, 173, 180, 186, 193, 199, 206, 212, 219, 227, 233, 242, 249, 256, 264, 270, 279, 286, 292, 300, 308, 316, 324, 331, 337, 344, 352, 360, 367, 375, 381, 390, 398, 405, 413, 420, 429, 437, 441, 449, 457, 463, 472, 479, 486, 494, 500, 507, 515, 524, 530, 536, 545, 554, 561, 570, 578, 582, 587, 594, 600, 606, 611, 616, 621, 625, 631, 637, 643, 650, 657, 663, 669, 676, 684, 693, 699, 707, 716, 721, 728, 733, 741, 748, 754, 761, 767, 774, 781, 788, 796, 803, 811, 819, 826, 833, 840, 848, 853, 859, 866, 872, 878, 883, 889, 897, 905, 909, 914, 919, 924, 932, 941, 951, 960, 968, 975, 980, 988, 998, 1008, 1016, 1022, 1030, 1037, 1045, 1053, 1061}
 
-const _OcodeKindLowerName = "oplopdbopdwopddopresbopmovopaddopaaaopaadopaamopaasopadxopalteropamxopcbwopcdqopcdqeopclcopcldopcliopcltsopcmcopcpuidopcqoopcsopcwdopcwdeopdaaopdasopdivopdsopemmsopenteropesopf2xm1opfabsopfaddpopfchsopfclexopfcomopfcompopfcomppopfcosopfdecstpopfdisiopfdivpopfdivrpopfeniopfincstpopfinitopfld1opfldl2eopfldl2topfldlg2opfldln2opfldpiopfldzopfmulpopfnclexopfndisiopfneniopfninitopfnopopfnsetpmopfpatanopfpremopfprem1opfptanopfrndintopfrstoropfsopfscaleopfsetpmopfsinopfsincosopfsqrtopfsubpopfsubrpopftstopfucomopfucompopfucomppopfxamopfxchopfxrstoropfxtractopfyl2xopfyl2xp1opgetsecopgsophltopicebpopidivopimulopintopcmpopjmpopintoopinvdopiretopiretdopiretqopjmpeoplahfopleaveoplfenceoploadalloplockopmfenceopmonitoropmulopmwaitopnopopntakenoppauseoppopaoppopadoppopfoppopfdoppopfqoppushaoppushadoppushfoppushfdoppushfqoprdmsroprdpmcoprdtscoprdtscpoprepoprepeoprepneopretfopretnoprsmopsahfopsetalcopsfenceopssopstcopstdopstiopswapgsopsyscallopsysenteropsysexitopsysretoptakenopud2opvmcallopvmlaunchopvmresumeopvmxoffopwaitopwbinvdopwrmsropxgetbvopxrstoropxsetbv"
+const _OcodeKindLowerName = "oplopdbopdwopddopresbopmovopaddopaaaopaadopaamopaasopadxopalteropamxopcbwopcdqopcdqeopclcopcldopcliopcltsopcmcopcpuidopcqoopcsopcwdopcwdeopdaaopdasopdivopdsopemmsopenteropesopf2xm1opfabsopfaddpopfchsopfclexopfcomopfcompopfcomppopfcosopfdecstpopfdisiopfdivpopfdivrpopfeniopfincstpopfinitopfld1opfldl2eopfldl2topfldlg2opfldln2opfldpiopfldzopfmulpopfnclexopfndisiopfneniopfninitopfnopopfnsetpmopfpatanopfpremopfprem1opfptanopfrndintopfrstoropfsopfscaleopfsetpmopfsinopfsincosopfsqrtopfsubpopfsubrpopftstopfucomopfucompopfucomppopfxamopfxchopfxrstoropfxtractopfyl2xopfyl2xp1opgetsecopgsophltopicebpopidivopimulopintopcmpopjmpopjeopintoopinvdopiretopiretdopiretqopjmpeoplahfopleaveoplfenceoploadalloplockopmfenceopmonitoropmulopmwaitopnopopntakenoppauseoppopaoppopadoppopfoppopfdoppopfqoppushaoppushadoppushfoppushfdoppushfqoprdmsroprdpmcoprdtscoprdtscpoprepoprepeoprepneopretfopretnoprsmopsahfopsetalcopsfenceopssopstcopstdopstiopswapgsopsyscallopsysenteropsysexitopsysretoptakenopud2opvmcallopvmlaunchopvmresumeopvmxoffopwaitopwbinvdopwrmsropxgetbvopxrstoropxsetbv"
 
 func (i OcodeKind) String() string {
 	if i < 0 || i >= OcodeKind(len(_OcodeKindIndex)-1) {
@@ -122,71 +122,72 @@ func _OcodeKindNoOp() {
 	_ = x[OpINT-(94)]
 	_ = x[OpCMP-(95)]
 	_ = x[OpJMP-(96)]
-	_ = x[OpINTO-(97)]
-	_ = x[OpINVD-(98)]
-	_ = x[OpIRET-(99)]
-	_ = x[OpIRETD-(100)]
-	_ = x[OpIRETQ-(101)]
-	_ = x[OpJMPE-(102)]
-	_ = x[OpLAHF-(103)]
-	_ = x[OpLEAVE-(104)]
-	_ = x[OpLFENCE-(105)]
-	_ = x[OpLOADALL-(106)]
-	_ = x[OpLOCK-(107)]
-	_ = x[OpMFENCE-(108)]
-	_ = x[OpMONITOR-(109)]
-	_ = x[OpMUL-(110)]
-	_ = x[OpMWAIT-(111)]
-	_ = x[OpNOP-(112)]
-	_ = x[OpNTAKEN-(113)]
-	_ = x[OpPAUSE-(114)]
-	_ = x[OpPOPA-(115)]
-	_ = x[OpPOPAD-(116)]
-	_ = x[OpPOPF-(117)]
-	_ = x[OpPOPFD-(118)]
-	_ = x[OpPOPFQ-(119)]
-	_ = x[OpPUSHA-(120)]
-	_ = x[OpPUSHAD-(121)]
-	_ = x[OpPUSHF-(122)]
-	_ = x[OpPUSHFD-(123)]
-	_ = x[OpPUSHFQ-(124)]
-	_ = x[OpRDMSR-(125)]
-	_ = x[OpRDPMC-(126)]
-	_ = x[OpRDTSC-(127)]
-	_ = x[OpRDTSCP-(128)]
-	_ = x[OpREP-(129)]
-	_ = x[OpREPE-(130)]
-	_ = x[OpREPNE-(131)]
-	_ = x[OpRETF-(132)]
-	_ = x[OpRETN-(133)]
-	_ = x[OpRSM-(134)]
-	_ = x[OpSAHF-(135)]
-	_ = x[OpSETALC-(136)]
-	_ = x[OpSFENCE-(137)]
-	_ = x[OpSS-(138)]
-	_ = x[OpSTC-(139)]
-	_ = x[OpSTD-(140)]
-	_ = x[OpSTI-(141)]
-	_ = x[OpSWAPGS-(142)]
-	_ = x[OpSYSCALL-(143)]
-	_ = x[OpSYSENTER-(144)]
-	_ = x[OpSYSEXIT-(145)]
-	_ = x[OpSYSRET-(146)]
-	_ = x[OpTAKEN-(147)]
-	_ = x[OpUD2-(148)]
-	_ = x[OpVMCALL-(149)]
-	_ = x[OpVMLAUNCH-(150)]
-	_ = x[OpVMRESUME-(151)]
-	_ = x[OpVMXOFF-(152)]
-	_ = x[OpWAIT-(153)]
-	_ = x[OpWBINVD-(154)]
-	_ = x[OpWRMSR-(155)]
-	_ = x[OpXGETBV-(156)]
-	_ = x[OpXRSTOR-(157)]
-	_ = x[OpXSETBV-(158)]
+	_ = x[OpJE-(97)]
+	_ = x[OpINTO-(98)]
+	_ = x[OpINVD-(99)]
+	_ = x[OpIRET-(100)]
+	_ = x[OpIRETD-(101)]
+	_ = x[OpIRETQ-(102)]
+	_ = x[OpJMPE-(103)]
+	_ = x[OpLAHF-(104)]
+	_ = x[OpLEAVE-(105)]
+	_ = x[OpLFENCE-(106)]
+	_ = x[OpLOADALL-(107)]
+	_ = x[OpLOCK-(108)]
+	_ = x[OpMFENCE-(109)]
+	_ = x[OpMONITOR-(110)]
+	_ = x[OpMUL-(111)]
+	_ = x[OpMWAIT-(112)]
+	_ = x[OpNOP-(113)]
+	_ = x[OpNTAKEN-(114)]
+	_ = x[OpPAUSE-(115)]
+	_ = x[OpPOPA-(116)]
+	_ = x[OpPOPAD-(117)]
+	_ = x[OpPOPF-(118)]
+	_ = x[OpPOPFD-(119)]
+	_ = x[OpPOPFQ-(120)]
+	_ = x[OpPUSHA-(121)]
+	_ = x[OpPUSHAD-(122)]
+	_ = x[OpPUSHF-(123)]
+	_ = x[OpPUSHFD-(124)]
+	_ = x[OpPUSHFQ-(125)]
+	_ = x[OpRDMSR-(126)]
+	_ = x[OpRDPMC-(127)]
+	_ = x[OpRDTSC-(128)]
+	_ = x[OpRDTSCP-(129)]
+	_ = x[OpREP-(130)]
+	_ = x[OpREPE-(131)]
+	_ = x[OpREPNE-(132)]
+	_ = x[OpRETF-(133)]
+	_ = x[OpRETN-(134)]
+	_ = x[OpRSM-(135)]
+	_ = x[OpSAHF-(136)]
+	_ = x[OpSETALC-(137)]
+	_ = x[OpSFENCE-(138)]
+	_ = x[OpSS-(139)]
+	_ = x[OpSTC-(140)]
+	_ = x[OpSTD-(141)]
+	_ = x[OpSTI-(142)]
+	_ = x[OpSWAPGS-(143)]
+	_ = x[OpSYSCALL-(144)]
+	_ = x[OpSYSENTER-(145)]
+	_ = x[OpSYSEXIT-(146)]
+	_ = x[OpSYSRET-(147)]
+	_ = x[OpTAKEN-(148)]
+	_ = x[OpUD2-(149)]
+	_ = x[OpVMCALL-(150)]
+	_ = x[OpVMLAUNCH-(151)]
+	_ = x[OpVMRESUME-(152)]
+	_ = x[OpVMXOFF-(153)]
+	_ = x[OpWAIT-(154)]
+	_ = x[OpWBINVD-(155)]
+	_ = x[OpWRMSR-(156)]
+	_ = x[OpXGETBV-(157)]
+	_ = x[OpXRSTOR-(158)]
+	_ = x[OpXSETBV-(159)]
 }
 
-var _OcodeKindValues = []OcodeKind{OpL, OpDB, OpDW, OpDD, OpRESB, OpMOV, OpADD, OpAAA, OpAAD, OpAAM, OpAAS, OpADX, OpALTER, OpAMX, OpCBW, OpCDQ, OpCDQE, OpCLC, OpCLD, OpCLI, OpCLTS, OpCMC, OpCPUID, OpCQO, OpCS, OpCWD, OpCWDE, OpDAA, OpDAS, OpDIV, OpDS, OpEMMS, OpENTER, OpES, OpF2XM1, OpFABS, OpFADDP, OpFCHS, OpFCLEX, OpFCOM, OpFCOMP, OpFCOMPP, OpFCOS, OpFDECSTP, OpFDISI, OpFDIVP, OpFDIVRP, OpFENI, OpFINCSTP, OpFINIT, OpFLD1, OpFLDL2E, OpFLDL2T, OpFLDLG2, OpFLDLN2, OpFLDPI, OpFLDZ, OpFMULP, OpFNCLEX, OpFNDISI, OpFNENI, OpFNINIT, OpFNOP, OpFNSETPM, OpFPATAN, OpFPREM, OpFPREM1, OpFPTAN, OpFRNDINT, OpFRSTOR, OpFS, OpFSCALE, OpFSETPM, OpFSIN, OpFSINCOS, OpFSQRT, OpFSUBP, OpFSUBRP, OpFTST, OpFUCOM, OpFUCOMP, OpFUCOMPP, OpFXAM, OpFXCH, OpFXRSTOR, OpFXTRACT, OpFYL2X, OpFYL2XP1, OpGETSEC, OpGS, OpHLT, OpICEBP, OpIDIV, OpIMUL, OpINT, OpCMP, OpJMP, OpINTO, OpINVD, OpIRET, OpIRETD, OpIRETQ, OpJMPE, OpLAHF, OpLEAVE, OpLFENCE, OpLOADALL, OpLOCK, OpMFENCE, OpMONITOR, OpMUL, OpMWAIT, OpNOP, OpNTAKEN, OpPAUSE, OpPOPA, OpPOPAD, OpPOPF, OpPOPFD, OpPOPFQ, OpPUSHA, OpPUSHAD, OpPUSHF, OpPUSHFD, OpPUSHFQ, OpRDMSR, OpRDPMC, OpRDTSC, OpRDTSCP, OpREP, OpREPE, OpREPNE, OpRETF, OpRETN, OpRSM, OpSAHF, OpSETALC, OpSFENCE, OpSS, OpSTC, OpSTD, OpSTI, OpSWAPGS, OpSYSCALL, OpSYSENTER, OpSYSEXIT, OpSYSRET, OpTAKEN, OpUD2, OpVMCALL, OpVMLAUNCH, OpVMRESUME, OpVMXOFF, OpWAIT, OpWBINVD, OpWRMSR, OpXGETBV, OpXRSTOR, OpXSETBV}
+var _OcodeKindValues = []OcodeKind{OpL, OpDB, OpDW, OpDD, OpRESB, OpMOV, OpADD, OpAAA, OpAAD, OpAAM, OpAAS, OpADX, OpALTER, OpAMX, OpCBW, OpCDQ, OpCDQE, OpCLC, OpCLD, OpCLI, OpCLTS, OpCMC, OpCPUID, OpCQO, OpCS, OpCWD, OpCWDE, OpDAA, OpDAS, OpDIV, OpDS, OpEMMS, OpENTER, OpES, OpF2XM1, OpFABS, OpFADDP, OpFCHS, OpFCLEX, OpFCOM, OpFCOMP, OpFCOMPP, OpFCOS, OpFDECSTP, OpFDISI, OpFDIVP, OpFDIVRP, OpFENI, OpFINCSTP, OpFINIT, OpFLD1, OpFLDL2E, OpFLDL2T, OpFLDLG2, OpFLDLN2, OpFLDPI, OpFLDZ, OpFMULP, OpFNCLEX, OpFNDISI, OpFNENI, OpFNINIT, OpFNOP, OpFNSETPM, OpFPATAN, OpFPREM, OpFPREM1, OpFPTAN, OpFRNDINT, OpFRSTOR, OpFS, OpFSCALE, OpFSETPM, OpFSIN, OpFSINCOS, OpFSQRT, OpFSUBP, OpFSUBRP, OpFTST, OpFUCOM, OpFUCOMP, OpFUCOMPP, OpFXAM, OpFXCH, OpFXRSTOR, OpFXTRACT, OpFYL2X, OpFYL2XP1, OpGETSEC, OpGS, OpHLT, OpICEBP, OpIDIV, OpIMUL, OpINT, OpCMP, OpJMP, OpJE, OpINTO, OpINVD, OpIRET, OpIRETD, OpIRETQ, OpJMPE, OpLAHF, OpLEAVE, OpLFENCE, OpLOADALL, OpLOCK, OpMFENCE, OpMONITOR, OpMUL, OpMWAIT, OpNOP, OpNTAKEN, OpPAUSE, OpPOPA, OpPOPAD, OpPOPF, OpPOPFD, OpPOPFQ, OpPUSHA, OpPUSHAD, OpPUSHF, OpPUSHFD, OpPUSHFQ, OpRDMSR, OpRDPMC, OpRDTSC, OpRDTSCP, OpREP, OpREPE, OpREPNE, OpRETF, OpRETN, OpRSM, OpSAHF, OpSETALC, OpSFENCE, OpSS, OpSTC, OpSTD, OpSTI, OpSWAPGS, OpSYSCALL, OpSYSENTER, OpSYSEXIT, OpSYSRET, OpTAKEN, OpUD2, OpVMCALL, OpVMLAUNCH, OpVMRESUME, OpVMXOFF, OpWAIT, OpWBINVD, OpWRMSR, OpXGETBV, OpXRSTOR, OpXSETBV}
 
 var _OcodeKindNameToValueMap = map[string]OcodeKind{
 	_OcodeKindName[0:3]:            OpL,
@@ -383,130 +384,132 @@ var _OcodeKindNameToValueMap = map[string]OcodeKind{
 	_OcodeKindLowerName[611:616]:   OpCMP,
 	_OcodeKindName[616:621]:        OpJMP,
 	_OcodeKindLowerName[616:621]:   OpJMP,
-	_OcodeKindName[621:627]:        OpINTO,
-	_OcodeKindLowerName[621:627]:   OpINTO,
-	_OcodeKindName[627:633]:        OpINVD,
-	_OcodeKindLowerName[627:633]:   OpINVD,
-	_OcodeKindName[633:639]:        OpIRET,
-	_OcodeKindLowerName[633:639]:   OpIRET,
-	_OcodeKindName[639:646]:        OpIRETD,
-	_OcodeKindLowerName[639:646]:   OpIRETD,
-	_OcodeKindName[646:653]:        OpIRETQ,
-	_OcodeKindLowerName[646:653]:   OpIRETQ,
-	_OcodeKindName[653:659]:        OpJMPE,
-	_OcodeKindLowerName[653:659]:   OpJMPE,
-	_OcodeKindName[659:665]:        OpLAHF,
-	_OcodeKindLowerName[659:665]:   OpLAHF,
-	_OcodeKindName[665:672]:        OpLEAVE,
-	_OcodeKindLowerName[665:672]:   OpLEAVE,
-	_OcodeKindName[672:680]:        OpLFENCE,
-	_OcodeKindLowerName[672:680]:   OpLFENCE,
-	_OcodeKindName[680:689]:        OpLOADALL,
-	_OcodeKindLowerName[680:689]:   OpLOADALL,
-	_OcodeKindName[689:695]:        OpLOCK,
-	_OcodeKindLowerName[689:695]:   OpLOCK,
-	_OcodeKindName[695:703]:        OpMFENCE,
-	_OcodeKindLowerName[695:703]:   OpMFENCE,
-	_OcodeKindName[703:712]:        OpMONITOR,
-	_OcodeKindLowerName[703:712]:   OpMONITOR,
-	_OcodeKindName[712:717]:        OpMUL,
-	_OcodeKindLowerName[712:717]:   OpMUL,
-	_OcodeKindName[717:724]:        OpMWAIT,
-	_OcodeKindLowerName[717:724]:   OpMWAIT,
-	_OcodeKindName[724:729]:        OpNOP,
-	_OcodeKindLowerName[724:729]:   OpNOP,
-	_OcodeKindName[729:737]:        OpNTAKEN,
-	_OcodeKindLowerName[729:737]:   OpNTAKEN,
-	_OcodeKindName[737:744]:        OpPAUSE,
-	_OcodeKindLowerName[737:744]:   OpPAUSE,
-	_OcodeKindName[744:750]:        OpPOPA,
-	_OcodeKindLowerName[744:750]:   OpPOPA,
-	_OcodeKindName[750:757]:        OpPOPAD,
-	_OcodeKindLowerName[750:757]:   OpPOPAD,
-	_OcodeKindName[757:763]:        OpPOPF,
-	_OcodeKindLowerName[757:763]:   OpPOPF,
-	_OcodeKindName[763:770]:        OpPOPFD,
-	_OcodeKindLowerName[763:770]:   OpPOPFD,
-	_OcodeKindName[770:777]:        OpPOPFQ,
-	_OcodeKindLowerName[770:777]:   OpPOPFQ,
-	_OcodeKindName[777:784]:        OpPUSHA,
-	_OcodeKindLowerName[777:784]:   OpPUSHA,
-	_OcodeKindName[784:792]:        OpPUSHAD,
-	_OcodeKindLowerName[784:792]:   OpPUSHAD,
-	_OcodeKindName[792:799]:        OpPUSHF,
-	_OcodeKindLowerName[792:799]:   OpPUSHF,
-	_OcodeKindName[799:807]:        OpPUSHFD,
-	_OcodeKindLowerName[799:807]:   OpPUSHFD,
-	_OcodeKindName[807:815]:        OpPUSHFQ,
-	_OcodeKindLowerName[807:815]:   OpPUSHFQ,
-	_OcodeKindName[815:822]:        OpRDMSR,
-	_OcodeKindLowerName[815:822]:   OpRDMSR,
-	_OcodeKindName[822:829]:        OpRDPMC,
-	_OcodeKindLowerName[822:829]:   OpRDPMC,
-	_OcodeKindName[829:836]:        OpRDTSC,
-	_OcodeKindLowerName[829:836]:   OpRDTSC,
-	_OcodeKindName[836:844]:        OpRDTSCP,
-	_OcodeKindLowerName[836:844]:   OpRDTSCP,
-	_OcodeKindName[844:849]:        OpREP,
-	_OcodeKindLowerName[844:849]:   OpREP,
-	_OcodeKindName[849:855]:        OpREPE,
-	_OcodeKindLowerName[849:855]:   OpREPE,
-	_OcodeKindName[855:862]:        OpREPNE,
-	_OcodeKindLowerName[855:862]:   OpREPNE,
-	_OcodeKindName[862:868]:        OpRETF,
-	_OcodeKindLowerName[862:868]:   OpRETF,
-	_OcodeKindName[868:874]:        OpRETN,
-	_OcodeKindLowerName[868:874]:   OpRETN,
-	_OcodeKindName[874:879]:        OpRSM,
-	_OcodeKindLowerName[874:879]:   OpRSM,
-	_OcodeKindName[879:885]:        OpSAHF,
-	_OcodeKindLowerName[879:885]:   OpSAHF,
-	_OcodeKindName[885:893]:        OpSETALC,
-	_OcodeKindLowerName[885:893]:   OpSETALC,
-	_OcodeKindName[893:901]:        OpSFENCE,
-	_OcodeKindLowerName[893:901]:   OpSFENCE,
-	_OcodeKindName[901:905]:        OpSS,
-	_OcodeKindLowerName[901:905]:   OpSS,
-	_OcodeKindName[905:910]:        OpSTC,
-	_OcodeKindLowerName[905:910]:   OpSTC,
-	_OcodeKindName[910:915]:        OpSTD,
-	_OcodeKindLowerName[910:915]:   OpSTD,
-	_OcodeKindName[915:920]:        OpSTI,
-	_OcodeKindLowerName[915:920]:   OpSTI,
-	_OcodeKindName[920:928]:        OpSWAPGS,
-	_OcodeKindLowerName[920:928]:   OpSWAPGS,
-	_OcodeKindName[928:937]:        OpSYSCALL,
-	_OcodeKindLowerName[928:937]:   OpSYSCALL,
-	_OcodeKindName[937:947]:        OpSYSENTER,
-	_OcodeKindLowerName[937:947]:   OpSYSENTER,
-	_OcodeKindName[947:956]:        OpSYSEXIT,
-	_OcodeKindLowerName[947:956]:   OpSYSEXIT,
-	_OcodeKindName[956:964]:        OpSYSRET,
-	_OcodeKindLowerName[956:964]:   OpSYSRET,
-	_OcodeKindName[964:971]:        OpTAKEN,
-	_OcodeKindLowerName[964:971]:   OpTAKEN,
-	_OcodeKindName[971:976]:        OpUD2,
-	_OcodeKindLowerName[971:976]:   OpUD2,
-	_OcodeKindName[976:984]:        OpVMCALL,
-	_OcodeKindLowerName[976:984]:   OpVMCALL,
-	_OcodeKindName[984:994]:        OpVMLAUNCH,
-	_OcodeKindLowerName[984:994]:   OpVMLAUNCH,
-	_OcodeKindName[994:1004]:       OpVMRESUME,
-	_OcodeKindLowerName[994:1004]:  OpVMRESUME,
-	_OcodeKindName[1004:1012]:      OpVMXOFF,
-	_OcodeKindLowerName[1004:1012]: OpVMXOFF,
-	_OcodeKindName[1012:1018]:      OpWAIT,
-	_OcodeKindLowerName[1012:1018]: OpWAIT,
-	_OcodeKindName[1018:1026]:      OpWBINVD,
-	_OcodeKindLowerName[1018:1026]: OpWBINVD,
-	_OcodeKindName[1026:1033]:      OpWRMSR,
-	_OcodeKindLowerName[1026:1033]: OpWRMSR,
-	_OcodeKindName[1033:1041]:      OpXGETBV,
-	_OcodeKindLowerName[1033:1041]: OpXGETBV,
-	_OcodeKindName[1041:1049]:      OpXRSTOR,
-	_OcodeKindLowerName[1041:1049]: OpXRSTOR,
-	_OcodeKindName[1049:1057]:      OpXSETBV,
-	_OcodeKindLowerName[1049:1057]: OpXSETBV,
+	_OcodeKindName[621:625]:        OpJE,
+	_OcodeKindLowerName[621:625]:   OpJE,
+	_OcodeKindName[625:631]:        OpINTO,
+	_OcodeKindLowerName[625:631]:   OpINTO,
+	_OcodeKindName[631:637]:        OpINVD,
+	_OcodeKindLowerName[631:637]:   OpINVD,
+	_OcodeKindName[637:643]:        OpIRET,
+	_OcodeKindLowerName[637:643]:   OpIRET,
+	_OcodeKindName[643:650]:        OpIRETD,
+	_OcodeKindLowerName[643:650]:   OpIRETD,
+	_OcodeKindName[650:657]:        OpIRETQ,
+	_OcodeKindLowerName[650:657]:   OpIRETQ,
+	_OcodeKindName[657:663]:        OpJMPE,
+	_OcodeKindLowerName[657:663]:   OpJMPE,
+	_OcodeKindName[663:669]:        OpLAHF,
+	_OcodeKindLowerName[663:669]:   OpLAHF,
+	_OcodeKindName[669:676]:        OpLEAVE,
+	_OcodeKindLowerName[669:676]:   OpLEAVE,
+	_OcodeKindName[676:684]:        OpLFENCE,
+	_OcodeKindLowerName[676:684]:   OpLFENCE,
+	_OcodeKindName[684:693]:        OpLOADALL,
+	_OcodeKindLowerName[684:693]:   OpLOADALL,
+	_OcodeKindName[693:699]:        OpLOCK,
+	_OcodeKindLowerName[693:699]:   OpLOCK,
+	_OcodeKindName[699:707]:        OpMFENCE,
+	_OcodeKindLowerName[699:707]:   OpMFENCE,
+	_OcodeKindName[707:716]:        OpMONITOR,
+	_OcodeKindLowerName[707:716]:   OpMONITOR,
+	_OcodeKindName[716:721]:        OpMUL,
+	_OcodeKindLowerName[716:721]:   OpMUL,
+	_OcodeKindName[721:728]:        OpMWAIT,
+	_OcodeKindLowerName[721:728]:   OpMWAIT,
+	_OcodeKindName[728:733]:        OpNOP,
+	_OcodeKindLowerName[728:733]:   OpNOP,
+	_OcodeKindName[733:741]:        OpNTAKEN,
+	_OcodeKindLowerName[733:741]:   OpNTAKEN,
+	_OcodeKindName[741:748]:        OpPAUSE,
+	_OcodeKindLowerName[741:748]:   OpPAUSE,
+	_OcodeKindName[748:754]:        OpPOPA,
+	_OcodeKindLowerName[748:754]:   OpPOPA,
+	_OcodeKindName[754:761]:        OpPOPAD,
+	_OcodeKindLowerName[754:761]:   OpPOPAD,
+	_OcodeKindName[761:767]:        OpPOPF,
+	_OcodeKindLowerName[761:767]:   OpPOPF,
+	_OcodeKindName[767:774]:        OpPOPFD,
+	_OcodeKindLowerName[767:774]:   OpPOPFD,
+	_OcodeKindName[774:781]:        OpPOPFQ,
+	_OcodeKindLowerName[774:781]:   OpPOPFQ,
+	_OcodeKindName[781:788]:        OpPUSHA,
+	_OcodeKindLowerName[781:788]:   OpPUSHA,
+	_OcodeKindName[788:796]:        OpPUSHAD,
+	_OcodeKindLowerName[788:796]:   OpPUSHAD,
+	_OcodeKindName[796:803]:        OpPUSHF,
+	_OcodeKindLowerName[796:803]:   OpPUSHF,
+	_OcodeKindName[803:811]:        OpPUSHFD,
+	_OcodeKindLowerName[803:811]:   OpPUSHFD,
+	_OcodeKindName[811:819]:        OpPUSHFQ,
+	_OcodeKindLowerName[811:819]:   OpPUSHFQ,
+	_OcodeKindName[819:826]:        OpRDMSR,
+	_OcodeKindLowerName[819:826]:   OpRDMSR,
+	_OcodeKindName[826:833]:        OpRDPMC,
+	_OcodeKindLowerName[826:833]:   OpRDPMC,
+	_OcodeKindName[833:840]:        OpRDTSC,
+	_OcodeKindLowerName[833:840]:   OpRDTSC,
+	_OcodeKindName[840:848]:        OpRDTSCP,
+	_OcodeKindLowerName[840:848]:   OpRDTSCP,
+	_OcodeKindName[848:853]:        OpREP,
+	_OcodeKindLowerName[848:853]:   OpREP,
+	_OcodeKindName[853:859]:        OpREPE,
+	_OcodeKindLowerName[853:859]:   OpREPE,
+	_OcodeKindName[859:866]:        OpREPNE,
+	_OcodeKindLowerName[859:866]:   OpREPNE,
+	_OcodeKindName[866:872]:        OpRETF,
+	_OcodeKindLowerName[866:872]:   OpRETF,
+	_OcodeKindName[872:878]:        OpRETN,
+	_OcodeKindLowerName[872:878]:   OpRETN,
+	_OcodeKindName[878:883]:        OpRSM,
+	_OcodeKindLowerName[878:883]:   OpRSM,
+	_OcodeKindName[883:889]:        OpSAHF,
+	_OcodeKindLowerName[883:889]:   OpSAHF,
+	_OcodeKindName[889:897]:        OpSETALC,
+	_OcodeKindLowerName[889:897]:   OpSETALC,
+	_OcodeKindName[897:905]:        OpSFENCE,
+	_OcodeKindLowerName[897:905]:   OpSFENCE,
+	_OcodeKindName[905:909]:        OpSS,
+	_OcodeKindLowerName[905:909]:   OpSS,
+	_OcodeKindName[909:914]:        OpSTC,
+	_OcodeKindLowerName[909:914]:   OpSTC,
+	_OcodeKindName[914:919]:        OpSTD,
+	_OcodeKindLowerName[914:919]:   OpSTD,
+	_OcodeKindName[919:924]:        OpSTI,
+	_OcodeKindLowerName[919:924]:   OpSTI,
+	_OcodeKindName[924:932]:        OpSWAPGS,
+	_OcodeKindLowerName[924:932]:   OpSWAPGS,
+	_OcodeKindName[932:941]:        OpSYSCALL,
+	_OcodeKindLowerName[932:941]:   OpSYSCALL,
+	_OcodeKindName[941:951]:        OpSYSENTER,
+	_OcodeKindLowerName[941:951]:   OpSYSENTER,
+	_OcodeKindName[951:960]:        OpSYSEXIT,
+	_OcodeKindLowerName[951:960]:   OpSYSEXIT,
+	_OcodeKindName[960:968]:        OpSYSRET,
+	_OcodeKindLowerName[960:968]:   OpSYSRET,
+	_OcodeKindName[968:975]:        OpTAKEN,
+	_OcodeKindLowerName[968:975]:   OpTAKEN,
+	_OcodeKindName[975:980]:        OpUD2,
+	_OcodeKindLowerName[975:980]:   OpUD2,
+	_OcodeKindName[980:988]:        OpVMCALL,
+	_OcodeKindLowerName[980:988]:   OpVMCALL,
+	_OcodeKindName[988:998]:        OpVMLAUNCH,
+	_OcodeKindLowerName[988:998]:   OpVMLAUNCH,
+	_OcodeKindName[998:1008]:       OpVMRESUME,
+	_OcodeKindLowerName[998:1008]:  OpVMRESUME,
+	_OcodeKindName[1008:1016]:      OpVMXOFF,
+	_OcodeKindLowerName[1008:1016]: OpVMXOFF,
+	_OcodeKindName[1016:1022]:      OpWAIT,
+	_OcodeKindLowerName[1016:1022]: OpWAIT,
+	_OcodeKindName[1022:1030]:      OpWBINVD,
+	_OcodeKindLowerName[1022:1030]: OpWBINVD,
+	_OcodeKindName[1030:1037]:      OpWRMSR,
+	_OcodeKindLowerName[1030:1037]: OpWRMSR,
+	_OcodeKindName[1037:1045]:      OpXGETBV,
+	_OcodeKindLowerName[1037:1045]: OpXGETBV,
+	_OcodeKindName[1045:1053]:      OpXRSTOR,
+	_OcodeKindLowerName[1045:1053]: OpXRSTOR,
+	_OcodeKindName[1053:1061]:      OpXSETBV,
+	_OcodeKindLowerName[1053:1061]: OpXSETBV,
 }
 
 var _OcodeKindNames = []string{
@@ -607,68 +610,69 @@ var _OcodeKindNames = []string{
 	_OcodeKindName[606:611],
 	_OcodeKindName[611:616],
 	_OcodeKindName[616:621],
-	_OcodeKindName[621:627],
-	_OcodeKindName[627:633],
-	_OcodeKindName[633:639],
-	_OcodeKindName[639:646],
-	_OcodeKindName[646:653],
-	_OcodeKindName[653:659],
-	_OcodeKindName[659:665],
-	_OcodeKindName[665:672],
-	_OcodeKindName[672:680],
-	_OcodeKindName[680:689],
-	_OcodeKindName[689:695],
-	_OcodeKindName[695:703],
-	_OcodeKindName[703:712],
-	_OcodeKindName[712:717],
-	_OcodeKindName[717:724],
-	_OcodeKindName[724:729],
-	_OcodeKindName[729:737],
-	_OcodeKindName[737:744],
-	_OcodeKindName[744:750],
-	_OcodeKindName[750:757],
-	_OcodeKindName[757:763],
-	_OcodeKindName[763:770],
-	_OcodeKindName[770:777],
-	_OcodeKindName[777:784],
-	_OcodeKindName[784:792],
-	_OcodeKindName[792:799],
-	_OcodeKindName[799:807],
-	_OcodeKindName[807:815],
-	_OcodeKindName[815:822],
-	_OcodeKindName[822:829],
-	_OcodeKindName[829:836],
-	_OcodeKindName[836:844],
-	_OcodeKindName[844:849],
-	_OcodeKindName[849:855],
-	_OcodeKindName[855:862],
-	_OcodeKindName[862:868],
-	_OcodeKindName[868:874],
-	_OcodeKindName[874:879],
-	_OcodeKindName[879:885],
-	_OcodeKindName[885:893],
-	_OcodeKindName[893:901],
-	_OcodeKindName[901:905],
-	_OcodeKindName[905:910],
-	_OcodeKindName[910:915],
-	_OcodeKindName[915:920],
-	_OcodeKindName[920:928],
-	_OcodeKindName[928:937],
-	_OcodeKindName[937:947],
-	_OcodeKindName[947:956],
-	_OcodeKindName[956:964],
-	_OcodeKindName[964:971],
-	_OcodeKindName[971:976],
-	_OcodeKindName[976:984],
-	_OcodeKindName[984:994],
-	_OcodeKindName[994:1004],
-	_OcodeKindName[1004:1012],
-	_OcodeKindName[1012:1018],
-	_OcodeKindName[1018:1026],
-	_OcodeKindName[1026:1033],
-	_OcodeKindName[1033:1041],
-	_OcodeKindName[1041:1049],
-	_OcodeKindName[1049:1057],
+	_OcodeKindName[621:625],
+	_OcodeKindName[625:631],
+	_OcodeKindName[631:637],
+	_OcodeKindName[637:643],
+	_OcodeKindName[643:650],
+	_OcodeKindName[650:657],
+	_OcodeKindName[657:663],
+	_OcodeKindName[663:669],
+	_OcodeKindName[669:676],
+	_OcodeKindName[676:684],
+	_OcodeKindName[684:693],
+	_OcodeKindName[693:699],
+	_OcodeKindName[699:707],
+	_OcodeKindName[707:716],
+	_OcodeKindName[716:721],
+	_OcodeKindName[721:728],
+	_OcodeKindName[728:733],
+	_OcodeKindName[733:741],
+	_OcodeKindName[741:748],
+	_OcodeKindName[748:754],
+	_OcodeKindName[754:761],
+	_OcodeKindName[761:767],
+	_OcodeKindName[767:774],
+	_OcodeKindName[774:781],
+	_OcodeKindName[781:788],
+	_OcodeKindName[788:796],
+	_OcodeKindName[796:803],
+	_OcodeKindName[803:811],
+	_OcodeKindName[811:819],
+	_OcodeKindName[819:826],
+	_OcodeKindName[826:833],
+	_OcodeKindName[833:840],
+	_OcodeKindName[840:848],
+	_OcodeKindName[848:853],
+	_OcodeKindName[853:859],
+	_OcodeKindName[859:866],
+	_OcodeKindName[866:872],
+	_OcodeKindName[872:878],
+	_OcodeKindName[878:883],
+	_OcodeKindName[883:889],
+	_OcodeKindName[889:897],
+	_OcodeKindName[897:905],
+	_OcodeKindName[905:909],
+	_OcodeKindName[909:914],
+	_OcodeKindName[914:919],
+	_OcodeKindName[919:924],
+	_OcodeKindName[924:932],
+	_OcodeKindName[932:941],
+	_OcodeKindName[941:951],
+	_OcodeKindName[951:960],
+	_OcodeKindName[960:968],
+	_OcodeKindName[968:975],
+	_OcodeKindName[975:980],
+	_OcodeKindName[980:988],
+	_OcodeKindName[988:998],
+	_OcodeKindName[998:1008],
+	_OcodeKindName[1008:1016],
+	_OcodeKindName[1016:1022],
+	_OcodeKindName[1022:1030],
+	_OcodeKindName[1030:1037],
+	_OcodeKindName[1037:1045],
+	_OcodeKindName[1045:1053],
+	_OcodeKindName[1053:1061],
 }
 
 // OcodeKindString retrieves an enum value from the enum constants string name.

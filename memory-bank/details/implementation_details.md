@@ -144,4 +144,10 @@
 - `GenerateX86INT` 関数を `handleINT` にリネーム
 - `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
 
+### JE命令の実装 (2025/03/14)
+- `internal/codegen/x86gen_jmp.go` に `generateJMPCode` 関数を追加し、JMP命令とJE命令の共通処理を実装
+- `handleJMP` 関数と `handleJE` 関数から `generateJMPCode` 関数を呼び出すように修正
+- `internal/codegen/x86gen.go` の `processOcode` 関数に `ocode.OpJE` のcaseを追加し、`handleJE` 関数を呼び出すように修正
+- `pkg/ocode/ocode.go` に `OpJE` を追加し、`enumer` を実行して `OcodeKind` を再生成
+
 [過去の作業履歴はこちら](./archives/implementation_details_archive_20250313.md)
