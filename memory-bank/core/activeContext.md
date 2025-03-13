@@ -1,22 +1,20 @@
 # Active Context
 
 ## 現在の作業の焦点
-- ModR/Mバイト生成の改善
-- オペランドのForceImm8対応
-- `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
+- CMP命令の追加
+- テストエラーの修正
 
 ## Day02実装計画
 - MOV命令 (レジスタ間, 即値)
 - ADD命令 (フラグ更新)
+- CMP命令 (フラグ更新)
 - 他、メモリアドレッシングや制御フロー命令の実装
 
 ## 直近の変更点
-- GenerateModRM関数を2種に分割
-- セグメントレジスタ用MOV命令の修正
-- `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
+- `internal/codegen/x86gen.go` の `handleCMP` 関数呼び出しを修正
 
 ## 次のステップ
-- MOV命令残機能の実装
+- CMP命令の実装
 - メモリアドレッシングモードの実装
 
 (詳細: [implementation_details.md](../details/implementation_details.md))

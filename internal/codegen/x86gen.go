@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
@@ -57,9 +58,11 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 	case ocode.OpJMP:
 		return handleJMP(oc, ctx)
 	case ocode.OpADD:
-		return handleArithmetic(oc.Operands, ctx), nil
+		return handleADD(oc.Operands, ctx)
+	case ocode.OpCMP:
+		return handleCMP(oc.Operands, ctx)
 	default:
-		return handleNoParamOpcode(oc), nil
+		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}
 }
 

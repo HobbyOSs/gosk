@@ -6,6 +6,7 @@
 - システム命令 (INT, HLT)
 - 算術命令(一部)
 - `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
+- CMP命令の呼び出し修正
 
 ## まだ必要な実装
 - MOV命令 (レジスタ間, 即値)

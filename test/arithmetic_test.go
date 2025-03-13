@@ -16,7 +16,7 @@ type ArithmeticSuite struct {
 }
 
 func (s *ArithmeticSuite) TestArithmeticInstructions() {
-	s.T().Skip("算術命令の実装が完了するまでスキップ")
+    s.T().Skip("算術命令の実装が完了するまでスキップ")
 
 	code := `; arithmetic instructions test
 		ORG		0x7c00
@@ -111,6 +111,7 @@ func (s *ArithmeticSuite) TestArithmeticInstructions() {
 		"DATA 0xb8 0x05 0x00", // MOV AX, 5
 		"DATA 0x83 0xdb 0x02", // SBB AX, 2
 
+		// CMP test
 		// CMP test
 		"DATA 0xb8 0x05 0x00", // MOV AX, 5
 		"DATA 0x3d 0x05 0x00", // CMP AX, 5
