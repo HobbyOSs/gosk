@@ -3,6 +3,7 @@ package codegen
 import (
 	"log"
 
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/variantstack"
 )
@@ -11,12 +12,14 @@ import (
 type CodeGenContext struct {
 	MachineCode []byte
 	VS          *variantstack.VariantStack
+	BitMode     ast.BitMode
 }
 
-func GenerateX86(ocodes []ocode.Ocode) []byte {
+func GenerateX86(ocodes []ocode.Ocode, bitMode ast.BitMode) []byte {
 	ctx := CodeGenContext{
 		MachineCode: make([]byte, 0),
 		VS:          variantstack.NewVariantStack(),
+		BitMode:     bitMode,
 	}
 
 	log.Printf("debug: === ocode ===\n")
@@ -24,7 +27,7 @@ func GenerateX86(ocodes []ocode.Ocode) []byte {
 		log.Printf("debug: %s\n", ocode)
 		code, err := processOcode(ocode, &ctx)
 		if err != nil {
-
+			log.Printf("error: Failed to process ocode: %v", err)
 		}
 		ctx.MachineCode = append(ctx.MachineCode, code...)
 	}
@@ -48,13 +51,13 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 	case ocode.OpRESB:
 		return handleRESB(oc.Operands, currentBufferSize), nil
 	case ocode.OpMOV:
-		return handleMOV(oc.Operands), nil
+		return handleMOV(oc.Operands, ctx), nil
 	case ocode.OpINT:
 		return handleINT(oc), nil
 	case ocode.OpJMP:
 		return handleJMP(oc, ctx)
 	case ocode.OpADD:
-		return handleADD(oc.Operands)
+		return handleArithmetic(oc.Operands, ctx), nil
 	default:
 		return handleNoParamOpcode(oc), nil
 	}

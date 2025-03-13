@@ -3,6 +3,7 @@ package codegen
 import (
 	"testing"
 
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/stretchr/testify/assert"
 )
@@ -101,7 +102,7 @@ func TestGenerateX86(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := GenerateX86(tt.ocodes)
+			result := GenerateX86(tt.ocodes, ast.MODE_16BIT)
 			assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
 		})
 	}

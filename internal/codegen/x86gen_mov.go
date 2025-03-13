@@ -10,7 +10,7 @@ import (
 )
 
 // handleMOV handles the MOV instruction and generates the appropriate machine code.
-func handleMOV(operands []string) []byte {
+func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	if len(operands) != 2 {
 		log.Printf("error: MOV requires 2 operands, got %d", len(operands))
 		return nil
@@ -64,12 +64,12 @@ func handleMOV(operands []string) []byte {
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
 		log.Printf("debug: ModRM: %+v", encoding.ModRM)
-		modrm, err := getModRMFromOperands(operands, encoding)
+		modrm, err := getModRMFromOperands(operands, encoding, ctx.BitMode)
 		if err != nil {
 			log.Printf("error: Failed to generate ModR/M: %v", err)
 			return nil
 		}
-		machineCode = append(machineCode, modrm)
+		machineCode = append(machineCode, byte(modrm))
 	}
 
 	// 即値の追加(必要な場合)
@@ -87,32 +87,4 @@ func handleMOV(operands []string) []byte {
 	log.Printf("debug: Generated machine code: % x", machineCode)
 
 	return machineCode
-}
-
-// getImmediateValue extracts immediate value from operand
-func getImmediateValue(operand string, size int) ([]byte, error) {
-	// 0xで始まる16進数の場合
-	if strings.HasPrefix(operand, "0x") {
-		value, err := strconv.ParseUint(operand[2:], 16, size*8)
-		if err != nil {
-			return make([]byte, size), nil
-		}
-		return intToBytes(value, size), nil
-	}
-
-	// 10進数の場合
-	value, err := strconv.ParseInt(operand, 10, size*8)
-	if err != nil {
-		return make([]byte, size), nil
-	}
-	return intToBytes(uint64(value), size), nil
-}
-
-// intToBytes converts an integer to a byte slice of specified size
-func intToBytes(value uint64, size int) []byte {
-	bytes := make([]byte, size)
-	for i := 0; i < size; i++ {
-		bytes[i] = byte(value >> (i * 8))
-	}
-	return bytes
 }

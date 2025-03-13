@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
@@ -76,6 +77,6 @@ func (c *ocodeClient) EmitAll(text string) error {
 
 // Exec メソッドの実装
 func (c *ocodeClient) Exec() ([]byte, error) {
-	machineCode := codegen.GenerateX86(c.ocodes)
+	machineCode := codegen.GenerateX86(c.ocodes, ast.MODE_32BIT)
 	return machineCode, nil
 }

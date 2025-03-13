@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -9,18 +9,23 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/operand"
 )
 
-// handleADD はADD命令の機械語を生成します
-func handleADD(operands []string) ([]byte, error) {
-	// オペランドを解析
-	ops := operand.
-		NewOperandFromString(strings.Join(operands, ",")).
+// handleArithmetic handles arithmetic instructions and generates the appropriate machine code.
+func handleArithmetic(operands []string, ctx *CodeGenContext) []byte {
+	if len(operands) != 2 {
+		log.Printf("error: Arithmetic instructions require 2 operands, got %d", len(operands))
+		return nil
+	}
+
+	// オペランドの解析
+	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
 		WithForceImm8(true)
 
-	// asmdbからエンコーディング情報を取得
+	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding("ADD", ops)
+	encoding, err := db.FindEncoding("ADD", ops) // ADDを例として使用
 	if err != nil {
-		return nil, fmt.Errorf("failed to find encoding for ADD: %v", err)
+		log.Printf("error: Failed to find encoding: %v", err)
+		return nil
 	}
 
 	// エンコーディング情報を使用して機械語を生成
@@ -37,37 +42,50 @@ func handleADD(operands []string) ([]byte, error) {
 	if encoding.Opcode.Addend != nil {
 		operandIndex, err := strconv.Atoi(strings.TrimPrefix(*encoding.Opcode.Addend, "#"))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse addend: %v", err)
+			log.Printf("error: Failed to parse addend: %v", err)
+			return nil
 		}
 
 		// operandsからレジスタ名を取得し、番号に変換
 		regNum, err = GetRegisterNumber(operands[operandIndex])
 		if err != nil {
-			return nil, fmt.Errorf("failed to get register number: %v", err)
+			log.Printf("error: %v", err)
+			return nil
 		}
 	}
 
 	opcode, err := ResolveOpcode(encoding.Opcode, regNum)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve opcode: %v", err)
+		log.Printf("error: Failed to resolve opcode: %v", err)
+		return nil
 	}
 	machineCode = append(machineCode, opcode)
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
-		modrmByte, err := GenerateModRM(operands, encoding)
+		log.Printf("debug: ModRM: %+v", encoding.ModRM)
+		modrm, err := getModRMFromOperands(operands, encoding, ctx.BitMode)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate ModR/M: %v", err)
+			log.Printf("error: Failed to generate ModR/M: %v", err)
+			return nil
 		}
-		machineCode = append(machineCode, modrmByte)
+		machineCode = append(machineCode, byte(modrm))
 	}
 
 	// 即値の追加(必要な場合)
 	if encoding.Immediate != nil {
-		if imm, err := getImmediateValue(operands[1], encoding.Immediate.Size); err == nil {
+		immIndex, err := parseIndex(encoding.Immediate.Value)
+		if err != nil {
+			log.Printf("error: invalid Immediate.Value format")
+			return nil
+		}
+		// ADD命令等はimmをimm8で計算する
+		if imm, err := getImmediateValue(operands[immIndex], 1); err == nil {
 			machineCode = append(machineCode, imm...)
 		}
 	}
 
-	return machineCode, nil
+	log.Printf("debug: Generated machine code: % x", machineCode)
+
+	return machineCode
 }
