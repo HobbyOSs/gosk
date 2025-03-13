@@ -215,7 +215,7 @@ OpcodeStmt <- _ o:Opcode _ {
         return nil, failure.Wrap(err)
     }
     opcode := ast.NewIdentFactor(ast.BaseFactor{}, opcodeStr)
-    return ast.NewMnemonicStmt(ast.BaseStatement{}, opcode, []ast.Exp{}), nil
+    return ast.NewOpcodeStmt(ast.BaseStatement{}, opcode), nil
 }
 
 Operand <- Exp

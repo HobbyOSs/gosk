@@ -142,6 +142,9 @@ flowchart TD
     - memory-bank内を参照するときは `/home/forbarbazz/gosk/memory-bank/...` のように必ずルートから始まるパスを用いる
 - **差分出力の優先**:
     - コード修正は基本的に差分形式か、最小限の抜粋で提示する
+- **コード調査**
+    - コードの検索調査にはMCPのcommand-executorで`git grep <対象コード>`やfindを使用すること
+
 ---
 
 ## 追加リソース

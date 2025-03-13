@@ -40,6 +40,8 @@ func GenerateX86(ocodes []ocode.Ocode, bitMode ast.BitMode) []byte {
 func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 	currentBufferSize := len(ctx.MachineCode)
 
+	log.Printf("debug: processOcode: %s, operands: %v\n", oc.Kind, oc.Operands) // デバッグログを追加
+
 	switch oc.Kind {
 	case ocode.OpL:
 		return handleL(oc.Operands, ctx.VS)
@@ -61,6 +63,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 		return handleADD(oc.Operands, ctx)
 	case ocode.OpCMP:
 		return handleCMP(oc.Operands, ctx)
+	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN:
+		return handleNoParamOpcode(oc), nil
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}
@@ -68,6 +72,7 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext) ([]byte, error) {
 
 // handleNoParamOpcode handles opcodes that do not require parameters.
 func handleNoParamOpcode(ocode ocode.Ocode) []byte {
+	log.Printf("debug: handleNoParamOpcode: %s\n", ocode.Kind)
 	if _, exists := opcodeMap[ocode.Kind]; exists {
 		return GenerateX86NoParam(ocode)
 	}
