@@ -4,6 +4,7 @@
 - x86アセンブラ解析基盤 (pass1, pass2)
 - Ocode・PEGパーサ等の基礎部分
 - システム命令 (INT, HLT)
+  - grammar_test.go の HLT 命令関連テストを修正
 - 算術命令(一部)
 - `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
 - CMP命令の呼び出し修正
@@ -23,10 +24,14 @@
 - JE命令の追加
 - MOV命令 (レジスタ間, 即値)
 - ADD命令 (フラグ更新)
+- JMP命令のラベル解決
+  - pass1でラベルをテンプレート文字列としてEmit
+  - pass2でテンプレート文字列をアドレスに置換
+- CodegenClientインターフェースの拡張
+  - GetOcodes/SetOcodesメソッドを追加
 
 ## まだ必要な実装
 - メモリアドレッシング
-- 制御フロー命令 (JMPの相対アドレス計算)
 (細かな実装ステップや過去履歴は [implementation_details.md](../details/implementation_details.md) に記載)
 
 ## 関連情報

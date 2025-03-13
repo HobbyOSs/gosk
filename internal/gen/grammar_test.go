@@ -214,10 +214,9 @@ func TestParse(t *testing.T) {
 			),
 		},
 		{"opcode only", "OpcodeStmt", "HLT",
-			ast.NewMnemonicStmt(
+			ast.NewOpcodeStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "HLT"),
-				[]ast.Exp{},
 			),
 		},
 		{"1 operand_1", "MnemonicStmt", " ORG 0x7c00 ; comment",
@@ -317,11 +316,7 @@ func TestParse(t *testing.T) {
 		{"cfg program3", "Program", "HLT ;\n JMP fin",
 			&ast.Program{
 				Statements: []ast.Statement{
-					ast.NewMnemonicStmt(
-						ast.BaseStatement{},
-						ast.NewIdentFactor(ast.BaseFactor{}, "HLT"),
-						[]ast.Exp{},
-					),
+					ast.NewOpcodeStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, "HLT")),
 					ast.NewMnemonicStmt(
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),

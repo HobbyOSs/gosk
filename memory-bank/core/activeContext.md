@@ -1,19 +1,21 @@
 # Active Context
 
 ## 現在の作業の焦点
-- MOVとJMP命令のオフセット計算
+- メモリアドレッシング
 
 ## Day02実装計画
 - メモリアドレッシング
-- 制御フロー命令 (JMPの相対アドレス計算)
 
 ## 直近の変更点
-- progress.mdを更新
-  - MOV命令(レジスタ間, 即値)とADD命令(フラグ更新)を実装済みに追加
-  - まだ必要な実装からMOV, ADDを削除
+- JMP命令のラベル解決を実装
+  - pass1でラベルをテンプレート文字列としてEmit
+  - pass2でテンプレート文字列をアドレスに置換
+- grammar_test.go の HLT 命令関連テストを修正
+  - OpcodeStmt の型に合わせてテストを修正
+- CodegenClientインターフェースにGetOcodes/SetOcodesメソッドを追加
 
 ## 次のステップ
-- MOVとJMP命令のオフセット計算の実装
+- メモリアドレッシングの実装
 
 (詳細: [implementation_details.md](../details/implementation_details.md))
 
