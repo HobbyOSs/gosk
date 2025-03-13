@@ -5,6 +5,7 @@
 - Ocode・PEGパーサ等の基礎部分
 - システム命令 (INT, HLT)
 - 算術命令(一部)
+- `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
 
 ## まだ必要な実装
 - MOV命令 (レジスタ間, 即値)

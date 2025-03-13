@@ -19,12 +19,15 @@ type CodegenClient interface {
 
 // ocodeClient 構造体の定義
 type ocodeClient struct {
-	ocodes []ocode.Ocode
+	ocodes  []ocode.Ocode
+	bitMode ast.BitMode // 追加
 }
 
 // NewCodegenClient は新しい CodegenClient を返す
-func NewCodegenClient() CodegenClient {
-	return &ocodeClient{}
+func NewCodegenClient(bitMode ast.BitMode) CodegenClient { // 引数追加
+	return &ocodeClient{ // 初期化処理修正
+		bitMode: bitMode,
+	}
 }
 
 // Emit メソッドの実装
@@ -77,6 +80,6 @@ func (c *ocodeClient) EmitAll(text string) error {
 
 // Exec メソッドの実装
 func (c *ocodeClient) Exec() ([]byte, error) {
-	machineCode := codegen.GenerateX86(c.ocodes, ast.MODE_32BIT)
+	machineCode := codegen.GenerateX86(c.ocodes, c.bitMode) // 変更
 	return machineCode, nil
 }

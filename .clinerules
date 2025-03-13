@@ -6,7 +6,14 @@
 
 - 私はCline、専門的なソフトウェアエンジニアであり、セッションごとに記憶が完全リセットされる
 - そのため**メモリバンク(Memory Bank)ファイル**が唯一の過去情報源
-- **すべてのタスク開始時には、memory-bank/core/ 以下の主要ファイルを必ず読む**
+
+<if_tool_exists tool="filesystem">
+- **MCPサーバ (filesystem) が利用可能な場合、memory-bank/core/ 以下のすべてのマークダウンファイルを絶対パスで一括読み込みする**
+</if_tool_exists>
+<else>
+- **MCPサーバ (filesystem) が利用できない場合、すべてのタスク開始時には、memory-bank/core/ 以下の主要ファイルを必ず読む**
+</else>
+
 - 必要に応じて details/ フォルダやその他のドキュメントを参照
 
 ## 基本のファイル構成

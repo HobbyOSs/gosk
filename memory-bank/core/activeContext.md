@@ -3,6 +3,7 @@
 ## 現在の作業の焦点
 - ModR/Mバイト生成の改善
 - オペランドのForceImm8対応
+- `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
 
 ## Day02実装計画
 - MOV命令 (レジスタ間, 即値)
@@ -12,6 +13,7 @@
 ## 直近の変更点
 - GenerateModRM関数を2種に分割
 - セグメントレジスタ用MOV命令の修正
+- `internal/ocode_client/client.go` の `Exec()` メソッドで `BitMode` を呼び出し元で渡せるように修正
 
 ## 次のステップ
 - MOV命令残機能の実装

@@ -58,7 +58,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_32BIT),
 			},
 		},
 		{
@@ -72,7 +72,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -86,7 +86,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -100,7 +100,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -114,7 +114,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -128,7 +128,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -142,7 +142,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		},
 		{
@@ -158,7 +158,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         map[string]int32{"label": 0x7c00},
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			},
 		}, /**
 		{
@@ -247,7 +247,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 				Ctx:              stack.NewStack[*token.ParseToken](100),
-				Client:           client.NewCodegenClient(),
+				Client:           client.NewCodegenClient(ast.MODE_16BIT),
 			}
 			pass1.Eval(prog)
 			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(*pass1, IgnoreFields...)); diff != "" {

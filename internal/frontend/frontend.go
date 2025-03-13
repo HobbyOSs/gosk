@@ -39,7 +39,7 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
 		Ctx:              stack.NewStack[*token.ParseToken](100),
-		Client:           client.NewCodegenClient(),
+		Client:           client.NewCodegenClient(ast.MODE_16BIT),
 		AsmDB:            asmdb.NewInstructionDB(),
 	}
 	pass1.Eval(prog)
