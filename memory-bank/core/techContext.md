@@ -16,6 +16,4 @@
 ## 依存関係
 - Go標準ライブラリ
 
-## 関連情報
-[implementation_details.md](./implementation_details.md)
-[technical_notes.md](./technical_notes.md)
+(さらに詳しい依存ライブラリや特記事項は [technical_notes.md](../details/technical_notes.md))

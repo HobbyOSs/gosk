@@ -142,3 +142,5 @@
   - `x86gen_mov.go` と `x86gen_arithmetic.go` でこれらの関数を使用するように修正
 - `GenerateX86INT` 関数を `handleINT` にリネーム
 - `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
+
+[過去の作業履歴はこちら](./archives/implementation_details_archive_20250313.md)

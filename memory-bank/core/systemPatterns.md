@@ -34,6 +34,4 @@
 - バックエンドはASTを基に中間表現を生成し、最終コードを出力
 - `pkg/asmdb` はx86命令の情報をJSONファイルから取得し、オペコード、オペランド、エンコーディングなどの情報を提供する
 
-## 関連情報
-[implementation_details.md](./implementation_details.md)
-[technical_notes.md](./technical_notes.md)
+(詳細: [implementation_details.md](../details/implementation_details.md) および [technical_notes.md](../details/technical_notes.md))

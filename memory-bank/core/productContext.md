@@ -11,6 +11,4 @@ GOSKは、Go言語のコードを効率的に解析し、中間表現を生成�
 - Go言語のコードを入力として受け取り、ASTを生成します。
 - ASTを基に中間表現を生成し、最終的なコードを出力します。
 
-## 関連情報
-[implementation_details.md](./implementation_details.md)
-[technical_notes.md](./technical_notes.md)
+(詳細なアセンブラ命令の実装手法などは [technical_notes.md](../details/technical_notes.md) に記載)
