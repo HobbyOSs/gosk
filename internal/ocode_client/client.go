@@ -28,7 +28,7 @@ func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) (client.C
 
 	return &ocodeClient{
 		Ocodes:  make([]ocode.Ocode, 0),
-		bitMode: ctx.BitMode, // ctxから取得
+		bitMode: ctx.BitMode,
 		ctx:     ctx,
 		pass1:   pass1,
 	}, nil
@@ -101,5 +101,5 @@ func (c *ocodeClient) SetLOC(loc int32) {
 // Exec メソッドの実装
 func (c *ocodeClient) Exec() ([]byte, error) {
 	// 保持しているContextを使用
-	return codegen.GenerateX86(c.Ocodes, c.ctx.BitMode, c.ctx), nil
+	return codegen.GenerateX86(c.Ocodes, c.ctx), nil
 }

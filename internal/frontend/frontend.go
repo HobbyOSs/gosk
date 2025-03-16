@@ -33,7 +33,8 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 
 	// pass1のEvalを実行
 	ctx := &codegen.CodeGenContext{BitMode: ast.MODE_16BIT}
-	client, err := ocode_client.NewCodegenClient(ctx, nil)
+	client, _ := ocode_client.NewCodegenClient(ctx, nil)
+
 	pass1 := &pass1.Pass1{
 		LOC:              0,
 		BitMode:          ast.MODE_16BIT,

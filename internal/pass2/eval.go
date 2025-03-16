@@ -19,13 +19,14 @@ type Pass2 struct {
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
-	DollarPos        uint32 // $ の位置
-	// 中間言語
-	Client client.CodegenClient
+	DollarPos        uint32               // $ の位置
+	Client           client.CodegenClient // 中間言語
 }
 
 func (p *Pass2) Eval(program ast.Prog) ([]byte, error) {
 	ocodes := p.Client.GetOcodes()
+	p.Client.SetDollarPosition(p.DollarPos)
+
 	for i, ocode := range ocodes {
 		for j, operand := range ocode.Operands {
 			if strings.Contains(operand, "{{.") {

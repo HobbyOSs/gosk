@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/variantstack"
 )
@@ -17,7 +16,7 @@ type x86genParams struct {
 	OCode          ocode.Ocode
 }
 
-func GenerateX86(ocodes []ocode.Ocode, bitMode ast.BitMode, ctx *CodeGenContext) []byte {
+func GenerateX86(ocodes []ocode.Ocode, ctx *CodeGenContext) []byte {
 	ctx.VS = variantstack.NewVariantStack()
 	var machineCode []byte
 
