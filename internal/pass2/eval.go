@@ -1,6 +1,11 @@
 package pass2
 
 import (
+	"bytes"
+	"fmt"
+	"strings"
+	"text/template"
+
 	"github.com/HobbyOSs/gosk/internal/ast"
 	client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -20,6 +25,25 @@ type Pass2 struct {
 }
 
 func (p *Pass2) Eval(program ast.Prog) ([]byte, error) {
-	//TraverseAST(program, p)
+	ocodes := p.Client.GetOcodes()
+	for i, ocode := range ocodes {
+		for j, operand := range ocode.Operands {
+			if strings.Contains(operand, "{{.") {
+				tmpl, err := template.New("").Parse(operand)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse template: %v", err)
+				}
+
+				var buf bytes.Buffer
+				err = tmpl.Execute(&buf, p.SymTable)
+				if err != nil {
+					return nil, fmt.Errorf("failed to execute template: %v", err)
+				}
+
+				ocodes[i].Operands[j] = buf.String()
+			}
+		}
+	}
+	p.Client.SetOcodes(ocodes)
 	return p.Client.Exec()
 }

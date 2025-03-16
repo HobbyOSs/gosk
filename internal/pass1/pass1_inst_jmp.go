@@ -3,10 +3,8 @@ package pass1
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/samber/lo"
 )
 
 func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
@@ -25,34 +23,21 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 		if _, ok := env.SymTable[label]; !ok {
 			env.SymTable[label] = 0 // Pass 1では仮アドレス
 		}
-		// TODO: 相対ジャンプのオフセットサイズを決定 (rel8 or rel16)
-		// 現状は rel8 を仮定
+		// Forward reference（前方参照）の問題により、Pass1フェーズではオフセットを正確に計算できない
+		// そのため、現状はrel8（2バイト）を仮定し、必要に応じてPass2フェーズで調整する
+		//
+		// 例：
+		//   JMP label   ; ラベルが前方にある場合、この時点でラベルの位置が不明
+		//   ...
+		//   label:      ; ラベルの実際の位置はPass2まで確定しない
 
 		// 機械語サイズを計算 (JMP rel8 は 2 bytes)
 		env.LOC += 2
 
 		// Ocodeを生成 (ジャンプ先アドレスはプレースホルダー)
-		args := lo.Map(tokens, func(t *token.ParseToken, _ int) string {
-			return t.AsString()
-		})
 		// プレースホルダーとしてラベルを使用
-		env.Client.Emit(fmt.Sprintf("%s %s", instName, strings.Join(args, ",")))
+		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
 		return
 	}
-	dataSize := checkUintRange(arg.ToUInt())
-	env.LOC += int32(dataSize)
-}
-
-func checkUintRange(value uint) int {
-	switch {
-	case value <= uint(^uint8(0)):
-		return 2
-	case value <= uint(^uint16(0)):
-		return 4
-	case value <= uint(^uint32(0)):
-		return 6
-	default:
-		log.Fatal("The value is larger than uint32")
-	}
-	return 0
+	log.Fatalf("invalid JMP operand: %v", arg)
 }

@@ -11,28 +11,28 @@ import (
 
 // CodeGenContext はコード生成全体の状態を保持するコンテキストです。
 type CodeGenContext struct {
-	MachineCode []byte
-	VS          *variantstack.VariantStack
-	BitMode     ast.BitMode
+	MachineCode    []byte
+	VS             *variantstack.VariantStack
+	BitMode        ast.BitMode
+	DollarPosition uint32 // エントリーポイントのアドレス
+	LOC            int32  // Location Counter
 }
 
-func GenerateX86(ocodes []ocode.Ocode, bitMode ast.BitMode) []byte {
-	ctx := CodeGenContext{
-		MachineCode: make([]byte, 0),
-		VS:          variantstack.NewVariantStack(),
-		BitMode:     bitMode,
-	}
+func GenerateX86(ocodes []ocode.Ocode, bitMode ast.BitMode, ctx *CodeGenContext) []byte {
+	ctx.VS = variantstack.NewVariantStack()
+    var machineCode []byte // ローカルのmachineCode変数を追加
 
 	log.Printf("debug: === ocode ===\n")
 	for _, ocode := range ocodes {
 		log.Printf("debug: %s\n", ocode)
-		code, err := processOcode(ocode, &ctx)
+		code, err := processOcode(ocode, ctx)
 		if err != nil {
 			log.Printf("error: Failed to process ocode: %v", err)
 		}
-		ctx.MachineCode = append(ctx.MachineCode, code...)
+		machineCode = append(machineCode, code...) // ローカル変数に追加
 	}
 	log.Printf("debug: === ocode ===\n")
+    ctx.MachineCode = machineCode // 最後にctx.MachineCodeに結合
 	return ctx.MachineCode
 }
 

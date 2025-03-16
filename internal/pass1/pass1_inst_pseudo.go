@@ -82,6 +82,7 @@ func processORG(env *Pass1, tokens []*token.ParseToken) {
 		log.Fatal(failure.Wrap(err))
 	}
 	env.LOC = int32(size)
+	env.DollarPosition += uint32(size) // エントリーポイントのアドレスを加算
 }
 
 func processRESB(env *Pass1, tokens []*token.ParseToken) {

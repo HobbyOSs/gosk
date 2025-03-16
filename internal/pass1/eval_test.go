@@ -127,7 +127,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 				LOC:     0,
 				BitMode: tt.bitMode,
 				Ctx:     stack.NewStack[*token.ParseToken](10),
-				Client:  client.NewCodegenClient(tt.bitMode),
+				Client:  client.NewCodegenClient(tt.bitMode, nil),
 				AsmDB:   asmdb.NewInstructionDB(),
 			}
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))

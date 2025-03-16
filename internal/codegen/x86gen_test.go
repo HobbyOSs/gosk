@@ -109,7 +109,13 @@ func TestGenerateX86(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := GenerateX86(tt.ocodes, ast.MODE_16BIT)
+			ctx := &CodeGenContext{
+				MachineCode:    make([]byte, 0),
+				VS:             nil,
+				BitMode:        ast.MODE_16BIT,
+				DollarPosition: 0,
+			}
+			result := GenerateX86(tt.ocodes, ast.MODE_16BIT, ctx)
 			assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
 		})
 	}

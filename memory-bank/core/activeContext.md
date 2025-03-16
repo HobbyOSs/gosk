@@ -1,21 +1,17 @@
 # Active Context
 
 ## 現在の作業の焦点
-- メモリアドレッシング
-
-## Day02実装計画
-- メモリアドレッシング
+- JMP命令の修正
 
 ## 直近の変更点
-- JMP命令のラベル解決を実装
-  - pass1でラベルをテンプレート文字列としてEmit
-  - pass2でテンプレート文字列をアドレスに置換
-- grammar_test.go の HLT 命令関連テストを修正
-  - OpcodeStmt の型に合わせてテストを修正
-- CodegenClientインターフェースにGetOcodes/SetOcodesメソッドを追加
+- `internal/pass1/pass1_inst_jmp.go` の `processCalcJcc` 関数で、JMP命令のオペランドがラベルの場合に、機械語サイズを2バイト（オペコード + rel8）として計算するように修正
+- `internal/codegen/x86gen.go` の `GenerateX86` 関数で、現在のOcodeの直前までの機械語長を計算し、`ctx.MachineCode` の代わりにローカル変数 `machineCode` を使用するように修正
+- `internal/codegen/x86gen_jmp.go` の `generateJMPCode` 関数で、現在のアドレスを計算する際に `ctx.MachineCode` の代わりに `ctx.DollarPosition` とローカル変数 `machineCode` の長さを使用するように修正
+- `internal/ocode_client/client_test.go`、`internal/frontend/frontend.go`、`internal/pass1/eval_test.go`、`test/pass1_test.go` で `NewCodegenClient` の呼び出しを修正し、`CodeGenContext` を渡すように変更
+- `test/pass1_test.go` でimport文の重複を修正
 
 ## 次のステップ
-- メモリアドレッシングの実装
+- `make test` を実行し、`day02test` がパスすることを確認
 
 (詳細: [implementation_details.md](../details/implementation_details.md))
 

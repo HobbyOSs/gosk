@@ -13,6 +13,7 @@ type Pass1 struct {
 	BitMode          ast.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32 // Pass1のシンボルテーブル
+	DollarPosition   uint32           // ORG命令で設定されるエントリーポイントのアドレス
 	GlobalSymbolList []string
 	ExternSymbolList []string
 	Ctx              *stack.Stack[*token.ParseToken]
@@ -21,5 +22,6 @@ type Pass1 struct {
 }
 
 func (p *Pass1) Eval(program ast.Prog) {
+	p.Client.SetLOC(0) // LOCを初期化
 	TraverseAST(program, p)
 }
