@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/comail/colog"

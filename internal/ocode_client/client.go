@@ -6,49 +6,38 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/codegen"
+	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
-// CodegenClient インターフェースの定義
-type CodegenClient interface {
-	Emit(line string) error
-	EmitAll(text string) error
-	Exec() ([]byte, error)
-	GetOcodes() []ocode.Ocode
-	SetOcodes(ocodes []ocode.Ocode)
-	SetDollarPosition(pos uint32)
-	SetLOC(loc int32) // SetLOCメソッドを追加
-}
-
 // ocodeClient 構造体の定義
 type ocodeClient struct {
-	Ocodes         []ocode.Ocode
-	bitMode        ast.BitMode
-	DollarPosition uint32      // エントリーポイントのアドレス
-	LOC            int32       // Location Counter
-	ctx            *codegen.CodeGenContext // CodeGenContextを保持
+	Ocodes  []ocode.Ocode
+	bitMode ast.BitMode
+	ctx     *codegen.CodeGenContext // CodeGenContextを保持
+	pass1   *pass1.Pass1            // pass1の結果を保持
 }
 
 // NewCodegenClient は新しい CodegenClient を返す
-func NewCodegenClient(bitMode ast.BitMode, ctx *codegen.CodeGenContext) CodegenClient {
+func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) client.CodegenClient {
 	if ctx == nil {
 		// デフォルトのContextを作成
 		ctx = &codegen.CodeGenContext{
 			MachineCode:    make([]byte, 0),
 			VS:             nil,
-			BitMode:        bitMode,
+			BitMode:        ast.BitMode32, // デフォルト値
 			DollarPosition: 0x7c00, // デフォルト値
-			LOC:            0,
+			SymTable:       map[string]int32{},
 		}
 	}
 
 	return &ocodeClient{
-		bitMode:        bitMode,
-		DollarPosition: ctx.DollarPosition,
-		LOC:            ctx.LOC,
-		ctx:            ctx,
-		Ocodes:         make([]ocode.Ocode, 0),
+		Ocodes:  make([]ocode.Ocode, 0),
+		bitMode: ctx.BitMode, // ctxから取得
+		ctx:     ctx,
+		pass1:   pass1,
 	}
 }
 
@@ -109,18 +98,15 @@ func (c *ocodeClient) SetOcodes(ocodes []ocode.Ocode) {
 }
 
 func (c *ocodeClient) SetDollarPosition(pos uint32) {
-	c.DollarPosition = pos
+	c.ctx.DollarPosition = uint64(pos)
 }
 
-// SetLOC メソッドの実装
 func (c *ocodeClient) SetLOC(loc int32) {
-	c.LOC = loc
+	// Do nothing
 }
 
 // Exec メソッドの実装
 func (c *ocodeClient) Exec() ([]byte, error) {
 	// 保持しているContextを使用
-	c.ctx.DollarPosition = c.DollarPosition
-	c.ctx.LOC = c.LOC
-	return codegen.GenerateX86(c.Ocodes, c.bitMode, c.ctx), nil
+	return codegen.GenerateX86(c.Ocodes, c.ctx.BitMode, c.ctx), nil
 }

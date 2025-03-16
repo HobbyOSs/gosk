@@ -2,7 +2,7 @@ package pass1
 
 import (
 	"github.com/HobbyOSs/gosk/internal/ast"
-	client "github.com/HobbyOSs/gosk/internal/ocode_client"
+	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/zeroflucs-given/generics/collections/stack"

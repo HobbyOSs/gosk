@@ -92,10 +92,10 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 	return machineCode, nil
 }
 
-func handleADD(operands []string, ctx *CodeGenContext) ([]byte, error) {
-	return generateArithmeticCode(operands, ctx, "ADD")
+func handleADD(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateArithmeticCode(params.Operands, ctx, "ADD")
 }
 
-func handleCMP(operands []string, ctx *CodeGenContext) ([]byte, error) {
-	return generateArithmeticCode(operands, ctx, "CMP")
+func handleCMP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateArithmeticCode(params.Operands, ctx, "CMP")
 }

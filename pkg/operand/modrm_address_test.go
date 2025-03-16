@@ -35,11 +35,11 @@ func TestParseMemoryOperand(t *testing.T) {
 			wantDisp: []byte{0x7f},
 		},
 		{
-			name:     "16bit disp16 [bx+di+0x1234]",
-			memStr:   "[bx+di+0x1234]",
-			bitMode:  ast.MODE_16BIT,
-			wantMod:  0b10,
-			wantRM:   0b001,
+			name:    "16bit disp16 [bx+di+0x1234]",
+			memStr:  "[bx+di+0x1234]",
+			bitMode: ast.MODE_16BIT,
+			wantMod: 0b10,
+			wantRM:  0b001,
 			// 0x1234 => LE: 34 12
 			wantDisp: []byte{0x34, 0x12},
 		},

@@ -16,7 +16,7 @@ type ArithmeticSuite struct {
 }
 
 func (s *ArithmeticSuite) TestArithmeticInstructions() {
-    s.T().Skip("算術命令の実装が完了するまでスキップ")
+	s.T().Skip("算術命令の実装が完了するまでスキップ")
 
 	code := `; arithmetic instructions test
 		ORG		0x7c00

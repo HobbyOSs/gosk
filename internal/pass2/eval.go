@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	client "github.com/HobbyOSs/gosk/internal/ocode_client"
+	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )

@@ -59,7 +59,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_32BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_32BIT}, nil),
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -87,7 +87,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -101,7 +101,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -115,7 +115,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0x7c00}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -129,7 +129,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -143,7 +143,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
 			},
 		},
 		{
@@ -156,10 +156,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:              0x7c00,
 				BitMode:          ast.MODE_16BIT,
-				SymTable:         map[string]int32{"label": 0x7c00},
+				SymTable:         make(map[string]int32{"label": 0x7c00}),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, &codegen.CodeGenContext{DollarPosition: 0x7c00}),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, pass1),
 			},
 		}, /**
 		{
@@ -248,10 +248,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 				Ctx:              stack.NewStack[*token.ParseToken](100),
-				Client:           client.NewCodegenClient(ast.MODE_16BIT, nil),
+				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, pass1),
 			}
 			pass1.Eval(prog)
-			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(*pass1, IgnoreFields...)); diff != "" {
+			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(pass1.Pass1{}, "Ctx", "EquMap", "Client")); diff != "" {
 				t.Errorf(`pass1.Eval("%v") result mismatch:\n%s`, prog, diff)
 			}
 
@@ -280,6 +280,7 @@ func TestPass1Suite(t *testing.T) {
 }
 
 func (s *Pass1Suite) SetupSuite() {
+	setUpColog(true)
 }
 
 func (s *Pass1Suite) TearDownSuite() {
