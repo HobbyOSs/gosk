@@ -59,7 +59,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_32BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_32BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -73,7 +76,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -87,7 +93,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -101,7 +110,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -115,7 +127,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -129,7 +144,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -143,7 +161,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil),
+				Client: func() client.CodegenClient {
+					cli, _ := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0, BitMode: ast.MODE_16BIT}, nil)
+					return cli
+				}(),
 			},
 		},
 		{
@@ -159,76 +180,15 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				SymTable:         make(map[string]int32{"label": 0x7c00}),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
-				Client:           client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, pass1),
+				Client: func() client.CodegenClient {
+					cli, err := client.NewCodegenClient(&codegen.CodeGenContext{DollarPosition: 0x7c00, BitMode: ast.MODE_16BIT}, pass1)
+					if err != nil {
+						panic(err)
+					}
+					return cli
+				}(),
 			},
-		}, /**
-		{
-			"integration test for pass1",
-			`		ORG		0x7c00
-
-				JMP		entry
-				DB		0x90
-				DB		"HELLOIPL"
-				DW		512
-				DB		1
-				DW		1
-				DB		2
-				DW		224
-				DW		2880
-				DB		0xf0
-				DW		9
-				DW		18
-				DW		2
-				DD		0
-				DD		2880
-				DB		0,0,0x29
-				DD		0xffffffff
-				DB		"HELLO-OS   "
-				DB		"FAT12   "
-				RESB	18
-
-		; プログラム本体
-
-		entry:
-				;MOV		AX,0
-				;MOV		SS,AX
-				;MOV		SP,0x7c00
-				;MOV		DS,AX
-				;MOV		ES,AX
-
-				;MOV		SI,msg
-
-		putloop:
-				;MOV		AL,[SI]
-				;ADD		SI,1
-				;CMP		AL,0
-				;JE		fin
-				;MOV		AH,0x0e
-				;MOV		BX,15
-				;INT		0x10
-				;JMP		putloop
-
-		fin:
-				;HLT
-				;JMP		fin
-
-		msg:
-		`,
-			stack.NewStack[*token.ParseToken](100),
-			nil,
-			&pass1.Pass1{
-				LOC:     31860,
-				BitMode: ast.MODE_16BIT,
-				SymTable: map[string]int32{
-					"entry":   31824,
-					"putloop": 31839,
-					"fin":     31857,
-					"msg":     31860,
-				},
-				GlobalSymbolList: []string{},
-				ExternSymbolList: []string{},
-			},
-		},*/
+		},
 	}
 
 	t := s.T()

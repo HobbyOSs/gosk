@@ -21,16 +21,9 @@ type ocodeClient struct {
 }
 
 // NewCodegenClient は新しい CodegenClient を返す
-func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) client.CodegenClient {
+func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) (client.CodegenClient, error) {
 	if ctx == nil {
-		// デフォルトのContextを作成
-		ctx = &codegen.CodeGenContext{
-			MachineCode:    make([]byte, 0),
-			VS:             nil,
-			BitMode:        ast.BitMode32, // デフォルト値
-			DollarPosition: 0x7c00, // デフォルト値
-			SymTable:       map[string]int32{},
-		}
+		return nil, fmt.Errorf("CodeGenContext must not be nil")
 	}
 
 	return &ocodeClient{
@@ -38,7 +31,7 @@ func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) client.Co
 		bitMode: ctx.BitMode, // ctxから取得
 		ctx:     ctx,
 		pass1:   pass1,
-	}
+	}, nil
 }
 
 // Emit メソッドの実装

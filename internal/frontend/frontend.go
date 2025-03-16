@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	client "github.com/HobbyOSs/gosk/internal/ocode_client"
+	"github.com/HobbyOSs/gosk/internal/codegen"                   // 追加: client パッケージをインポート
+	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client" // パッケージ名を明示的に指定
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -31,6 +32,8 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 
 	// pass1のEvalを実行
+	ctx := &codegen.CodeGenContext{BitMode: ast.MODE_16BIT}
+	client, err := ocode_client.NewCodegenClient(ctx, nil)
 	pass1 := &pass1.Pass1{
 		LOC:              0,
 		BitMode:          ast.MODE_16BIT,
@@ -39,7 +42,7 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
 		Ctx:              stack.NewStack[*token.ParseToken](100),
-		Client:           client.NewCodegenClient(ast.MODE_16BIT, nil, nil),
+		Client:           client,
 		AsmDB:            asmdb.NewInstructionDB(),
 	}
 	pass1.Eval(prog)

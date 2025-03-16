@@ -87,12 +87,17 @@ flowchart TD
     Plan --> Document[チャットで記録]
     
     CheckFiles -->|Yes| Verify[コンテキストを検証]
-    Verify --> Strategy[戦略を立案]
+    Verify --> CheckTaskType{タスクタイプを確認}
+
+    CheckTaskType -->|リファクタリング| ReadTechnicalNotes[technical_notes.mdを読む]
+    ReadTechnicalNotes --> Strategy[戦略を立案]
+    
+    CheckTaskType -->|その他| Strategy[戦略を立案]
     Strategy --> Present[アプローチを提示]
 ```
 
    - memory-bank/core/ のファイルを読み、状況を把握
-   - 新しい実装を開始するときは `implementation_details.md`, `technical_notes.md` を必ず確認すること
+   - 新しい実装を開始するとき、またはリファクタリングタスクを実施する際は `implementation_details.md`, `technical_notes.md` を必ず確認すること
    - 計画を立案し、チャットにまとめる
 
 2. **Act Mode**:

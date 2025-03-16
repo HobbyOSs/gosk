@@ -9,31 +9,41 @@ import (
 )
 
 func TestNewCodegenClient(t *testing.T) {
-	client := NewCodegenClient(&codegen.CodeGenContext{}, nil)
-	assert.NotNil(t, client)
+	// ctx == nil の場合、エラーが発生することを確認
+	clientNilCtx, errNilCtx := NewCodegenClient(nil, nil)
+	assert.Nil(t, clientNilCtx)
+	assert.Error(t, errNilCtx)
+
+	// ctx != nil の場合、エラーが発生しないことを確認
+	clientValidCtx, errValidCtx := NewCodegenClient(&codegen.CodeGenContext{}, nil)
+	assert.NotNil(t, clientValidCtx)
+	assert.NoError(t, errValidCtx)
 }
 
 func TestEmit(t *testing.T) {
-	client := NewCodegenClient(&codegen.CodeGenContext{}, nil)
-	err := client.Emit("MOV AX, 1")
+	client, err := NewCodegenClient(&codegen.CodeGenContext{}, nil)
 	assert.NoError(t, err)
+	errEmit := client.Emit("MOV AX, 1")
+	assert.NoError(t, errEmit)
 }
 
 func TestEmitAll(t *testing.T) {
-	client := NewCodegenClient(&codegen.CodeGenContext{}, nil)
-	err := client.EmitAll("MOV AX, 1\nMOV BX, 2")
+	client, err := NewCodegenClient(&codegen.CodeGenContext{}, nil)
 	assert.NoError(t, err)
+	errEmitAll := client.EmitAll("MOV AX, 1\nMOV BX, 2")
+	assert.NoError(t, errEmitAll)
 }
 
 func TestExec(t *testing.T) {
 	pass1 := &pass1.Pass1{
 		SymTable: make(map[string]int32),
 	}
-	client := NewCodegenClient(&codegen.CodeGenContext{}, pass1)
-	err := client.EmitAll("MOV AX, 1\nMOV BX, 2")
+	client, err := NewCodegenClient(&codegen.CodeGenContext{}, pass1)
 	assert.NoError(t, err)
+	errEmitAll := client.EmitAll("MOV AX, 1\nMOV BX, 2")
+	assert.NoError(t, errEmitAll)
 
-	machineCode, err := client.Exec()
-	assert.NoError(t, err)
+	machineCode, errExec := client.Exec()
+	assert.NoError(t, errExec)
 	assert.NotNil(t, machineCode)
 }
