@@ -116,7 +116,7 @@ func TestGenerateX86(t *testing.T) {
 				DollarPosition: 0,
 				SymTable:       map[string]int32{},
 			}
-			result := GenerateX86(tt.ocodes, ast.MODE_16BIT, ctx)
+			result := GenerateX86(tt.ocodes, ctx)
 			assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
 		})
 	}

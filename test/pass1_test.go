@@ -164,7 +164,8 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 
 			// pass1のEvalを実行
 			ctx := &codegen.CodeGenContext{BitMode: ast.MODE_16BIT}
-			client, err := ocode_client.NewCodegenClient(ctx, nil)
+			client, err := ocode_client.NewCodegenClient(ctx)
+			s.Require().NoError(err)
 
 			pass1 := &pass1.Pass1{
 				LOC:              0,

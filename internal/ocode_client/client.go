@@ -8,7 +8,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/codegen"
-	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
@@ -17,11 +16,10 @@ type ocodeClient struct {
 	Ocodes  []ocode.Ocode
 	bitMode ast.BitMode
 	ctx     *codegen.CodeGenContext // CodeGenContextを保持
-	pass1   *pass1.Pass1            // pass1の結果を保持
 }
 
 // NewCodegenClient は新しい CodegenClient を返す
-func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) (client.CodegenClient, error) {
+func NewCodegenClient(ctx *codegen.CodeGenContext) (client.CodegenClient, error) {
 	if ctx == nil {
 		return nil, fmt.Errorf("CodeGenContext must not be nil")
 	}
@@ -30,7 +28,6 @@ func NewCodegenClient(ctx *codegen.CodeGenContext, pass1 *pass1.Pass1) (client.C
 		Ocodes:  make([]ocode.Ocode, 0),
 		bitMode: ctx.BitMode,
 		ctx:     ctx,
-		pass1:   pass1,
 	}, nil
 }
 

@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	"github.com/HobbyOSs/gosk/internal/ocode_client"
+	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen"
+	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/comail/colog"
@@ -123,11 +124,17 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 
 	for _, tt := range tests {
 		s.T().Run(tt.text, func(t *testing.T) {
+			ctx := &codegen.CodeGenContext{BitMode: tt.bitMode}
+			client, err := ocode_client.NewCodegenClient(ctx)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
 			pass1 := &Pass1{
 				LOC:     0,
 				BitMode: tt.bitMode,
 				Ctx:     stack.NewStack[*token.ParseToken](100),
-				Client:  ocode_client.NewCodegenClient(tt.bitMode, nil, nil),
+				Client:  client,
 				AsmDB:   asmdb.NewInstructionDB(),
 			}
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
@@ -143,4 +150,3 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		})
 	}
 }
-<<<<<<< HEAD

@@ -35,8 +35,6 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
 	// ORG命令で設定されたDollarPositionを考慮する
 	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-	fmt.Printf("Debug: DollarPosition=0x%x, len(ctx.MachineCode)=%d, currentAddr=0x%x\n",
-		ctx.DollarPosition, params.MachineCodeLen, currentAddr)
 	var offset int64
 	var machineCode []byte
 
@@ -44,24 +42,20 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	case ocode.OpJMP:
 		// JMP rel8 (オペコード: eb, オフセット: 1 byte)
 		// JMP rel16 (オペコード: e9, オフセット: 2 bytes)
-		offset = destAddr - currentAddr
+		offset := destAddr - currentAddr - 2
+
 		if offset >= -128 && offset <= 127 {
 			// 8ビットオフセットで表現可能な場合
 			machineCode = []byte{0xeb, byte(offset)}
-			fmt.Printf("JMP rel8: destAddr=0x%x, currentAddr=0x%x, offset=0x%x\n",
-				destAddr, currentAddr, offset)
+			fmt.Printf("JMP rel8: destAddr=0x%x, currentAddr=0x%x, offset=%d\n", destAddr, currentAddr, offset)
 		} else {
 			// 16ビットオフセットが必要な場合
-			offset = destAddr - currentAddr
 			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
-			fmt.Printf("JMP rel16: destAddr=%d, currentAddr=%d, offset=%d\n", destAddr, currentAddr, offset) // デバッグログ
 		}
 	case ocode.OpJE:
 		// JE rel8 (オペコード: 74, オフセット: 1 byte)
-		offset = destAddr - currentAddr
 		if offset >= -128 && offset <= 127 {
 			machineCode = []byte{0x74, byte(offset)}
-			fmt.Printf("JE rel8: destAddr=%d, currentAddr=%d, offset=%d\n", destAddr, currentAddr, offset) // デバッグログ
 		} else {
 			return nil, fmt.Errorf("JE instruction with offset larger than 8 bits is not supported")
 		}

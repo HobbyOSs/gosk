@@ -10,12 +10,12 @@ NASK=wine nask.exe
 all: tool build test
 
 build: dep gen compress
+	go build ./...
 	cd cmd/gosk && $(GOBUILD) -v
-	cd ..
-	go install -v ./...
 
 test:
 	go install -v github.com/rakyll/gotest@latest
+	go test -cv ./...
 	$(GOTEST) -v ./...
 
 clean:
