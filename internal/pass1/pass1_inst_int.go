@@ -2,11 +2,8 @@ package pass1
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/operand"
-	"github.com/samber/lo"
 )
 
 func processINT(env *Pass1, tokens []*token.ParseToken) {
@@ -15,16 +12,12 @@ func processINT(env *Pass1, tokens []*token.ParseToken) {
 		panic("INT instruction requires one operand")
 	}
 
-	args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-		return token.AsString()
-	})
+	arg := tokens[0].AsString()
+	if arg == "3" {
+		env.LOC += int32(1)
+	} else {
+		env.LOC += int32(2)
+	}
 
-	// オペランドを作成してサイズを計算
-	operands := operand.
-		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode)
-	size, _ := env.AsmDB.FindMinOutputSize("INT", operands)
-	env.LOC += int32(size)
-
-	env.Client.Emit(fmt.Sprintf("INT %s", strings.Join(args, ",")))
+	env.Client.Emit(fmt.Sprintf("INT %s", arg))
 }

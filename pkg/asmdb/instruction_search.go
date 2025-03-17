@@ -97,7 +97,9 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 	size := encoding.GetOutputSize(options)
 
 	// プレフィックスとオフセットのサイズを加算
-	return size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize(), nil
+	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize()
+	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize)
+	return minOutputSize, nil
 }
 
 func matchOperands(formOperands *[]Operand, queryOperands operand.Operands, conditionRelaxed bool) bool {

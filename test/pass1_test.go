@@ -10,6 +10,8 @@ import (
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeroflucs-given/generics/collections/stack"
@@ -105,6 +107,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7c00,
+				DollarPosition:   0x7c00,
 				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
@@ -118,6 +121,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              18,
+				DollarPosition:   0,
 				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
@@ -131,6 +135,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7dfe,
+				DollarPosition:   0,
 				BitMode:          ast.MODE_16BIT,
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
@@ -146,8 +151,73 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0x7c00,
+				DollarPosition:   0x7c00,
 				BitMode:          ast.MODE_16BIT,
 				SymTable:         map[string]int32{"label": 0x7c00},
+				GlobalSymbolList: []string{},
+				ExternSymbolList: []string{},
+			},
+		},
+		{
+			"integration test for pass1",
+			`	ORG		0x7c00
+
+				JMP		entry
+				DB		0x90
+				DB		"HELLOIPL"
+				DW		512
+				DB		1
+				DW		1
+				DB		2
+				DW		224
+				DW		2880
+				DB		0xf0
+				DW		9
+				DW		18
+				DW		2
+				DD		0
+				DD		2880
+				DB		0,0,0x29
+				DD		0xffffffff
+				DB		"HELLO-OS   "
+				DB		"FAT12   "
+				RESB	18
+
+		; プログラム本体
+
+		entry:
+				MOV		AX,0
+				MOV		SS,AX
+				MOV		SP,0x7c00
+				MOV		DS,AX
+				MOV		ES,AX
+				MOV		SI,msg
+		putloop:
+				MOV		AL,[SI]
+				ADD		SI,1
+				CMP		AL,0
+				JE		fin
+				MOV		AH,0x0e
+				MOV		BX,15
+				INT		0x10
+				JMP		putloop
+		fin:
+				HLT
+				JMP		fin
+		msg:
+		`,
+			stack.NewStack[*token.ParseToken](100),
+			nil,
+			&pass1.Pass1{
+				LOC:            31860,
+				DollarPosition: 0x7c00,
+				BitMode:        ast.MODE_16BIT,
+				SymTable: map[string]int32{
+					"entry":   31824,
+					"putloop": 31839,
+					"fin":     31857,
+					"msg":     31860,
+				},
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 			},
@@ -178,9 +248,10 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				Client:           client,
 			}
 			pass1.Eval(prog)
-			//if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(pass1.Pass1{}, "Ctx", "EquMap", "Client")); diff != "" {
-			//	t.Errorf(`pass1.Eval("%v") result mismatch:\n%s`, prog, diff)
-			//}
+
+			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(*pass1, "Ctx", "EquMap", "Client")); diff != "" {
+				t.Errorf(`pass1.Eval("%v") result mismatch:\n%s`, prog, diff)
+			}
 
 			// Ctx: stack
 			s.Require().Equal(tt.ctx.Capacity(), pass1.Ctx.Capacity(), "Should have same capacity")

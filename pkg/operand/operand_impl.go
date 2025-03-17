@@ -141,6 +141,9 @@ func (b *OperandImpl) DetectImmediateSize() int {
 			break
 		}
 		if parsed.Reg != "" {
+			if b.ForceImm8 {
+				return 1
+			}
 			t := getRegisterType(parsed.Reg)
 			switch t {
 			case CodeR8:
