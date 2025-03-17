@@ -37,7 +37,7 @@ func handleDD(args []string) []byte {
 	return binary
 }
 
-func handleRESB(args []string, currentBufferSize int) []byte {
+func handleRESB(args []string, params x86genParams, ctx *CodeGenContext) []byte {
 	var binary []byte
 
 	if strings.Contains(args[0], `-$`) {
@@ -47,7 +47,7 @@ func handleRESB(args []string, currentBufferSize int) []byte {
 			log.Fatal(failure.Wrap(err))
 		}
 
-		needToAppendSize := reserveSize - int64(currentBufferSize)
+		needToAppendSize := reserveSize - int64(ctx.DollarPosition) - int64(params.MachineCodeLen)
 		binary = append(binary, make([]byte, needToAppendSize)...)
 		return binary
 	}
@@ -57,6 +57,7 @@ func handleRESB(args []string, currentBufferSize int) []byte {
 		log.Fatal(failure.Wrap(err))
 	}
 
-	binary = append(binary, make([]byte, reserveSize)...)
+	needToAppendSize := reserveSize
+	binary = append(binary, make([]byte, needToAppendSize)...)
 	return binary
 }

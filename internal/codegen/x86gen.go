@@ -54,7 +54,7 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 	case ocode.OpDD:
 		return handleDD(oc.Operands), nil
 	case ocode.OpRESB:
-		return handleRESB(oc.Operands, params.MachineCodeLen), nil
+		return handleRESB(oc.Operands, params, ctx), nil
 	case ocode.OpMOV:
 		return handleMOV(params.Operands, ctx), nil
 	case ocode.OpINT:
