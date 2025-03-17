@@ -22,6 +22,5 @@ type Pass1 struct {
 }
 
 func (p *Pass1) Eval(program ast.Prog) {
-	p.Client.SetLOC(0) // LOCを初期化
 	TraverseAST(program, p)
 }

@@ -24,8 +24,10 @@ type Pass2 struct {
 }
 
 func (p *Pass2) Eval(program ast.Prog) ([]byte, error) {
+	// TODO: このあたりの受け渡しおかしい
 	ocodes := p.Client.GetOcodes()
 	p.Client.SetDollarPosition(p.DollarPos)
+	p.Client.SetSymbolTable(p.SymTable)
 
 	for i, ocode := range ocodes {
 		for j, operand := range ocode.Operands {

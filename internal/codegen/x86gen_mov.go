@@ -79,7 +79,11 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			log.Printf("error: invalid Immediate.Value format")
 			return nil
 		}
-		if imm, err := getImmediateValue(operands[immIndex], encoding.Immediate.Size); err == nil {
+
+		immOp := operands[immIndex]
+		if addr, ok := ctx.SymTable[immOp]; ok {
+			machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF))
+		} else if imm, err := getImmediateValue(immOp, encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
 		}
 	}

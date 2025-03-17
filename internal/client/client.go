@@ -12,5 +12,5 @@ type CodegenClient interface {
 	GetOcodes() []ocode.Ocode
 	SetOcodes(ocodes []ocode.Ocode)
 	SetDollarPosition(pos uint32)
-	SetLOC(loc int32)
+	SetSymbolTable(map[string]int32)
 }

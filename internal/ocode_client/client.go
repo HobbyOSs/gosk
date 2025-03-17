@@ -91,8 +91,8 @@ func (c *ocodeClient) SetDollarPosition(pos uint32) {
 	c.ctx.DollarPosition = uint64(pos)
 }
 
-func (c *ocodeClient) SetLOC(loc int32) {
-	// Do nothing
+func (c *ocodeClient) SetSymbolTable(symTable map[string]int32) {
+	c.ctx.SymTable = symTable
 }
 
 // Exec メソッドの実装

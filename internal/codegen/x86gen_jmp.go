@@ -35,14 +35,14 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
 	// ORG命令で設定されたDollarPositionを考慮する
 	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-	var offset int64
+	offset := destAddr - currentAddr - 2
+
 	var machineCode []byte
 
 	switch opKind {
 	case ocode.OpJMP:
 		// JMP rel8 (オペコード: eb, オフセット: 1 byte)
 		// JMP rel16 (オペコード: e9, オフセット: 2 bytes)
-		offset := destAddr - currentAddr - 2
 
 		if offset >= -128 && offset <= 127 {
 			// 8ビットオフセットで表現可能な場合
