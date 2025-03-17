@@ -7,7 +7,7 @@ NASK=wine nask.exe
 
 .PHONY: all test gen compress
 
-all: tool build test
+all: build test
 
 build: dep gen compress
 	go build ./...
@@ -31,6 +31,9 @@ fmt:
 	go fmt ./...
 
 dep:
+	go install -v github.com/mna/pigeon@latest
+	go install -v github.com/Bin-Huang/newc@latest
+	go install -v github.com/dmarkham/enumer@latest
 	go mod download
 	go mod tidy
 
@@ -42,8 +45,5 @@ compress:
 tool:
 	go install -v golang.org/x/tools/gopls@latest
 	go install -v github.com/go-delve/delve/cmd/dlv@latest
-	go install -v github.com/mna/pigeon@latest
 	go install -v github.com/awalterschulze/goderive@latest
-	go install -v github.com/Bin-Huang/newc@latest
 	go install -v github.com/hairyhenderson/gomplate/v3/cmd/gomplate@latest
-	go install -v github.com/dmarkham/enumer@latest
