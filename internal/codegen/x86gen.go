@@ -61,12 +61,66 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleINT(oc), nil
 	case ocode.OpJMP:
 		return handleJMP(params, ctx)
-	case ocode.OpJNC:
-		return handleJNC(params, ctx)
-	case ocode.OpJAE:
-		return handleJAE(params, ctx)
 	case ocode.OpJE:
 		return handleJE(params, ctx)
+	case ocode.OpJA:
+		return handleJcc(params, ctx)
+	case ocode.OpJAE:
+		return handleJcc(params, ctx)
+	case ocode.OpJB:
+		return handleJcc(params, ctx)
+	case ocode.OpJBE:
+		return handleJcc(params, ctx)
+	case ocode.OpJC:
+		return handleJcc(params, ctx)
+	case ocode.OpJG:
+		return handleJcc(params, ctx)
+	case ocode.OpJGE:
+		return handleJcc(params, ctx)
+	case ocode.OpJL:
+		return handleJcc(params, ctx)
+	case ocode.OpJLE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNA:
+		return handleJcc(params, ctx)
+	case ocode.OpJNAE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNB:
+		return handleJcc(params, ctx)
+	case ocode.OpJNBE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNC:
+		return handleJcc(params, ctx)
+	case ocode.OpJNE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNG:
+		return handleJcc(params, ctx)
+	case ocode.OpJNGE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNL:
+		return handleJcc(params, ctx)
+	case ocode.OpJNLE:
+		return handleJcc(params, ctx)
+	case ocode.OpJNO:
+		return handleJcc(params, ctx)
+	case ocode.OpJNP:
+		return handleJcc(params, ctx)
+	case ocode.OpJNS:
+		return handleJcc(params, ctx)
+	case ocode.OpJNZ:
+		return handleJcc(params, ctx)
+	case ocode.OpJO:
+		return handleJcc(params, ctx)
+	case ocode.OpJP:
+		return handleJcc(params, ctx)
+	case ocode.OpJPE:
+		return handleJcc(params, ctx)
+	case ocode.OpJPO:
+		return handleJcc(params, ctx)
+	case ocode.OpJS:
+		return handleJcc(params, ctx)
+	case ocode.OpJZ:
+		return handleJcc(params, ctx)
 	case ocode.OpADD:
 		return handleADD(params, ctx)
 	case ocode.OpCMP:

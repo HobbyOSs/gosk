@@ -144,6 +144,14 @@
 - `GenerateX86INT` 関数を `handleINT` にリネーム
 - `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
 
+### JMP系命令 (Jcc命令) の実装 (2025/03/19)
+- `pkg/ocode/ocode.go` に JMP系命令 (JA, JAE, JB, JBE, JC, JE, JG, JGE, JL, JLE, JNA, JNAE, JNB, JNBE, JNC, JNE, JNG, JNGE, JNL, JNLE, JNO, JNP, JNS, JNZ, JO, JP, JPE, JPO, JS, JZ) を追加
+- `internal/codegen/x86gen.go` の `processOcode` 関数に JMP系命令のケースを追加し、`handleJcc` 関数を呼び出すように修正
+- `internal/codegen/x86gen_jmp.go` に `handleJcc` 関数を実装し、各JMP系命令の機械語生成処理を実装
+  - `generateJMPCode` 関数は JMP 命令のみに使用するように変更
+  - 各JMP系命令のオペコードは、`handleJcc` 関数内で定義
+  - オフセットは `rel8` (1バイト) のみ対応
+
 ### JE命令の実装 (2025/03/14)
 - `internal/codegen/x86gen_jmp.go` に `generateJMPCode` 関数を追加し、JMP命令とJE命令の共通処理を実装
 - `handleJMP` 関数と `handleJE` 関数から `generateJMPCode` 関数を呼び出すように修正

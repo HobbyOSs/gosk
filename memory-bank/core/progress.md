@@ -7,7 +7,7 @@
 - CodegenClient 関連機能
 
 ## まだ必要な実装
-- JNC, JAE, JMP rel8 命令の実装
+- JMP系命令 (Jcc命令) のrel32オフセット対応
 - RESBの計算処理の実装
 - メモリアドレッシング
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
