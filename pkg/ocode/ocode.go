@@ -101,6 +101,8 @@ const (
 	OpINT                      // INT
 	OpCMP
 	OpJMP      // JMP
+	OpJNC      // JNC
+	OpJAE      // JAE
 	OpJE       // JE
 	OpINTO     // INTO
 	OpINVD     // INVD

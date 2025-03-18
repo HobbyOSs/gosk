@@ -61,6 +61,10 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleINT(oc), nil
 	case ocode.OpJMP:
 		return handleJMP(params, ctx)
+	case ocode.OpJNC:
+		return handleJNC(params, ctx)
+	case ocode.OpJAE:
+		return handleJAE(params, ctx)
 	case ocode.OpJE:
 		return handleJE(params, ctx)
 	case ocode.OpADD:

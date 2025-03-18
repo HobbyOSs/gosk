@@ -17,6 +17,16 @@ func handleJE(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	return generateJMPCode(ocode.OpJE, params.OCode, ctx, params.MachineCodeLen)
 }
 
+// handleJNC handles the JNC instruction in code generation.
+func handleJNC(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateJMPCode(ocode.OpJNC, params.OCode, ctx, params.MachineCodeLen)
+}
+
+// handleJAE handles the JAE instruction in code generation.
+func handleJAE(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateJMPCode(ocode.OpJAE, params.OCode, ctx, params.MachineCodeLen)
+}
+
 // generateJMPCode generates the machine code for JMP and JE instructions.
 func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext, currentMachineCodeLen int) ([]byte, error) {
 	params := x86genParams{
@@ -59,6 +69,14 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 		} else {
 			return nil, fmt.Errorf("JE instruction with offset larger than 8 bits is not supported")
 		}
+	case ocode.OpJNC, ocode.OpJAE:
+		// JNC/JAE rel8 (オペコード: 73, オフセット: 1 byte)
+		if offset >= -128 && offset <= 127 {
+			machineCode = []byte{0x73, byte(offset)}
+		} else {
+			return nil, fmt.Errorf("JNC/JAE instruction with offset larger than 8 bits is not supported")
+		}
+
 	default:
 		return nil, fmt.Errorf("invalid opcode kind for generateJMPCode: %v", opKind)
 	}
