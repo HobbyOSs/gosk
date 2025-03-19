@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/comail/colog"
+	"github.com/samber/lo"
 )
 
 func setUpColog(debug bool) {
@@ -25,17 +26,36 @@ func setUpColog(debug bool) {
 func defineHEX(dsl []string) []byte {
 	var result []byte
 	for _, line := range dsl {
-		tokens := strings.Fields(line)
+		// CSV Reader を作成
+		var inQuotes bool
+		// FieldsFunc でカスタム区切りルール
+		tokens := strings.FieldsFunc(line, func(r rune) bool {
+			if r == '"' {
+				inQuotes = !inQuotes // クォートの開始・終了
+				return false         // クォート自体は区切りにしない
+			}
+			// クォート外のスペースだけ区切りとする
+			return !inQuotes && (r == ' ' || r == '\t')
+		})
+
+		// クォートを除去
+		for i, field := range tokens {
+			tokens[i] = strings.Trim(field, `"`)
+		}
+
 		switch tokens[0] {
 		case "#", ";":
 			continue
 		case "DATA":
 			// DATA命令の処理
-			for _, hexStr := range tokens[1:] {
-				if val, err := strconv.ParseUint(hexStr, 0, 8); err == nil {
-					result = append(result, byte(val))
+			for _, str := range tokens[1:] {
+				if bin, err := strconv.ParseUint(str, 0, 8); err == nil {
+					result = append(result, byte(bin))
 				} else {
-					fmt.Println("Error parsing DATA value:", err)
+					bytes := lo.Map([]rune(str), func(r rune, _ int) byte {
+						return byte(r)
+					})
+					result = append(result, bytes...)
 				}
 			}
 		case "FILL":
