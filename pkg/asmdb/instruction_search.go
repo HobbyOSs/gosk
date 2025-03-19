@@ -143,15 +143,15 @@ func matchOperands(formOperands *[]Operand, queryOperands operand.Operands, cond
 }
 
 func matchOperandsWithAccumulator(formOperands *[]Operand, queryOperands operand.Operands) bool {
-	reAcc := regexp.MustCompile(`^(al|ax|eax)$`)
-	reOp := regexp.MustCompile(`^r(8|16|32)$`)
 
 	// アキュムレータレジスタを優先的にマッチングするロジック
 	for i, operand := range *formOperands {
 		queryType := queryOperands.OperandTypes()[i].String()
 		if operand.Type != queryType {
 			// アキュムレータレジスタの場合、特定の条件でマッチングを試みる
-			if reAcc.MatchString(operand.Type) && reOp.MatchString(queryType) {
+			if (operand.Type == "al" && queryType == "r8") ||
+				(operand.Type == "ax" && queryType == "r16") ||
+				(operand.Type == "eax" && queryType == "r32") {
 				continue
 			}
 			return false
