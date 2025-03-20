@@ -68,6 +68,16 @@ func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, 
 	switch bitMode {
 	case ast.MODE_16BIT:
 		baseKey := strings.Join(regs, "+") // 例: "bx+si"
+		if baseKey == "" && hasDisp {
+			// [0x0ff0] のような直接アドレッシングを処理する
+			mod = 0b00 // mod=00 は disp16 参照
+			rm = 0b110 // 16ビットモードにおける [disp16] は rm=110
+			lo := byte(dispValue & 0xFF)
+			hi := byte((dispValue >> 8) & 0xFF)
+			disp = []byte{lo, hi}
+			return mod, rm, disp, nil
+		}
+
 		rmVal, ok := rm16Table[baseKey]
 		if !ok {
 			// [bp]単体など含む特殊ケースの取りこぼしに注意

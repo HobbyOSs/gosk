@@ -70,7 +70,7 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 			log.Printf("error: Failed to generate ModR/M: %v", err)
 			return nil, fmt.Errorf("failed to generate ModR/M")
 		}
-		machineCode = append(machineCode, byte(modrm))
+		machineCode = append(machineCode, modrm...)
 	}
 
 	// 即値の追加(必要な場合)

@@ -12,32 +12,32 @@ import (
 )
 
 // GenerateModRM generates ModR/M byte based on encoding information and bit mode.
-func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) (uint32, error) {
+func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) ([]byte, error) {
 	if modRM == nil || modRM.ModRM == nil {
-		return 0, nil
+		return nil, nil
 	}
 
 	modRMDef := modRM.ModRM
 	if modRMDef == nil {
-		return 0, nil
+		return nil, nil
 	}
 
 	if strings.HasPrefix(modRMDef.Reg, "#") {
 		// ModR/M の reg フィールドがオペランドの場合
 		regIndex, err := parseIndex(modRMDef.Reg)
 		if err != nil {
-			return 0, fmt.Errorf("invalid ModRM.Reg format")
+			return nil, fmt.Errorf("invalid ModRM.Reg format")
 		}
 		rmIndex, err := parseIndex(modRMDef.Rm)
 		if err != nil {
-			return 0, fmt.Errorf("invalid ModRM.RM format")
+			return nil, fmt.Errorf("invalid ModRM.RM format")
 		}
 
 		if regIndex < 0 || regIndex >= len(operands) {
-			return 0, fmt.Errorf("ModRM.Reg index out of range")
+			return nil, fmt.Errorf("ModRM.Reg index out of range")
 		}
 		if rmIndex < 0 || rmIndex >= len(operands) {
-			return 0, fmt.Errorf("ModRM.RM index out of range")
+			return nil, fmt.Errorf("ModRM.RM index out of range")
 		}
 
 		regOperand := operands[regIndex]
@@ -47,22 +47,22 @@ func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode
 		// ModR/M の reg フィールドが固定値の場合
 		regValue, err := strconv.Atoi(modRMDef.Reg)
 		if err != nil {
-			return 0, fmt.Errorf("failed to parse ModRM.Reg: %v", err)
+			return nil, fmt.Errorf("failed to parse ModRM.Reg: %v", err)
 		}
 		rmIndex, err := parseIndex(modRMDef.Rm)
 		if err != nil {
-			return 0, fmt.Errorf("invalid ModRM.RM format")
+			return nil, fmt.Errorf("invalid ModRM.RM format")
 		}
 		if rmIndex < 0 || rmIndex >= len(operands) {
-			return 0, fmt.Errorf("ModRM.RM index out of range")
+			return nil, fmt.Errorf("ModRM.RM index out of range")
 		}
 		rmOperand := operands[rmIndex]
-		return uint32(ModRMByValue(modRMDef.Mode, regValue, rmOperand)), nil
+		return ModRMByValue(modRMDef.Mode, regValue, rmOperand), nil
 	}
 }
 
 // ModRMByOperand generates ModR/M byte based on mode, reg operand, rm operand and bit mode.
-func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode ast.BitMode) (uint32, error) {
+func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode ast.BitMode) ([]byte, error) {
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -85,42 +85,35 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	// regの解析（3ビット）
 	reg, err := GetRegisterNumber(regOperand)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get register number for %s: %w", regOperand, err)
+		return nil, fmt.Errorf("failed to get register number for %s: %w", regOperand, err)
 	}
 	regBits := byte(reg) << 3
 
 	// r/mの解析
 	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		modrmBytes, err := operand.CalcModRM(rmOperand, regBits, bitMode)
+		modrmBytes, err := operand.CalcModRM(rmOperand, byte(reg), bitMode)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 		// 生成されたModRMバイトとディスプレースメントを組み合わせ
 		// 上位バイトにmode、次にModRM、その後ろにディスプレースメントを配置
-		combined := byte(mode)<<6 | modrmBytes[0]
-		if len(modrmBytes) > 1 {
-			// ディスプレースメントを追加
-			return (uint32(combined) << 24) | // mode + modrm
-				(uint32(modrmBytes[1]) << 16) | // disp1
-				(uint32(modrmBytes[2]) << 8) | // disp2 (if exists)
-				uint32(modrmBytes[3]), nil
-		}
-		return uint32(combined), nil
+		// modrmのあとに [0x0ff0] のようなメモリアドレスが続く場合にここで動く
+		return modrmBytes, nil
 	}
 
 	rm, err := GetRegisterNumber(rmOperand)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get register number for %s: %w", rmOperand, err)
+		return nil, fmt.Errorf("failed to get register number for %s: %w", rmOperand, err)
 	}
 	rmBits := byte(rm)
 
 	result := mode | regBits | rmBits
 	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, result)
-	return uint32(result), nil
+	return []byte{result}, nil
 }
 
 // ModRMByValue generates ModR/M byte based on mode, fixed reg value, and rm operand.
-func ModRMByValue(modeStr string, regValue int, rmOperand string) byte {
+func ModRMByValue(modeStr string, regValue int, rmOperand string) []byte {
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -148,19 +141,19 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string) byte {
 	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
 		// TODO: メモリオペランドの解析
 		rmBits := byte(0)
-		return mode | regBits | rmBits
+		return []byte{mode | regBits | rmBits}
 	}
 
 	rm, err := GetRegisterNumber(rmOperand)
 	if err != nil {
 		log.Printf("error: Failed to get register number for rm: %v", err)
-		return 0
+		return []byte{0}
 	}
 	rmBits := byte(rm)
 
 	result := mode | regBits | rmBits
 	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, result)
-	return result
+	return []byte{result}
 }
 
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する
@@ -210,10 +203,10 @@ func ResolveOpcode(op asmdb.Opcode, regNum int) (byte, error) {
 }
 
 // getModRMFromOperands はオペランドからModR/Mバイトを生成する
-func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) (uint32, error) {
+func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) ([]byte, error) {
 	modrmByte, err := GenerateModRM(operands, modRM, bitMode)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	return modrmByte, nil
 }

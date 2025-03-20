@@ -1,16 +1,14 @@
 # Active Context
 
 ## 現在の作業の焦点
-- EQU命令展開の実装とMemory Bankの更新
+- `getModRMFromOperands`の返り値の型変更とMemory Bankの更新
 
 ## 直近の変更点
-- EQU命令展開処理を `internal/pass1/handlers.go` に実装
-  - `TraverseAST` 関数内の `case *ast.IdentFactor:` で `env.EquMap` を参照し、EQU定義の値でオペランドを展開
-  - `case *ast.MnemonicStmt:` 内のEQU展開処理を削除
-- `test/day03_harib00d_test.go` のテストがPASSすることを確認
+- `getModRMFromOperands`の返り値を`uint32`から`[]byte`に変更
+- `internal/codegen/x86gen_arithmetic.go`と`internal/codegen/x86gen_mov.go`で、`getModRMFromOperands`の返り値を`append`で処理するように修正
+- ビルドが通ることを確認
 
 ## 次のステップ
-- Memory Bankの更新 (完了)
 - `test/day03_harib00g_test.go`の修正
   - `MOV [0x0ff0], CH`命令のエンコーディング問題の調査・修正 (優先)
   - `JMP 0xc200`命令のジャンプ先アドレス解決の問題は修正済み

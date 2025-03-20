@@ -69,7 +69,7 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			log.Printf("error: Failed to generate ModR/M: %v", err)
 			return nil
 		}
-		machineCode = append(machineCode, byte(modrm))
+		machineCode = append(machineCode, modrm...)
 	}
 
 	// 即値の追加(必要な場合)
