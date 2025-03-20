@@ -7,6 +7,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast"
 
+	"github.com/samber/lo"
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -358,7 +359,7 @@ func getImmediateSizeFromValue(imm string) OperandType {
 
 // オペランドサイズを解決する
 func (b *OperandImpl) resolveOperandSizes(types []OperandType, operands []*ParsedOperand) []OperandType {
-	regSize := getOperandSizeFromTypes(types, operands)
+	regSize := getOperandSizeFromTypesLo(types, operands)
 
 	for i, t := range types {
 		switch t {
@@ -375,33 +376,32 @@ func (b *OperandImpl) resolveOperandSizes(types []OperandType, operands []*Parse
 	return types
 }
 
-// タイプリストからレジスタサイズを取得
-func getOperandSizeFromTypes(types []OperandType, operands []*ParsedOperand) OperandType {
-	for i, t := range types {
-		switch t {
-		case CodeR8, CodeM8:
-			return CodeR8
-		case CodeR16, CodeM16:
-			return CodeR16
-		case CodeR32, CodeM32:
-			return CodeR32
-		case CodeM:
-			if operands[i].Addr != nil {
-				size := calcMemOffsetSize(operands[i].Addr.Addr)
-				switch size {
-				case 1:
-					return CodeR8
-				case 2:
-					return CodeR16
-				default:
-					return CodeR32
+// タイプリストからレジスタサイズを取得 (samber/lo バージョン)
+func getOperandSizeFromTypesLo(types []OperandType, operands []*ParsedOperand) OperandType {
+	foundType, _ := lo.Find(types, func(t OperandType) bool {
+		return lo.Contains([]OperandType{CodeR8, CodeM8, CodeR16, CodeM16, CodeR32, CodeM32}, t)
+	})
+
+	return lo.Switch[OperandType, OperandType](foundType).
+		Case(CodeR8, CodeR8).
+		Case(CodeM8, CodeR8).
+		Case(CodeR16, CodeR16).
+		Case(CodeM16, CodeR16).
+		Case(CodeR32, CodeR32).
+		Case(CodeM32, CodeR32).
+		DefaultF(func() OperandType {
+			if lo.Contains(types, CodeM) {
+				i := lo.IndexOf(types, CodeM) // CodeM のインデックスを取得 (最初の出現箇所)
+				if operands[i].Addr != nil {
+					size := calcMemOffsetSize(operands[i].Addr.Addr)
+					return lo.Switch[int, OperandType](size).
+						Case(1, CodeR8).
+						Case(2, CodeR16).
+						Default(CodeR32)
 				}
 			}
-		default:
-			return CodeR32
-		}
-	}
-	return CodeR32
+			return CodeR32 // デフォルト値
+		})
 }
 
 // レジスタサイズからメモリタイプを取得

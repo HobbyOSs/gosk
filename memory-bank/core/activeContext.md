@@ -14,6 +14,7 @@
 - `test/day03_harib00g_test.go`の修正
   - `MOV [0x0ff0], CH`命令のエンコーディング問題の調査・修正 (優先)
   - `JMP 0xc200`命令のジャンプ先アドレス解決の問題は修正済み
+  - 提示された機械語と`defineHex`関数の期待値を比較し、不一致を修正
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

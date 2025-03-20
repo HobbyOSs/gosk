@@ -20,7 +20,6 @@ type Pass1EvalSuite struct {
 }
 
 func TestPass1EvalSuite(t *testing.T) {
-	//t.Skip()
 	suite.Run(t, new(Pass1EvalSuite))
 }
 
@@ -41,16 +40,16 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// * 16bit/32bitモード
 		// * アセンブラ文の一部
 		// * 期待される機械語サイズ
-		// {
-		// 	bitMode:     ast.MODE_16BIT,
-		// 	text:        "ADD [BX], AX",
-		// 	expectedLOC: 2,
-		// },
-		// {
-		// 	bitMode:     ast.MODE_16BIT,
-		// 	text:        "INT 0x10",
-		// 	expectedLOC: 2,
-		// },
+		{
+			bitMode:     ast.MODE_16BIT,
+			text:        "ADD [BX], AX",
+			expectedLOC: 2,
+		},
+		{
+			bitMode:     ast.MODE_16BIT,
+			text:        "INT 0x10",
+			expectedLOC: 2,
+		},
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
 		// 	text:        "CALL waitkbdout",
@@ -84,6 +83,13 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			bitMode:     ast.MODE_16BIT,
 			text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
 			expectedLOC: 9,
+		},
+		{
+			// MOV [0x0ff0],CH
+			// 0x88,0x2e,0xf0,0x0f
+			bitMode:     ast.MODE_16BIT,
+			text:        "MOV [0x0ff0],CH",
+			expectedLOC: 4,
 		},
 		// {
 		// 	bitMode:     ast.MODE_16BIT,
