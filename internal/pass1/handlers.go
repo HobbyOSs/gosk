@@ -172,6 +172,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}
 
 		evalOpcodeFn(env, vOperands)
+		log.Printf("debug: [pass1] LOC = %d\n", env.LOC)
 
 	case *ast.OpcodeStmt:
 		log.Println("trace: opcode stmt handler!!!")

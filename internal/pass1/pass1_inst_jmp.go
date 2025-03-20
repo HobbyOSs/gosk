@@ -39,17 +39,25 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 		// プレースホルダーとしてラベルを使用
 		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
 	case token.TTNumber, token.TTHex:
-		// 機械語サイズを計算 (JMP rel8 は 2 bytes, JMP rel32 は 5 bytes)
-		val := arg.ToInt32()
-		if -128 <= val && val <= 127 {
-			env.LOC += 2 // rel8
-		} else {
-			env.LOC += 5 // rel32
-		}
+		// 機械語サイズを計算
+		offset := arg.ToInt32() - int32(env.DollarPosition)
+		env.LOC += getOffsetSize(offset)
+		env.LOC += 1
 
 		// Ocodeを生成 (ジャンプ先アドレスは即値)
 		env.Client.Emit(fmt.Sprintf("%s %s", instName, arg.AsString()))
 	default:
 		log.Fatalf("invalid JMP operand: %v", arg)
 	}
+}
+
+// -128～127, -32768～32767 などの判定に使う
+func getOffsetSize(imm int32) int32 {
+	if imm >= -0x80 && imm <= 0x7f {
+		return 1
+	}
+	if imm >= -0x8000 && imm <= 0x7fff {
+		return 2
+	}
+	return 4
 }

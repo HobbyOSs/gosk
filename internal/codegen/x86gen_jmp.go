@@ -45,7 +45,6 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
 	// ORG命令で設定されたDollarPositionを考慮する
 	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-	offset := destAddr - currentAddr - 2
 
 	var machineCode []byte
 
@@ -53,16 +52,18 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	case ocode.OpJMP:
 		// JMP rel8 (オペコード: eb, オフセット: 1 byte)
 		// JMP rel16 (オペコード: e9, オフセット: 2 bytes)
-
-		if offset >= -128 && offset <= 127 {
-			// 8ビットオフセットで表現可能な場合
+		// JMP rel32 (オペコード: e9, オフセット: 4 bytes)
+		switch getOffsetSize(destAddr - currentAddr) {
+		case 1:
+			offset := destAddr - currentAddr - 2
 			machineCode = []byte{0xeb, byte(offset)}
-			fmt.Printf("JMP rel8: destAddr=0x%x, currentAddr=0x%x, offset=%d\n", destAddr, currentAddr, offset)
-		} else {
-			// 16ビットオフセットが必要な場合
-			offset16 := int16(offset) // 16bit 符号付き整数に変換
-			machineCode = []byte{0xe9, byte(offset16), byte(offset16 >> 8)}
+		case 2:
+			offset := destAddr - currentAddr - 3
+			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
+		default:
+			// NOP?
 		}
+
 	default:
 		return handleJcc(params, ctx)
 	}
@@ -161,4 +162,15 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 
 	return machineCode, nil
+}
+
+// -128～127, -32768～32767 などの判定に使う
+func getOffsetSize(imm int64) int {
+	if imm >= -0x80 && imm <= 0x7f {
+		return 1
+	}
+	if imm >= -0x8000 && imm <= 0x7fff {
+		return 2
+	}
+	return 4
 }

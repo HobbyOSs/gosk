@@ -7,9 +7,9 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast"
 
-	"github.com/samber/lo"
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/samber/lo"
 )
 
 var operandTypesCache = make(map[string][]OperandType)
