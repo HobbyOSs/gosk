@@ -40,8 +40,12 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
 	case token.TTNumber, token.TTHex:
 		// 機械語サイズを計算 (JMP rel8 は 2 bytes, JMP rel32 は 5 bytes)
-		// Pass1では正確なサイズを決定できないため、仮に2 bytesとしておく
-		env.LOC += 2
+		val := arg.ToInt32()
+		if -128 <= val && val <= 127 {
+			env.LOC += 2 // rel8
+		} else {
+			env.LOC += 5 // rel32
+		}
 
 		// Ocodeを生成 (ジャンプ先アドレスは即値)
 		env.Client.Emit(fmt.Sprintf("%s %s", instName, arg.AsString()))

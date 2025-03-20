@@ -60,7 +60,8 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 			fmt.Printf("JMP rel8: destAddr=0x%x, currentAddr=0x%x, offset=%d\n", destAddr, currentAddr, offset)
 		} else {
 			// 16ビットオフセットが必要な場合
-			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
+			offset16 := int16(offset) // 16bit 符号付き整数に変換
+			machineCode = []byte{0xe9, byte(offset16), byte(offset16 >> 8)}
 		}
 	default:
 		return handleJcc(params, ctx)
