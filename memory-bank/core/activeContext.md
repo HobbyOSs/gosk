@@ -10,9 +10,18 @@
 - `test/day03_harib00d_test.go` のテストがPASSすることを確認
 
 ## 次のステップ
-- Memory Bankの更新 (完了後)
-- その他の疑似命令の展開方法の検討 (必要に応じて)
+- Memory Bankの更新 (完了)
+- `test/day03_harib00g_test.go`の修正
+  - `MOV [0x0ff0], CH`命令のエンコーディング問題の調査・修正 (優先)
+  - `JMP 0xc200`命令のジャンプ先アドレス解決の問題は修正済み
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
 [implementation_details.md](../details/implementation_details.md)
+
+## 調査記録
+- `test/day03_harib00g_test.go`のテスト実行時に以下の問題が発生
+  - `MOV [0x0ff0], CH`命令のエンコーディングに失敗
+  - `JMP 0xc200`命令のジャンプ先アドレスの解決に失敗  -> 修正済み: `internal/codegen/x86gen_jmp.go`で、`strconv.ParseInt`の基数を10から0に変更
+  - 生成されるバイナリデータの長さが期待値より2バイト短い (512バイト、期待値は514バイト)
+  - バイナリデータの内容が期待値と異なる

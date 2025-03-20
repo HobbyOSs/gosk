@@ -37,7 +37,7 @@ func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext
 	if len(params.OCode.Operands) < 1 {
 		return nil, fmt.Errorf("jump instruction requires destination address")
 	}
-	destAddr, err := strconv.ParseInt(params.OCode.Operands[0], 10, 64)
+	destAddr, err := strconv.ParseInt(params.OCode.Operands[0], 0, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid jump destination address: %v", err)
 	}
@@ -74,7 +74,7 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	if len(params.OCode.Operands) < 1 {
 		return nil, fmt.Errorf("jump instruction requires destination address")
 	}
-	destAddr, err := strconv.ParseInt(params.OCode.Operands[0], 10, 64)
+	destAddr, err := strconv.ParseInt(params.OCode.Operands[0], 0, 64)
 	if err != nil {
 		return nil, fmt.Errorf("invalid jump destination address: %v", err)
 	}
