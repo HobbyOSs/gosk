@@ -99,12 +99,12 @@ fin:
 		"DATA 0xeb 0xfd",
 	})
 
-	if len(expected) != len(actual) {
-		s.T().Fatalf("expected length %d, actual length %d", len(expected), len(actual))
-	}
-
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))
 		s.T().Fail()
+	}
+
+	if len(expected) != len(actual) {
+		s.T().Fatalf("expected length %d, actual length %d", len(expected), len(actual))
 	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
-	// JMP命令のオペランドは1つ (ジャンプ先ラベル)
+
 	if len(tokens) != 1 {
 		log.Fatalf("%s instruction requires exactly one operand, got %d", instName, len(tokens))
 		return
@@ -16,7 +16,8 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 
 	arg := tokens[0]
 
-	if arg.TokenType == token.TTIdentifier {
+	switch arg.TokenType {
+	case token.TTIdentifier:
 		label := arg.AsString()
 
 		// ラベルをSymTableに登録 (仮アドレスを割り当てる)
@@ -37,7 +38,14 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 		// Ocodeを生成 (ジャンプ先アドレスはプレースホルダー)
 		// プレースホルダーとしてラベルを使用
 		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
-		return
+	case token.TTNumber, token.TTHex:
+		// 機械語サイズを計算 (JMP rel8 は 2 bytes, JMP rel32 は 5 bytes)
+		// Pass1では正確なサイズを決定できないため、仮に2 bytesとしておく
+		env.LOC += 2
+
+		// Ocodeを生成 (ジャンプ先アドレスは即値)
+		env.Client.Emit(fmt.Sprintf("%s %s", instName, arg.AsString()))
+	default:
+		log.Fatalf("invalid JMP operand: %v", arg)
 	}
-	log.Fatalf("invalid JMP operand: %v", arg)
 }

@@ -15,6 +15,10 @@
    - テストは最小単位で実行し、必要な部分のみをテスト
    - 全体テストは変更完了後に実施
 
+- **テスト実行方法 (補足)**
+  - テストスイートのメソッドを実行する場合: `go test ./test/ -run <TestSuiteName>/<TestMethodName>`
+  - 例: `Day03Suite` の `TestHarib00g` メソッドを実行する場合: `go test ./test/ -run Day03Suite/TestHarib00g`
+
 2. **テストケース作成ガイドライン**
    - 各機能の基本動作を確認するテスト
    - エッジケースの網羅
