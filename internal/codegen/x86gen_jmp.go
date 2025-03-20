@@ -7,70 +7,6 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
-// handleJMP handles the JMP instruction in code generation.
-func handleJMP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
-	return generateJMPCode(ocode.OpJMP, params.OCode, ctx, params.MachineCodeLen)
-}
-
-// handleJE handles the JE instruction in code generation.
-func handleJE(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
-	return generateJMPCode(ocode.OpJE, params.OCode, ctx, params.MachineCodeLen)
-}
-
-// handleJNC handles the JNC instruction in code generation.
-func handleJNC(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
-	return generateJMPCode(ocode.OpJNC, params.OCode, ctx, params.MachineCodeLen)
-}
-
-// handleJAE handles the JAE instruction in code generation.
-func handleJAE(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
-	return generateJMPCode(ocode.OpJAE, params.OCode, ctx, params.MachineCodeLen)
-}
-
-// generateJMPCode generates the machine code for JMP and JE instructions.
-func generateJMPCode(opKind ocode.OcodeKind, oc ocode.Ocode, ctx *CodeGenContext, currentMachineCodeLen int) ([]byte, error) {
-	params := x86genParams{
-		OCode:          oc,
-		MachineCodeLen: currentMachineCodeLen,
-	}
-	// ジャンプ先アドレスを取得
-	if len(params.OCode.Operands) < 1 {
-		return nil, fmt.Errorf("jump instruction requires destination address")
-	}
-	destAddr, err := strconv.ParseInt(params.OCode.Operands[0], 0, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid jump destination address: %v", err)
-	}
-
-	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
-	// ORG命令で設定されたDollarPositionを考慮する
-	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-
-	var machineCode []byte
-
-	switch opKind {
-	case ocode.OpJMP:
-		// JMP rel8 (オペコード: eb, オフセット: 1 byte)
-		// JMP rel16 (オペコード: e9, オフセット: 2 bytes)
-		// JMP rel32 (オペコード: e9, オフセット: 4 bytes)
-		switch getOffsetSize(destAddr - currentAddr) {
-		case 1:
-			offset := destAddr - currentAddr - 2
-			machineCode = []byte{0xeb, byte(offset)}
-		case 2:
-			offset := destAddr - currentAddr - 3
-			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
-		default:
-			// NOP?
-		}
-
-	default:
-		return handleJcc(params, ctx)
-	}
-
-	return machineCode, nil
-}
-
 func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	// ジャンプ先アドレスを取得
 	if len(params.OCode.Operands) < 1 {
@@ -84,7 +20,27 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	var machineCode []byte
 	var opcode byte
 
+	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
+	// ORG命令で設定されたDollarPositionを考慮する
+	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
+
 	switch params.OCode.Kind {
+	case ocode.OpJMP:
+		// JMP rel8 (オペコード: eb, オフセット: 1 byte)
+		// JMP rel16 (オペコード: e9, オフセット: 2 bytes)
+		// JMP rel32 (オペコード: e9, オフセット: 4 bytes)
+		switch getOffsetSize(destAddr - currentAddr) {
+		case 1:
+			offset := destAddr - currentAddr - 2
+			machineCode = []byte{0xeb, byte(offset)}
+		case 2:
+			offset := destAddr - currentAddr - 3
+			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
+		default:
+			// TODO: rel32
+			return nil, fmt.Errorf("not implemented: JMP rel32")
+		}
+		return machineCode, nil // JMPの場合はここでreturn
 	case ocode.OpJA:
 		opcode = 0x77
 	case ocode.OpJAE:
@@ -149,19 +105,16 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("invalid opcode kind for generateJMPCode: %v", params.OCode.Kind)
 	}
 
-	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
-	// ORG命令で設定されたDollarPositionを考慮する
-	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-
 	switch getOffsetSize(destAddr - currentAddr) {
 	case 1:
 		offset := destAddr - currentAddr - 2
 		machineCode = []byte{opcode, byte(offset)}
 	case 2:
-		offset := destAddr - currentAddr - 3
-		machineCode = []byte{opcode, byte(offset), byte(offset >> 8)}
+		offset := destAddr - currentAddr - 2
+		machineCode = []byte{0x0f, opcode + 0x10, byte(offset), byte(offset >> 8)}
 	default:
-		// NOP?
+		// TODO: rel32
+		return nil, fmt.Errorf("not implemented: Jcc rel32")
 	}
 
 	return machineCode, nil
