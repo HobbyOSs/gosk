@@ -135,7 +135,11 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		if !ok {
 			log.Fatal("error: EQU failed to pop token value")
 		}
-		env.EquMap[key.AsString()] = value
+		// [TODO] 2025/03/21: EQUマクロの値 (*token.ParseToken) が *ast.ImmExp 以外の場合がある問題に対応するため、
+		// value の型チェックと *token.ParseToken への変換処理を追加したが、コンパイラエラーが発生したため一旦 revert。
+		// 今後、value の型を詳細に調査し、適切な型変換処理を実装する必要がある。
+		env.EquMap[key.AsString()] = value // Reverted to original structure
+		log.Printf("debug: EquMap after DeclareStmt: %+v\n", env.EquMap)
 
 	case *ast.LabelStmt:
 		// ラベルが存在するので、シンボルテーブルのラベルのレコードに現在のLOCを設定
@@ -209,7 +213,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		TraverseAST(n.Factor, env)
 		if n.ConfigType == ast.Bits {
 			ok, token := env.Ctx.Pop()
-			if !ok {
+			if ok != true { // Modified line: added != true to check boolean value explicitly
 				log.Fatal("Failed to pop token")
 			}
 			bitMode, ok := ast.NewBitMode(token.ToInt())
@@ -221,12 +225,13 @@ func TraverseAST(node ast.Node, env *Pass1) {
 
 	case *ast.MemoryAddrExp:
 		log.Println("trace: memory addr exp handler!!!")
+		// Recursively traverse left and right sides of memory address expression
 		TraverseAST(n.Left, env)
 		if n.Right != nil {
 			TraverseAST(n.Right, env)
 		}
 
-		pop(env)
+		pop(env) // Pop the result of TraverseAST(n.Right) or TraverseAST(n.Left)
 		v := token.NewParseToken(token.TTIdentifier, n)
 		push(env, v)
 
@@ -288,6 +293,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
 		)
 		push(env, v)
+		return
 
 	case *ast.MultExp:
 		log.Println("trace: mult exp handler!!!")
@@ -328,11 +334,13 @@ func TraverseAST(node ast.Node, env *Pass1) {
 			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
 		)
 		push(env, v)
+		return
 
 	case *ast.ImmExp:
 		log.Println("trace: imm exp handler!!!")
 		TraverseAST(n.Factor, env)
 		popAndPush(env)
+		return
 
 	case *ast.NumberFactor,
 		*ast.StringFactor,
@@ -343,11 +351,16 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		log.Printf("trace: %T factor: %+v\n", n, n)
 		var t *token.ParseToken
 		if ident, ok := n.(*ast.IdentFactor); ok {
+			log.Printf("debug: IdentFactor: %s, EquMap: %+v\n", ident.Value, env.EquMap)
 			if value, ok := env.EquMap[ident.Value]; ok {
-				switch f := value.Data.(*ast.ImmExp).Factor.(type) {
-				case *ast.NumberFactor, *ast.HexFactor, *ast.IdentFactor:
+				log.Printf("debug: IdentFactor: %s found in EquMap: %+v\n", ident.Value, value)
+				// Modify the token to hold the resolved value
+				immExp := value.Data.(*ast.ImmExp)
+				switch f := immExp.Factor.(type) {
+				case *ast.NumberFactor:
 					t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
 				default:
+					log.Printf("[ info ] unexpected type: %T", value.Data) // Log the actual type
 					log.Fatalf("unexpected type: %T", value)
 					return
 				}
@@ -378,5 +391,15 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}
 	default:
 		log.Printf("Unknown AST node: %T\n", node)
+		return
 	}
 }
+
+/*
+理由:
+- go test ./test/day03_harib00h_test.go -run TestHarib00h で失敗するため
+- EQU VMODE	EQU		0x0ff2 などで定義したVMODEなどの値が展開されずVMODEのままmov [VMODE],8のように処理されている
+
+原因:
+- pass1のhandlers.goのTraverseASTでEQU展開が不完全
+*/
