@@ -13,6 +13,7 @@ type Pass1 struct {
 	BitMode          ast.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32 // Pass1のシンボルテーブル
+	NextImmJumpID    int              // 即値用のカウンタ
 	DollarPosition   uint32           // ORG命令で設定されるエントリーポイントのアドレス
 	GlobalSymbolList []string
 	ExternSymbolList []string

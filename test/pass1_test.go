@@ -242,6 +242,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				BitMode:          ast.MODE_16BIT,
 				EquMap:           make(map[string]*token.ParseToken, 0),
 				SymTable:         make(map[string]int32, 0),
+				NextImmJumpID:    0,
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
 				Ctx:              stack.NewStack[*token.ParseToken](100),

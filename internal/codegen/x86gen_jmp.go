@@ -81,11 +81,6 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("invalid jump destination address: %v", err)
 	}
 
-	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
-	// ORG命令で設定されたDollarPositionを考慮する
-	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
-	offset := destAddr - currentAddr - 2
-
 	var machineCode []byte
 	var opcode byte
 
@@ -154,11 +149,19 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("invalid opcode kind for generateJMPCode: %v", params.OCode.Kind)
 	}
 
-	if offset >= -128 && offset <= 127 {
+	// 現在のアドレス (ジャンプ命令の次のアドレス) を計算
+	// ORG命令で設定されたDollarPositionを考慮する
+	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
+
+	switch getOffsetSize(destAddr - currentAddr) {
+	case 1:
+		offset := destAddr - currentAddr - 2
 		machineCode = []byte{opcode, byte(offset)}
-	} else {
-		// TODO: rel32
-		return nil, fmt.Errorf("offset must be within -128 to 127 for rel8 jmp")
+	case 2:
+		offset := destAddr - currentAddr - 3
+		machineCode = []byte{opcode, byte(offset), byte(offset >> 8)}
+	default:
+		// NOP?
 	}
 
 	return machineCode, nil

@@ -44,8 +44,13 @@ func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
 		env.LOC += getOffsetSize(offset)
 		env.LOC += 1
 
-		// Ocodeを生成 (ジャンプ先アドレスは即値)
-		env.Client.Emit(fmt.Sprintf("%s %s", instName, arg.AsString()))
+		// ダミーのラベルを作る
+		fakeLabel := fmt.Sprintf("imm_jmp_%d", env.NextImmJumpID)
+		env.NextImmJumpID++
+		env.SymTable[fakeLabel] = arg.ToInt32()
+
+		// Ocodeを生成 (ジャンプ先アドレスはダミー)
+		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, fakeLabel))
 	default:
 		log.Fatalf("invalid JMP operand: %v", arg)
 	}

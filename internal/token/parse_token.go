@@ -64,7 +64,7 @@ func (p *ParseToken) ToInt32() int32 {
 	case *ast.NumberFactor:
 		return int32(v.Value)
 	case *ast.HexFactor:
-		return int32(p.HexAsUInt())
+		return int32(p.HexAsInt())
 
 	default:
 		panic(fmt.Sprintf("token %s should be number", p.Data.TokenLiteral()))
@@ -81,7 +81,6 @@ func (p *ParseToken) ToUInt() uint {
 		return uint(v.Value)
 	case *ast.HexFactor:
 		return p.HexAsUInt()
-
 	default:
 		panic(fmt.Sprintf("token %s should be number", p.Data.TokenLiteral()))
 	}
@@ -93,4 +92,12 @@ func (p *ParseToken) HexAsUInt() uint {
 		log.Fatal(failure.Wrap(err))
 	}
 	return uint(i)
+}
+
+func (p *ParseToken) HexAsInt() int {
+	i, err := strconv.ParseInt(p.Data.TokenLiteral(), 0, 64)
+	if err != nil {
+		log.Fatal(failure.Wrap(err))
+	}
+	return int(i)
 }
