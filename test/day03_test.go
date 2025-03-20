@@ -14,7 +14,9 @@ func TestDay03Suite(t *testing.T) {
 	suite.Run(t, new(Day03Suite))
 }
 
-func (s *Day03Suite) SetupSuite() {}
+func (s *Day03Suite) SetupSuite() {
+	setUpColog(true)
+}
 
 func (s *Day03Suite) TearDownSuite() {}
 

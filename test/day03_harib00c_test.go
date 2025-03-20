@@ -3,14 +3,13 @@ package test
 import (
 	"log"
 	"os"
-	"testing"
 
 	"github.com/HobbyOSs/gosk/internal/frontend"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestHarib00c(t *testing.T) {
+func (s *Day03Suite) TestHarib00c() {
 
 	code := `; haribote-ipl
 ; TAB=4
@@ -109,19 +108,19 @@ msg:
 
 	temp, err := os.CreateTemp("", "harib00c.img")
 	if err != nil {
-		t.Fatal(err)
+		s.T().Fatal(err)
 	}
 	defer os.Remove(temp.Name()) // clean up
 
 	pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
 	if err != nil {
-		t.Fatal(err)
+		s.T().Fatal(err)
 	}
 	_, _ = frontend.Exec(pt, temp.Name())
 
 	actual, err := ReadFileAsBytes(temp.Name())
 	if err != nil {
-		t.Fatal(err)
+		s.T().Fatal(err)
 	}
 
 	expected := defineHEX([]string{
@@ -194,11 +193,11 @@ msg:
 	})
 
 	if len(expected) != len(actual) {
-		t.Fatalf("expected length %d, actual length %d", len(expected), len(actual))
+		s.T().Fatalf("expected length %d, actual length %d", len(expected), len(actual))
 	}
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))
-		t.Fail()
+		s.T().Fail()
 	}
 }
