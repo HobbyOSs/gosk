@@ -11,7 +11,7 @@ import (
 )
 
 func TestHarib00c(t *testing.T) {
-	t.Skip("未実装の命令があるためスキップ")
+
 	code := `; haribote-ipl
 ; TAB=4
 

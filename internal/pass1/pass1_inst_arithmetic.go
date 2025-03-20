@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"regexp"
+
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/samber/lo"
@@ -15,10 +17,20 @@ func processArithmeticInst(env *Pass1, tokens []*token.ParseToken, instName stri
 		return token.AsString()
 	})
 
+	isAccumulator := false
+	if len(args) > 0 {
+		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
+		isAccumulator = matched
+	}
+
 	operands := operand.
 		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode).
-		WithForceImm8(true)
+		WithBitMode(env.BitMode)
+
+	// アキュムレータでない場合は `force_imm8` を有効にする
+	if !isAccumulator {
+		operands = operands.WithForceImm8(true)
+	}
 
 	size, _ := env.AsmDB.FindMinOutputSize(instName, operands)
 	env.LOC += int32(size)
