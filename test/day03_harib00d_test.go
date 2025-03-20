@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Day03Suite) TestHarib00d() {
-	s.T().Skip("未実装の命令があるためスキップ")
+
 	code := `; haribote-ipl
 ; TAB=4
 

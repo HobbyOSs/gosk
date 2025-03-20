@@ -5,6 +5,7 @@
 - Ocode・PEGパーサ等の基礎部分
 - 主要命令実装 (システム命令, 算術命令, CMP, JE, MOV, ADD, JMP)
 - CodegenClient 関連機能
+- EQU命令の展開
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応

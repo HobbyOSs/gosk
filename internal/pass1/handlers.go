@@ -153,7 +153,12 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		vOperands := make([]*token.ParseToken, 0)
 		for _, operand := range n.Operands {
 			TraverseAST(operand, env)
-			vOperands = append(vOperands, pop(env))
+			ok, vOperand := env.Ctx.Pop()
+			if !ok {
+				log.Fatal("error: failed to pop operand")
+				return
+			}
+			vOperands = append(vOperands, vOperand)
 		}
 
 		if vOpcode.Data == nil {
@@ -335,28 +340,41 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		*ast.CharFactor:
 
 		log.Printf("trace: %T factor: %+v\n", n, n)
-		t := func() *token.ParseToken {
+		var t *token.ParseToken
+		if ident, ok := n.(*ast.IdentFactor); ok {
+			if value, ok := env.EquMap[ident.Value]; ok {
+				switch f := value.Data.(*ast.ImmExp).Factor.(type) {
+				case *ast.NumberFactor, *ast.HexFactor, *ast.IdentFactor:
+					t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+				default:
+					log.Fatalf("unexpected type: %T", value)
+					return
+				}
+			}
+		}
+		if t == nil {
 			switch f := n.(type) {
 			case *ast.NumberFactor:
-				return token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, f))
+				t = token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, f))
 			case *ast.StringFactor:
-				return token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
 			case *ast.HexFactor:
-				return token.NewParseToken(token.TTHex, ast.NewImmExp(ast.BaseExp{}, f))
-			case *ast.IdentFactor:
-				return token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+				t = token.NewParseToken(token.TTHex, ast.NewImmExp(ast.BaseExp{}, f))
+			case *ast.IdentFactor: // ここには到達しないはず
+				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
 			case *ast.CharFactor:
-				return token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
 			default:
-				return nil
+				return
 			}
-		}() // 即時実行
-
-		err := env.Ctx.Push(t)
-		if err != nil {
-			log.Fatal(failure.Wrap(err))
 		}
 
+		if t != nil {
+			err := env.Ctx.Push(t)
+			if err != nil {
+				log.Fatal(failure.Wrap(err))
+			}
+		}
 	default:
 		log.Printf("Unknown AST node: %T\n", node)
 	}

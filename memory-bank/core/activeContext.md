@@ -1,20 +1,17 @@
 # Active Context
 
 ## 現在の作業の焦点
-- JMP系命令の実装とmemory bankの更新
+- EQU命令展開の実装とMemory Bankの更新
 
 ## 直近の変更点
-- JMP系命令 (Jcc命令) の実装 (rel8のみ, rel32は未実装)
-  - `pkg/ocode/ocode.go` にJMP系命令のOcodeを追加
-  - `internal/codegen/x86gen.go` にJMP系命令のケースを追加
-  - `internal/codegen/x86gen_jmp.go` に `handleJcc` 関数を実装
-- `internal/pass1/pass1_inst_arithmetic.go` の `processArithmeticInst` 関数を修正
-  - アキュムレータレジスタの判定を正規表現で行うように変更
-  - `regexp` パッケージをインポート
+- EQU命令展開処理を `internal/pass1/handlers.go` に実装
+  - `TraverseAST` 関数内の `case *ast.IdentFactor:` で `env.EquMap` を参照し、EQU定義の値でオペランドを展開
+  - `case *ast.MnemonicStmt:` 内のEQU展開処理を削除
+- `test/day03_harib00d_test.go` のテストがPASSすることを確認
 
 ## 次のステップ
-- JMP系命令のテストコード作成
-- rel32オフセットの対応 (必要な場合)
+- Memory Bankの更新 (完了後)
+- その他の疑似命令の展開方法の検討 (必要に応じて)
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
