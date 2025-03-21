@@ -56,3 +56,20 @@ func (c CharFactor) factorNode() {}
 func (c CharFactor) TokenLiteral() string {
 	return fmt.Sprintf("%s", c.Value)
 }
+
+func FactorToString(f Factor) string {
+	switch x := f.(type) {
+	case *NumberFactor:
+		return x.TokenLiteral()
+	case *HexFactor:
+		return x.TokenLiteral()
+	case *IdentFactor:
+		return x.TokenLiteral()
+	case *StringFactor:
+		return x.TokenLiteral()
+	case *CharFactor:
+		return x.TokenLiteral()
+	default:
+		return ""
+	}
+}

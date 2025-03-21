@@ -1,5 +1,7 @@
 package ast
 
+import "strings"
+
 // TODO: go generateで作成できないか
 type DataType string
 
@@ -54,12 +56,20 @@ type SegmentExp struct {
 
 func (s SegmentExp) expressionNode() {}
 func (s SegmentExp) TokenLiteral() string {
-	str := s.Left.TokenLiteral()
+	leftStr := ExpToString(s.Left)
+	rightStr := ""
 	if s.Right != nil {
-		str += " : "
-		str += s.Right.TokenLiteral()
+		rightStr = ExpToString(s.Right)
 	}
-	return str
+	dataTypeStr := ""
+	if s.DataType != None {
+		dataTypeStr = string(s.DataType) + " "
+	}
+	if rightStr == "" {
+		return dataTypeStr + leftStr
+	} else {
+		return dataTypeStr + leftStr + ":" + rightStr
+	}
 }
 
 //go:generate newc
@@ -98,7 +108,19 @@ type AddExp struct {
 
 func (a AddExp) expressionNode() {}
 func (a AddExp) TokenLiteral() string {
-	return a.HeadExp.TokenLiteral()
+	// 頭の項
+	head := ExpToString(a.HeadExp)
+	// 後続の Operators & TailExps をまとめて文字列に
+	var buf strings.Builder
+	buf.WriteString(head)
+	for i, op := range a.Operators {
+		buf.WriteByte(' ')
+		buf.WriteString(op)
+		buf.WriteByte(' ')
+		tailStr := ExpToString(a.TailExps[i])
+		buf.WriteString(tailStr)
+	}
+	return buf.String()
 }
 
 //go:generate newc
@@ -111,7 +133,18 @@ type MultExp struct {
 
 func (m MultExp) expressionNode() {}
 func (m MultExp) TokenLiteral() string {
-	return m.HeadExp.TokenLiteral()
+	head := ExpToString(m.HeadExp)
+	// 例： "4 * ESI" など
+	var buf strings.Builder
+	buf.WriteString(head)
+	for i, op := range m.Operators {
+		buf.WriteByte(' ')
+		buf.WriteString(op)
+		buf.WriteByte(' ')
+		tailStr := ExpToString(m.TailExps[i])
+		buf.WriteString(tailStr)
+	}
+	return buf.String()
 }
 
 //go:generate newc

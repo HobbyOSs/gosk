@@ -15,5 +15,11 @@
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - `internal/codegen` パッケージの不要パラメータ削除
 
+## 実装済み機能 (詳細)
+- ASTノードの文字列化ヘルパー関数 `ExpToString` を `internal/ast` パッケージに実装
+- `FactorToString` 関数を `internal/ast/ast_factor_impl.go` に実装
+- `SegmentExp`, `AddExp`, `MultExp` の `TokenLiteral()` メソッドを `internal/ast/ast_exp_impl.go` で修正
+- `ExpToString` 関数のテストコードを `internal/ast/ast_string_test.go` に実装し、テストをパス
+
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
