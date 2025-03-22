@@ -339,6 +339,21 @@ func TraverseAST(node ast.Node, env *Pass1) {
 	case *ast.ImmExp:
 		log.Println("trace: imm exp handler!!!")
 		TraverseAST(n.Factor, env)
+
+		if ident, ok := n.Factor.(*ast.IdentFactor); ok {
+			if value, ok := env.EquMap[ident.Value]; ok {
+				log.Printf("debug: IdentFactor: %s found in EquMap: %+v\n", ident.Value, value)
+				// EQU対応; 置き換え対象の Factor を新しい Factor に変更する
+				if immExp, ok := value.Data.(*ast.ImmExp); ok {
+					n.Factor = immExp.Factor
+
+					pop(env)
+					v := token.NewParseToken(token.TTIdentifier, n)
+					push(env, v)
+					return
+				}
+			}
+		}
 		popAndPush(env)
 		return
 
@@ -350,44 +365,24 @@ func TraverseAST(node ast.Node, env *Pass1) {
 
 		log.Printf("trace: %T factor: %+v\n", n, n)
 		var t *token.ParseToken
-		if ident, ok := n.(*ast.IdentFactor); ok {
-			log.Printf("debug: IdentFactor: %s, EquMap: %+v\n", ident.Value, env.EquMap)
-			if value, ok := env.EquMap[ident.Value]; ok {
-				log.Printf("debug: IdentFactor: %s found in EquMap: %+v\n", ident.Value, value)
-				// Modify the token to hold the resolved value
-				immExp := value.Data.(*ast.ImmExp)
-				switch f := immExp.Factor.(type) {
-				case *ast.NumberFactor:
-					t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
-				default:
-					log.Printf("[ info ] unexpected type: %T", value.Data) // Log the actual type
-					log.Fatalf("unexpected type: %T", value)
-					return
-				}
-			}
-		}
-		if t == nil {
-			switch f := n.(type) {
-			case *ast.NumberFactor:
-				t = token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, f))
-			case *ast.StringFactor:
-				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
-			case *ast.HexFactor:
-				t = token.NewParseToken(token.TTHex, ast.NewImmExp(ast.BaseExp{}, f))
-			case *ast.IdentFactor: // ここには到達しないはず
-				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
-			case *ast.CharFactor:
-				t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
-			default:
-				return
-			}
+		switch f := n.(type) {
+		case *ast.NumberFactor:
+			t = token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, f))
+		case *ast.StringFactor:
+			t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+		case *ast.HexFactor:
+			t = token.NewParseToken(token.TTHex, ast.NewImmExp(ast.BaseExp{}, f))
+		case *ast.IdentFactor:
+			t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+		case *ast.CharFactor:
+			t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))
+		default:
+			return
 		}
 
-		if t != nil {
-			err := env.Ctx.Push(t)
-			if err != nil {
-				log.Fatal(failure.Wrap(err))
-			}
+		err := env.Ctx.Push(t)
+		if err != nil {
+			log.Fatal(failure.Wrap(err))
 		}
 	default:
 		log.Printf("Unknown AST node: %T\n", node)
