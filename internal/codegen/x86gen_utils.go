@@ -57,7 +57,7 @@ func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode
 			return nil, fmt.Errorf("ModRM.RM index out of range")
 		}
 		rmOperand := operands[rmIndex]
-		return ModRMByValue(modRMDef.Mode, regValue, rmOperand), nil
+		return ModRMByValue(modRMDef.Mode, regValue, rmOperand, bitMode), nil
 	}
 }
 
@@ -90,7 +90,7 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	regBits := byte(reg) << 3
 
 	// r/mの解析
-	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
+	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
 		modrmBytes, err := operand.CalcModRM(rmOperand, byte(reg), bitMode)
 		if err != nil {
 			return nil, err
@@ -107,13 +107,13 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	}
 	rmBits := byte(rm)
 
-	result := mode | regBits | rmBits
-	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, result)
-	return []byte{result}, nil
+	out := mode | regBits | rmBits
+	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, out)
+	return []byte{out}, nil
 }
 
 // ModRMByValue generates ModR/M byte based on mode, fixed reg value, and rm operand.
-func ModRMByValue(modeStr string, regValue int, rmOperand string) []byte {
+func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.BitMode) []byte {
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -138,10 +138,22 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string) []byte {
 
 	// r/mの解析（3ビット）
 	// メモリの場合は0として扱う
-	if strings.HasPrefix(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		// TODO: メモリオペランドの解析
-		rmBits := byte(0)
-		return []byte{mode | regBits | rmBits}
+	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
+		_, rm, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+		if err != nil {
+			log.Printf("error: Failed to parse memory operand for rm: %v", err)
+			return []byte{0}
+		}
+		rmBits := byte(rm)
+
+		modrmByte := mode | regBits | rmBits
+		log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, modrmByte)
+
+		out := []byte{modrmByte}
+		if disp != nil {
+			out = append(out, disp...)
+		}
+		return out
 	}
 
 	rm, err := GetRegisterNumber(rmOperand)
@@ -151,9 +163,9 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string) []byte {
 	}
 	rmBits := byte(rm)
 
-	result := mode | regBits | rmBits
-	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, result)
-	return []byte{result}
+	out := mode | regBits | rmBits
+	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, out)
+	return []byte{out}
 }
 
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する

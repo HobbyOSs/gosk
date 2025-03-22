@@ -2,6 +2,7 @@ package operand
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -43,7 +44,8 @@ var rm32Table = map[string]byte{
 // ParseMemoryOperand はメモリオペランド文字列(例: "[bx+si+0x10]" など)を
 // パースして (mod, rm, disp) を求める。bitMode には ast.MODE_16BIT, ast.MODE_32BIT を使う。
 func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, disp []byte, err error) {
-	inner := strings.TrimSpace(memStr[1 : len(memStr)-1]) // "bx+si+0x10"のように[]を除去
+	_memStr := removePrefix(memStr)                         // BYTE,WORD,DWORDを除去
+	inner := strings.TrimSpace(_memStr[1 : len(_memStr)-1]) // "bx+si+0x10"のように[]を除去
 
 	parts := strings.Split(inner, "+")
 	var regs []string
@@ -211,4 +213,20 @@ func toLe32(v int64) []byte {
 	b[2] = byte(v >> 16)
 	b[3] = byte(v >> 24)
 	return b
+}
+
+// removePrefix は BYTE, WORD, DWORD のようなプレフィックスを取り除く関数
+func removePrefix(input string) string {
+	// 正規表現パターンを定義
+	pattern := regexp.MustCompile(`^(BYTE|WORD|DWORD)\s+(.*)$`)
+
+	// パターンにマッチするか確認
+	matches := pattern.FindStringSubmatch(input)
+	if matches != nil && len(matches) > 2 {
+		// プレフィックスを取り除いた部分を返す
+		return matches[2]
+	}
+
+	// マッチしない場合は元の文字列を返す
+	return input
 }

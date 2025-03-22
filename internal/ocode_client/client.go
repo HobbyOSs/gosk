@@ -58,7 +58,7 @@ func parseLineToOcode(line string) (ocode.Ocode, error) {
 	// オペランドを,区切りで取得
 	var operands []string
 	if len(parts) > 1 {
-		operands_str := strings.Join(parts[1:], "")
+		operands_str := strings.Join(parts[1:], " ")
 		operands = strings.Split(operands_str, ",")
 	}
 

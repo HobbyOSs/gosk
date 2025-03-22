@@ -99,6 +99,27 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0x88, 0x2e, 0xf0, 0x0f},
 		},
 		{
+			name: "MOV BYTE [ 0x0ff2 ], 8",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"BYTE [ 0x0ff2 ]", "8"}},
+			},
+			expected: []byte{0xc6, 0x06, 0xf2, 0x0f, 0x08},
+		},
+		{
+			name: "MOV WORD [ 0x0ff4 ], 320",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"WORD [ 0x0ff4 ]", "320"}},
+			},
+			expected: []byte{0xc7, 0x06, 0xf4, 0x0f, 0x40, 0x01},
+		},
+		{
+			name: "MOV DWORD [ 0x0ff8 ],0x000a0000",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"DWORD [ 0x0ff8 ]", "0x000a0000"}},
+			},
+			expected: []byte{0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00},
+		},
+		{
 			name: "ADD SI,1",
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpADD, Operands: []string{"SI", "1"}},
