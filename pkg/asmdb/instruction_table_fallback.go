@@ -177,6 +177,88 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 		},
 	)
 
+	// https://www.felixcloutier.com/x86/mov
+	// A0 	MOV AL, moffs8 	（セグメント：オフセット）のバイトをALに転送します
+	// A1 	MOV AX, moffs16 	（セグメント：オフセット）のワードをAXに転送します
+	// A1 	MOV EAX, moffs32 	（セグメント：オフセット）のダブルワードをEAXに転送します
+	// A2 	MOV moffs8, AL 	ALを（セグメント：オフセット）に転送します
+	// A3 	MOV moffs16, AX 	AXを（セグメント：オフセット）に転送します
+	// A3 	MOV moffs32, EAX 	EAXを（セグメント：オフセット）に転送します
+	newMOVInstructionForms = append(newMOVInstructionForms,
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "al", Input: Bool(false), Output: Bool(true)},
+				{Type: "m8", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A0"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "ax", Input: Bool(false), Output: Bool(true)},
+				{Type: "m16", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A1"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "eax", Input: Bool(false), Output: Bool(true)},
+				{Type: "m32", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A1"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "m8", Input: Bool(false), Output: Bool(true)},
+				{Type: "al", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A2"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "m16", Input: Bool(false), Output: Bool(true)},
+				{Type: "ax", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A3"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "m32", Input: Bool(false), Output: Bool(true)},
+				{Type: "eax", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "A3"},
+					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+				},
+			},
+		},
+	)
+
 	// 更新された Forms で "MOV" 命令を更新
 	instructionData.Instructions["MOV"] = Instruction{
 		Summary: instructionData.Instructions["MOV"].Summary,

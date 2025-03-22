@@ -99,6 +99,13 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0x88, 0x2e, 0xf0, 0x0f},
 		},
 		{
+			name: "MOV [ 0x0ff1 ],AL",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"[0x0ff1]", "AL"}},
+			},
+			expected: []byte{0xa2, 0xf1, 0x0f},
+		},
+		{
 			name: "MOV BYTE [ 0x0ff2 ], 8",
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpMOV, Operands: []string{"BYTE [ 0x0ff2 ]", "8"}},
