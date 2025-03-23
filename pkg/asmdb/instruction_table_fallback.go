@@ -192,8 +192,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A0"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A0"},
+					Immediate: &Immediate{Size: 1, Value: "#1"},
 				},
 			},
 		},
@@ -204,8 +204,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A1"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A1"},
+					Immediate: &Immediate{Size: 2, Value: "#1"},
 				},
 			},
 		},
@@ -216,8 +216,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A1"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A1"},
+					Immediate: &Immediate{Size: 4, Value: "#1"},
 				},
 			},
 		},
@@ -228,8 +228,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A2"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A2"},
+					Immediate: &Immediate{Size: 1, Value: "#0"},
 				},
 			},
 		},
@@ -240,8 +240,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A3"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A3"},
+					Immediate: &Immediate{Size: 2, Value: "#0"},
 				},
 			},
 		},
@@ -252,8 +252,8 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 			},
 			Encodings: []Encoding{
 				{
-					Opcode: Opcode{Byte: "A3"},
-					ModRM:  &Modrm{Mode: "00", Reg: "#0", Rm: "#1"},
+					Opcode:    Opcode{Byte: "A3"},
+					Immediate: &Immediate{Size: 4, Value: "#0"},
 				},
 			},
 		},

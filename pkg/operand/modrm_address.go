@@ -44,6 +44,9 @@ var rm32Table = map[string]byte{
 // ParseMemoryOperand はメモリオペランド文字列(例: "[bx+si+0x10]" など)を
 // パースして (mod, rm, disp) を求める。bitMode には ast.MODE_16BIT, ast.MODE_32BIT を使う。
 func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, disp []byte, err error) {
+	if !strings.Contains(memStr, "[") && !strings.HasSuffix(memStr, "]") {
+		return 0, 0, nil, fmt.Errorf("invalid mem operand format: %s", memStr)
+	}
 	_memStr := removePrefix(memStr)                         // BYTE,WORD,DWORDを除去
 	inner := strings.TrimSpace(_memStr[1 : len(_memStr)-1]) // "bx+si+0x10"のように[]を除去
 

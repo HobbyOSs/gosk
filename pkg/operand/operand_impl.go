@@ -59,10 +59,10 @@ func (b *OperandImpl) InternalStrings() []string {
 			results = append(results, parsed.SegMem)
 		case parsed.Reg != "":
 			results = append(results, parsed.Reg)
-		case parsed.Addr != nil:
-			results = append(results, parsed.Addr.Addr)
-		case parsed.Mem != nil:
-			results = append(results, parsed.Mem.Mem)
+		case parsed.DirectMem != nil:
+			results = append(results, parsed.DirectMem.Addr)
+		case parsed.IndirectMem != nil:
+			results = append(results, parsed.IndirectMem.Mem)
 		case parsed.Imm != "":
 			results = append(results, parsed.Imm)
 		case parsed.Seg != "":
@@ -117,8 +117,8 @@ func (b *OperandImpl) DetectImmediateSize() int {
 	}
 
 	for _, parsed := range inst.Operands {
-		if parsed.Addr != nil && parsed.Addr.Prefix != nil {
-			t := getMemorySizeFromPrefix(*parsed.Addr.Prefix + " " + parsed.Addr.Addr)
+		if parsed.DirectMem != nil && parsed.DirectMem.Prefix != nil {
+			t := getMemorySizeFromPrefix(*parsed.DirectMem.Prefix + " " + parsed.DirectMem.Addr)
 			switch t {
 			case CodeM8:
 				return 1
@@ -129,8 +129,8 @@ func (b *OperandImpl) DetectImmediateSize() int {
 			}
 			break
 		}
-		if parsed.Mem != nil && parsed.Mem.Prefix != nil {
-			t := getMemorySizeFromPrefix(*parsed.Mem.Prefix + " " + parsed.Mem.Mem)
+		if parsed.IndirectMem != nil && parsed.IndirectMem.Prefix != nil {
+			t := getMemorySizeFromPrefix(*parsed.IndirectMem.Prefix + " " + parsed.IndirectMem.Mem)
 			switch t {
 			case CodeM8:
 				return 1
@@ -165,23 +165,23 @@ type Instruction struct {
 }
 
 type ParsedOperand struct {
-	SegMem string `parser:"@SegMem"`
-	Reg    string `parser:"| @Reg"`
-	Addr   *Addr  `parser:"| @@"`
-	Mem    *Mem   `parser:"| @@"`
-	Imm    string `parser:"| @Imm"`
-	Seg    string `parser:"| @Seg"`
-	Rel    string `parser:"| @Rel"`
+	SegMem string      `parser:"@SegMem"`
+	Reg    string      `parser:"| @Reg"`
+	DirectMem   *DirectMem  `parser:"| @@"`
+	IndirectMem    *IndirectMem `parser:"| @@"`
+	Imm    string      `parser:"| @Imm"`
+	Seg    string      `parser:"| @Seg"`
+	Rel    string      `parser:"| @Rel"`
 }
 
-type Mem struct {
+type IndirectMem struct {
 	Prefix *string `parser:"@MemSizePrefix?"`
-	Mem    string  `parser:"@Mem"`
+	Mem    string  `parser:"@IndirectMem"`
 }
 
-type Addr struct {
+type DirectMem struct {
 	Prefix *string `parser:"@MemSizePrefix?"`
-	Addr   string  `parser:"@Addr"`
+	Addr   string  `parser:"@DirectMem"`
 }
 
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
@@ -192,8 +192,8 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "MemSizePrefix", Pattern: `(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)`},
 	{Name: "Seg", Pattern: `(CS|DS|ES|FS|GS|SS)`},
 	{Name: "Reg", Pattern: `([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|SP|BP|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
-	{Name: "Addr", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
-	{Name: "Mem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
+	{Name: "DirectMem", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
+	{Name: "IndirectMem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(0x[a-fA-F0-9]+|-?\d+)`},
 	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*\w+`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
@@ -225,10 +225,10 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			types = append(types, CodeM16)
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
-		case parsed.Addr != nil && parsed.Addr.Prefix != nil:
-			types = append(types, getMemorySizeFromPrefix(*parsed.Addr.Prefix+" "+parsed.Addr.Addr))
-		case parsed.Mem != nil && parsed.Mem.Prefix != nil:
-			types = append(types, getMemorySizeFromPrefix(*parsed.Mem.Prefix+" "+parsed.Mem.Mem))
+		case parsed.DirectMem != nil && parsed.DirectMem.Prefix != nil:
+			types = append(types, getMemorySizeFromPrefix(*parsed.DirectMem.Prefix + " " + parsed.DirectMem.Addr))
+		case parsed.IndirectMem != nil && parsed.IndirectMem.Prefix != nil:
+			types = append(types, getMemorySizeFromPrefix(*parsed.IndirectMem.Prefix + " " + parsed.IndirectMem.Mem))
 		case parsed.Imm != "":
 			if b.ForceImm8 {
 				types = append(types, CodeIMM8)
@@ -237,9 +237,9 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 			}
 		case parsed.Seg != "":
 			types = append(types, CodeSREG)
-		case parsed.Addr != nil:
+		case parsed.DirectMem != nil:
 			types = append(types, CodeM)
-		case parsed.Mem != nil:
+		case parsed.IndirectMem != nil:
 			types = append(types, CodeM)
 		case parsed.Rel != "":
 			// ラベル指定
@@ -392,8 +392,8 @@ func getOperandSizeFromTypesLo(types []OperandType, operands []*ParsedOperand) O
 		DefaultF(func() OperandType {
 			if lo.Contains(types, CodeM) {
 				i := lo.IndexOf(types, CodeM) // CodeM のインデックスを取得 (最初の出現箇所)
-				if operands[i].Addr != nil {
-					size := calcMemOffsetSize(operands[i].Addr.Addr)
+				if operands[i].DirectMem != nil {
+					size := calcMemOffsetSize(operands[i].DirectMem.Addr)
 					return lo.Switch[int, OperandType](size).
 						Case(1, CodeR8).
 						Case(2, CodeR16).
@@ -511,13 +511,13 @@ func (b *OperandImpl) CalcOffsetByteSize() int {
 
 	var total int
 	for _, op := range inst.Operands {
-		// 例: op.Mem == "[EBX+16]" とか op.Addr == "[0x0ff0]" とかが入る
-		if op.Mem != nil {
-			size := calcMemOffsetSize(op.Mem.Mem)
+		// 例: op.IndirectMem == "[EBX+16]" とか op.DirectMem == "[0x0ff0]" とかが入る
+		if op.IndirectMem != nil {
+			size := calcMemOffsetSize(op.IndirectMem.Mem)
 			total += size
 		}
-		if op.Addr != nil {
-			size := calcMemOffsetSize(op.Addr.Addr)
+		if op.DirectMem != nil {
+			size := calcMemOffsetSize(op.DirectMem.Addr)
 			total += size
 		}
 	}
