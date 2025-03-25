@@ -42,15 +42,3 @@ type Operands interface {
 	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
 	ParsedOperands() []*ParsedOperand
 }
-
-func equalOperandTypes(a, b []OperandType) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}

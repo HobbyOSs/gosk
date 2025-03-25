@@ -195,6 +195,8 @@ func TraverseAST(node ast.Node, env *Pass1) {
 
 		evalOpcodeFn(env, nil)
 		env.Client.Emit(opcode) // opcodeFnの中で実行できないので
+		log.Printf("debug: [pass1] LOC = %d\n", env.LOC)
+
 	case *ast.ExportSymStmt:
 		log.Println("trace: export sym stmt handler!!!")
 		//for _, factor := range n.Factors {
