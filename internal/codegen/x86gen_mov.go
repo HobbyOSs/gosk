@@ -70,6 +70,14 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			return nil
 		}
 		machineCode = append(machineCode, modrm...)
+	} else {
+		// ModRMがない場合は
+		// メモリオペランドが有る場合のoffset取得して設定する必要が有る場合が有る
+		for _, opStr := range operands {
+			if _, _, disp, err := operand.ParseMemoryOperand(opStr, ctx.BitMode); err == nil {
+				machineCode = append(machineCode, disp...)
+			}
+		}
 	}
 
 	// 即値の追加(必要な場合)
@@ -81,10 +89,9 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 		}
 
 		opStr := operands[immIndex]
+		// アドレスが即値扱いされるパターンと通常の即値を処理する
 		if addr, ok := ctx.SymTable[opStr]; ok {
 			machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF))
-		} else if _, _, disp, err := operand.ParseMemoryOperand(opStr, ctx.BitMode); err == nil {
-			machineCode = append(machineCode, disp...)
 		} else if imm, err := getImmediateValue(opStr, encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
 		}

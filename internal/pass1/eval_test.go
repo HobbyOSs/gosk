@@ -126,6 +126,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV AX, SS",
 			expectedLOC: 3,
 		},
+		{
+			bitMode:     ast.MODE_16BIT,
+			text:        "MOV [ 0x0ff1 ], AL",
+			expectedLOC: 3,
+		},
 	}
 
 	for _, tt := range tests {
