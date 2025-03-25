@@ -9,6 +9,7 @@
 - `getModRMFromOperands`の返り値の型変更 (`uint32` -> `[]byte`)
 - InstructionForm の Encoding を ModRM の要否で振り分け
 - OUT命令の実装
+- CALL命令の実装
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応
@@ -24,6 +25,7 @@
 - `ExpToString` 関数のテストコードを `internal/ast/ast_string_test.go` に実装し、テストをパス
 - `pkg/asmdb/instruction_search.go` の `filterForms` 関数を修正し、ModRM 要否によるフィルタリングロジックを実装
 - `pkg/asmdb/instruction_search_test.go` にテストケースを追加
+- CALL命令の実装
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

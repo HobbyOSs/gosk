@@ -154,6 +154,13 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0xe6, 0xa1},
 		},
+		{
+			name: "CALL 0x1234",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpCALL, Operands: []string{"0x1234"}},
+			},
+			expected: []byte{0xe8, 0x2f, 0x12, 0x00, 0x00}, // CALL 0x1234 = e8 2f 12 00 00 (little endian)
+		},
 	}
 
 	for _, tt := range tests {
@@ -162,7 +169,7 @@ func TestGenerateX86(t *testing.T) {
 				MachineCode:    make([]byte, 0),
 				VS:             nil,
 				BitMode:        ast.MODE_16BIT,
-				DollarPosition: 0,
+				DollarPosition: 0, // Assume DollarPosition is 0 for simplicity in this test
 				SymTable:       map[string]int32{},
 			}
 			result := GenerateX86(tt.ocodes, ctx)

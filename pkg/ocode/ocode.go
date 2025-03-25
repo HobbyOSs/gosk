@@ -101,6 +101,7 @@ const (
 	OpIMUL                      // IMUL
 	OpINT                       // INT
 	OpCMP                       // CMP
+    OpCALL                      // CALL
 	OpJMP                       // JMP
 	OpJA                        // JA
 	OpJAE                       // JAE

@@ -72,6 +72,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleNoParamOpcode(oc), nil
 	case ocode.OpOUT:
 		return handleOUT(params, ctx)
+	case ocode.OpCALL:
+		return handleCALL(params, ctx)
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}

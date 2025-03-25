@@ -89,6 +89,11 @@ func init() {
 
 	// OUT
 	opcodeEvalFns["OUT"] = processOUT
+
+	// CALL
+	opcodeEvalFns["CALL"] = func(env *Pass1, tokens []*token.ParseToken) {
+		processCALL(env, tokens, "CALL")
+	}
 }
 
 func popAndPush(env *Pass1) {
