@@ -102,6 +102,7 @@ const (
 	OpINT                       // INT
 	OpCMP                       // CMP
     OpCALL                      // CALL
+	OpLGDT                      // LGDT
 	OpJMP                       // JMP
 	OpJA                        // JA
 	OpJAE                       // JAE

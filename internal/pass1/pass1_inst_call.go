@@ -7,7 +7,8 @@ import (
 	"github.com/HobbyOSs/gosk/internal/token"
 )
 
-func processCALL(env *Pass1, tokens []*token.ParseToken, instName string) {
+func processCALL(env *Pass1, tokens []*token.ParseToken) {
+	const instName = "CALL"
 	if len(tokens) != 1 {
 		log.Fatalf("%s instruction requires exactly one operand, got %d", instName, len(tokens))
 		return

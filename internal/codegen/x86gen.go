@@ -74,6 +74,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleOUT(params, ctx)
 	case ocode.OpCALL:
 		return handleCALL(params, ctx)
+	case ocode.OpLGDT:
+		return handleLGDT(params.Operands, ctx)
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}

@@ -146,7 +146,7 @@ func addOutFallbackEncodings() {
 	}
 }
 
-func addMovFallbackEncodings(instructionData *InstructionData) {
+func addMovFallbackEncodings() {
 	// "MOV" 命令の既存の Forms を取得
 	currentMOVInstructionForms := instructionData.Instructions["MOV"].Forms
 	// 新しい Forms を追加
@@ -258,4 +258,32 @@ func addMovFallbackEncodings(instructionData *InstructionData) {
 		Summary: instructionData.Instructions["MOV"].Summary,
 		Forms:   newMOVInstructionForms,
 	}
+}
+
+// addLgdtFallbackEncodings adds fallback encodings for LGDT instruction.
+// This function is called from instruction_table.go:init().
+func addLgdtFallbackEncodings() {
+	instructionData.Instructions["LGDT"] = Instruction{
+		Summary: "Load Global Descriptor Table Register",
+		Forms: []InstructionForm{
+			{
+				Operands: &[]Operand{
+					{Type: "m", Input: Bool(true), Output: Bool(false)},
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "0F01"},
+						ModRM:  &Modrm{Mode: "#0", Reg: "02", Rm: "#0"}, // Reg: 02 (/2)
+					},
+				},
+			},
+		},
+	}
+}
+
+func init() {
+	addImulFallbackEncodings()
+	addOutFallbackEncodings()
+	addMovFallbackEncodings()
+    addLgdtFallbackEncodings()
 }
