@@ -2,16 +2,28 @@ package operand
 
 import "github.com/HobbyOSs/gosk/internal/ast"
 
-func equalOperandTypes(a, b []OperandType) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+type Instruction struct {
+	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
+}
+
+type ParsedOperand struct {
+	SegMem      string       `parser:"@SegMem"`
+	Reg         string       `parser:"| @Reg"`
+	DirectMem   *DirectMem   `parser:"| @@"`
+	IndirectMem *IndirectMem `parser:"| @@"`
+	Imm         string       `parser:"| @Imm"`
+	Seg         string       `parser:"| @Seg"`
+	Rel         string       `parser:"| @Rel"`
+}
+
+type IndirectMem struct {
+	Prefix *string `parser:"@MemSizePrefix?"`
+	Mem    string  `parser:"@IndirectMem"`
+}
+
+type DirectMem struct {
+	Prefix *string `parser:"@MemSizePrefix?"`
+	Addr   string  `parser:"@DirectMem"`
 }
 
 type Operands interface {
@@ -28,4 +40,17 @@ type Operands interface {
 	GetBitMode() ast.BitMode
 	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
 	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
+	ParsedOperands() []*ParsedOperand
+}
+
+func equalOperandTypes(a, b []OperandType) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

@@ -33,17 +33,48 @@ func TestFindEncoding(t *testing.T) {
 	assert.Contains(t, err.Error(), "no matching encoding found")
 }
 
+func TestFindEncoding_ModRM(t *testing.T) {
+	db := NewInstructionDB()
+
+	// ModRM が必要なケース
+	encoding, err := db.FindEncoding("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
+	assert.NoError(t, err)
+	assert.NotNil(t, encoding)
+	assert.NotNil(t, encoding.ModRM, "ModRM should be required for MOV AL, [SI]")
+
+	encoding, err = db.FindEncoding("MOV", operand.NewOperandFromString("[SI], AL")) // MOV [SI], AL
+	assert.NoError(t, err)
+	assert.NotNil(t, encoding)
+	assert.NotNil(t, encoding.ModRM, "ModRM should be required for MOV [SI], AL")
+
+	// ModRM が不要なケース
+	encoding, err = db.FindEncoding("MOV", operand.NewOperandFromString("AL, [0x1234]")) // MOV AL, [0x1234]
+	assert.NoError(t, err)
+	assert.NotNil(t, encoding)
+	assert.Nil(t, encoding.ModRM, "ModRM should not be required for MOV AL, [0x1234]")
+
+	encoding, err = db.FindEncoding("MOV", operand.NewOperandFromString("AX, 0x1234")) // MOV AX, 0x1234
+	assert.NoError(t, err)
+	assert.NotNil(t, encoding)
+	assert.Nil(t, encoding.ModRM, "ModRM should not be required for MOV AX, 0x1234")
+}
+
 func TestFindMinOutputSize(t *testing.T) {
 	db := NewInstructionDB()
 
 	t.Run("MOV AX, 0", func(t *testing.T) {
-		size, err := db.FindMinOutputSize("MOV", operand.NewOperandFromString("AX, 0"))
+		size, err := db.FindMinOutputSize(
+			"MOV", operand.NewOperandFromString("AX, 0").WithForceRelAsImm(true),
+		)
 		assert.NoError(t, err)
 		assert.Equal(t, 3, size) // prefix(0x66) + opcode(0xB8) + imm16
 	})
 
 	t.Run("MOV r16, imm16 should use B8+rw form", func(t *testing.T) {
-		operands := operand.NewOperandFromString("AX, 0x1234")
+		operands := operand.
+			NewOperandFromString("AX, 0x1234").
+			WithForceImm8(true)
+
 		t.Logf("Operand types: %v", operands.OperandTypes())
 
 		encoding, err := db.FindEncoding("MOV", operands)

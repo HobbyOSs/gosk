@@ -3,6 +3,7 @@ package asmdb
 import (
 	"errors"
 	"log"
+	"regexp"
 
 	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/samber/lo"
@@ -41,11 +42,7 @@ func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) 
 
 	// Flatten the encodings from all filtered forms
 	allEncodings := lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
-		encodings := make([]*Encoding, len(form.Encodings))
-		for i := range form.Encodings {
-			encodings[i] = &form.Encodings[i]
-		}
-		return encodings
+		return filterEncodings(form, operands)
 	})
 
 	// Find the smallest encoding size
@@ -59,20 +56,59 @@ func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) 
 	return minEncoding, nil
 }
 
+// ModRM 要否によるフィルタリング(accがあるときのみのルール)
+func filterEncodings(form InstructionForm, operands operand.Operands) []*Encoding {
+
+	encodings := make([]*Encoding, 0)
+
+	if !hasAccumulator(operands) {
+		for _, e := range form.Encodings {
+			encodings = append(encodings, &e)
+		}
+		return encodings
+	}
+
+	hasDirectMem := false
+	hasIndirectMem := false
+
+	for _, op := range operands.ParsedOperands() {
+		// 直接アドレッシングではModRMが不要
+		if op.DirectMem != nil {
+			hasDirectMem = true
+		}
+		// 間接アドレッシングではModRMが必要
+		if op.IndirectMem != nil {
+			hasIndirectMem = true
+		}
+	}
+
+	for _, e := range form.Encodings {
+		// 直接アドレッシングではModRMが不要なのでエンコーディングとしては除外
+		if hasDirectMem && e.ModRM != nil {
+			continue
+		}
+		// 間接アドレッシングではModRMが必要なのでエンコーディングとしては除外
+		if hasIndirectMem && e.ModRM == nil {
+			continue
+		}
+		encodings = append(encodings, &e)
+	}
+	return encodings
+}
+
 func filterForms(forms []InstructionForm, operands operand.Operands) []InstructionForm {
 	var filteredForms []InstructionForm
 
 	// アキュムレータレジスタを優先的に検索
-	filteredForms = lo.Filter(forms, func(form InstructionForm, _ int) bool {
+	filteredForms = append(filteredForms, lo.Filter(forms, func(form InstructionForm, _ int) bool {
 		return matchOperandsWithAccumulator(*form.Operands, operands)
-	})
+	})...)
 	log.Printf("debug: filteredForms length after matchOperandsWithAccumulator: %d", len(filteredForms))
 
 	// 通常の検索
 	_forms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
 		return matchOperandsStrict(*form.Operands, operands)
 	})
-	//log.Printf("debug: filteredForms length after matchOperandsStrict: %d", len(filteredForms))
 	filteredForms = append(filteredForms, _forms...)
 	if len(filteredForms) > 0 {
 		return filteredForms
@@ -117,10 +153,7 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 
 func matchOperandsWithAccumulator(formOperands []Operand, queryOperands operand.Operands) bool {
 	// formOperandsにアキュムレータレジスタが含まれているかチェック
-	hasAccumulator := lo.SomeBy(formOperands, func(op Operand) bool {
-		return op.Type == "al" || op.Type == "ax" || op.Type == "eax"
-	})
-	if !hasAccumulator {
+	if !hasAccumulator(queryOperands) {
 		return false
 	}
 
@@ -138,6 +171,14 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands operand.
 		}
 	}
 	return true
+}
+
+func hasAccumulator(queryOperands operand.Operands) bool {
+	hasAccumulator := lo.SomeBy(queryOperands.InternalStrings(), func(op string) bool {
+		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, op)
+		return matched
+	})
+	return hasAccumulator
 }
 
 func matchOperandsStrict(formOperands []Operand, queryOperands operand.Operands) bool {

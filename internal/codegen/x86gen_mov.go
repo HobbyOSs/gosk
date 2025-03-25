@@ -80,10 +80,12 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			return nil
 		}
 
-		immOp := operands[immIndex]
-		if addr, ok := ctx.SymTable[immOp]; ok {
+		opStr := operands[immIndex]
+		if addr, ok := ctx.SymTable[opStr]; ok {
 			machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF))
-		} else if imm, err := getImmediateValue(immOp, encoding.Immediate.Size); err == nil {
+		} else if _, _, disp, err := operand.ParseMemoryOperand(opStr, ctx.BitMode); err == nil {
+			machineCode = append(machineCode, disp...)
+		} else if imm, err := getImmediateValue(opStr, encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
 		}
 	}

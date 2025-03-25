@@ -14,6 +14,8 @@ import (
 
 var operandTypesCache = make(map[string][]OperandType)
 
+var parsedOperandsCache = make(map[string][]*ParsedOperand)
+
 type OperandImpl struct {
 	Internal      string
 	BitMode       ast.BitMode
@@ -35,20 +37,48 @@ func (b *OperandImpl) WithForceImm8(force bool) Operands {
 	return b
 }
 
-func (b *OperandImpl) InternalString() string {
-	return b.Internal
-}
-
-var internalStringsCache = make(map[string][]string)
-
-func (b *OperandImpl) InternalStrings() []string {
-	if cached, exists := internalStringsCache[b.Internal]; exists {
+func (b *OperandImpl) ParsedOperands() []*ParsedOperand {
+	if cached, exists := parsedOperandsCache[b.Internal]; exists {
 		return cached
 	}
 
 	parser := getParser()
 	inst, err := parser.ParseString("", b.Internal)
 	if err != nil || len(inst.Operands) == 0 {
+		return []*ParsedOperand{} // エラー時は空のスライスを返し、キャッシュしない
+	}
+
+	parsedOperandsCache[b.Internal] = inst.Operands
+	return inst.Operands
+}
+
+func (b *OperandImpl) InternalString() string {
+	return b.Internal
+}
+
+var internalStringsCache = make(map[string][]string)
+var internalParsedCache = make(map[string]*Instruction)
+
+func (b *OperandImpl) getInternalParsed() *Instruction {
+	if cached, exists := internalParsedCache[b.Internal]; exists {
+		return cached
+	}
+	parser := getParser()
+	inst, err := parser.ParseString("", b.Internal)
+	if err != nil {
+		return nil
+	}
+	internalParsedCache[b.Internal] = inst
+	return inst
+}
+
+func (b *OperandImpl) InternalStrings() []string {
+	if cached, exists := internalStringsCache[b.Internal]; exists {
+		return cached
+	}
+
+	inst := b.getInternalParsed()
+	if inst == nil {
 		return []string{}
 	}
 
@@ -160,30 +190,6 @@ func (b *OperandImpl) DetectImmediateSize() int {
 	return 0
 }
 
-type Instruction struct {
-	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
-}
-
-type ParsedOperand struct {
-	SegMem string      `parser:"@SegMem"`
-	Reg    string      `parser:"| @Reg"`
-	DirectMem   *DirectMem  `parser:"| @@"`
-	IndirectMem    *IndirectMem `parser:"| @@"`
-	Imm    string      `parser:"| @Imm"`
-	Seg    string      `parser:"| @Seg"`
-	Rel    string      `parser:"| @Rel"`
-}
-
-type IndirectMem struct {
-	Prefix *string `parser:"@MemSizePrefix?"`
-	Mem    string  `parser:"@IndirectMem"`
-}
-
-type DirectMem struct {
-	Prefix *string `parser:"@MemSizePrefix?"`
-	Addr   string  `parser:"@DirectMem"`
-}
-
 var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Comma", Pattern: `,`},
 	{Name: "SegMem", Pattern: `(CS|DS|ES|FS|GS|SS):([ABCD]X|SI|DI)`}, // このパターンは特別にアドレスとして扱う
@@ -212,9 +218,8 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		return cached
 	}
 
-	parser := getParser()
-	inst, err := parser.ParseString("", b.Internal)
-	if err != nil || len(inst.Operands) == 0 {
+	inst := b.getInternalParsed()
+	if inst == nil {
 		return []OperandType{OperandType("unknown")}
 	}
 
@@ -226,9 +231,9 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		case parsed.Reg != "":
 			types = append(types, getRegisterType(parsed.Reg))
 		case parsed.DirectMem != nil && parsed.DirectMem.Prefix != nil:
-			types = append(types, getMemorySizeFromPrefix(*parsed.DirectMem.Prefix + " " + parsed.DirectMem.Addr))
+			types = append(types, getMemorySizeFromPrefix(*parsed.DirectMem.Prefix+" "+parsed.DirectMem.Addr))
 		case parsed.IndirectMem != nil && parsed.IndirectMem.Prefix != nil:
-			types = append(types, getMemorySizeFromPrefix(*parsed.IndirectMem.Prefix + " " + parsed.IndirectMem.Mem))
+			types = append(types, getMemorySizeFromPrefix(*parsed.IndirectMem.Prefix+" "+parsed.IndirectMem.Mem))
 		case parsed.Imm != "":
 			if b.ForceImm8 {
 				types = append(types, CodeIMM8)
