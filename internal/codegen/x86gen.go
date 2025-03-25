@@ -70,6 +70,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleCMP(params, ctx)
 	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN:
 		return handleNoParamOpcode(oc), nil
+	case ocode.OpOUT:
+		return handleOUT(params, ctx)
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}

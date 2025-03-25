@@ -1,12 +1,14 @@
 # Active Context
 
 ## 現在の作業の焦点
-- InstructionForm の Encoding を ModRM の要否で振り分ける
+- OUT命令の実装
 
 ## 直近の変更点
-- `pkg/asmdb/instruction_search.go` の `filterForms` 関数を修正し、ModRM 要否によるフィルタリングロジックを実装
-- `pkg/asmdb/instruction_search_test.go` にテストケースを追加
-- 上記修正が完了し、テストが通ることを確認
+- `internal/pass1/pass1_inst_out.go` にOUT命令の処理を追加
+- `internal/pass1/handlers.go` に `processOUT` 関数を登録
+- `internal/codegen/x86gen_out.go` を作成し、OUT命令のエンコード処理を実装
+- `internal/codegen/x86gen_test.go` にOUT命令のテストケースを追加
+- `internal/codegen/x86gen.go` に `processOcode` 関数に `ocode.OpOUT` のケースを追加
 
 ## 次のステップ
 - (なし)

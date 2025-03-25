@@ -8,6 +8,7 @@
 - EQU命令の展開
 - `getModRMFromOperands`の返り値の型変更 (`uint32` -> `[]byte`)
 - InstructionForm の Encoding を ModRM の要否で振り分け
+- OUT命令の実装
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応

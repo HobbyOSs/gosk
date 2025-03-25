@@ -86,6 +86,9 @@ func init() {
 	opcodeEvalFns["IMUL"] = processIMUL
 	opcodeEvalFns["DIV"] = processDIV
 	opcodeEvalFns["IDIV"] = processIDIV
+
+	// OUT
+	opcodeEvalFns["OUT"] = processOUT
 }
 
 func popAndPush(env *Pass1) {

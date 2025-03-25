@@ -110,52 +110,64 @@
 
 ### 実装時の注意点
 
-1. **asmdbの活用**
-   - 命令の正確な機械語表現の取得
-   - プレフィックスバイトの適切な処理
-   - オペランドサイズの正確な計算
-   - 複数の機械語パターンがある場合は最小サイズのものを選択
-   - FindEncodingを使用して最小サイズのエンコーディングを一意に決定
-   - セグメントレジスタ（sreg）をr16として扱う
-   - JSONにない命令パターンのフォールバック処理
-   - オペランドタイプの互換性チェック（例：sreg→r16の変換）
-2. **テスト駆動開発**
-   - 各命令の基本的なテストケース作成
-   - エッジケースの考慮
-   - 他の命令との相互作用の確認
-3. **ドキュメント化**
-   - 実装した命令の仕様と制限事項の記録
-   - テストケースの説明
-   - 既知の問題点の記録
-4. **pkg/asmdbに存在しない命令への対応**
-   - 特殊なOS命令など、json-x86-64/x86_64.jsonに存在しない命令が発生する場合がある
-   - このような場合は、フォールバック実装が必要
-   - フォールバック実装を行う前に、必ず人間に指示を仰ぐこと
-5. **開発ルーチン**
-   - 実装完了後は必ず`make test`を実行し、全体のテストを確認
-   - テストのスキップは明示的な許可がある場合のみ実施
-   - テストエラーが発生した場合は、修正を行うか、スキップの許可を得る
+1.  **asmdbの活用**
+    -   命令の正確な機械語表現の取得
+    -   プレフィックスバイトの適切な処理
+    -   オペランドサイズの正確な計算
+    -   複数の機械語パターンがある場合は最小サイズのものを選択
+    -   FindEncodingを使用して最小サイズのエンコーディングを一意に決定
+    -   セグメントレジスタ（sreg）をr16として扱う
+    -   JSONにない命令パターンのフォールバック処理
+    -   オペランドタイプの互換性チェック（例：sreg→r16の変換）
+2.  **テスト駆動開発**
+    -   各命令の基本的なテストケース作成
+    -   エッジケースの考慮
+    -   他の命令との相互作用の確認
+3.  **ドキュメント化**
+    -   実装した命令の仕様と制限事項の記録
+    -   テストケースの説明
+    -   既知の問題点の記録
+4.  **pkg/asmdbに存在しない命令への対応**
+    -   特殊なOS命令など、json-x86-64/x86_64.jsonに存在しない命令が発生する場合がある
+    -   このような場合は、フォールバック実装が必要
+    -   フォールバック実装を行う前に、必ず人間に指示を仰ぐこと
+5.  **開発ルーチン**
+    -   実装完了後は必ず`make test`を実行し、全体のテストを確認
+    -   テストのスキップは明示的な許可がある場合のみ実施
+    -   テストエラーが発生した場合は、修正を行うか、スキップの許可を得る
 
 ### 過去の作業
 
-- オペコード生成処理の改善 (`internal/codegen/x86gen_utils.go`)
-  - `ResolveOpcode` 関数と `GetRegisterNumber` 関数を追加
-  - `x86gen_mov.go` と `x86gen_arithmetic.go` でこれらの関数を使用するように修正
-- `GenerateX86INT` 関数を `handleINT` にリネーム
-- `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
+-   オペコード生成処理の改善 (`internal/codegen/x86gen_utils.go`)
+    -   `ResolveOpcode` 関数と `GetRegisterNumber` 関数を追加
+    -   `x86gen_mov.go` と `x86gen_arithmetic.go` でこれらの関数を使用するように修正
+-   `GenerateX86INT` 関数を `handleINT` にリネーム
+-   `GenerateModRM` 関数と `GetRegisterNumber` 関数を修正
 
 ### JMP系命令 (Jcc命令) の実装 (2025/03/19)
-- `pkg/ocode/ocode.go` に JMP系命令 (JA, JAE, JB, JBE, JC, JE, JG, JGE, JL, JLE, JNA, JNAE, JNB, JNBE, JNC, JNE, JNG, JNGE, JNL, JNLE, JNO, JNP, JNS, JNZ, JO, JP, JPE, JPO, JS, JZ) を追加
-- `internal/codegen/x86gen.go` の `processOcode` 関数に JMP系命令のケースを追加し、`handleJcc` 関数を呼び出すように修正
-- `internal/codegen/x86gen_jmp.go` に `handleJcc` 関数を実装し、各JMP系命令の機械語生成処理を実装
-  - `generateJMPCode` 関数は JMP 命令のみに使用するように変更
-  - 各JMP系命令のオペコードは、`handleJcc` 関数内で定義
-  - オフセットは `rel8` (1バイト) のみ対応
+
+-   `pkg/ocode/ocode.go` に JMP系命令 (JA, JAE, JB, JBE, JC, JE, JG, JGE, JL, JLE, JNA, JNAE, JNB, JNBE, JNC, JNE, JNG, JNGE, JNL, JNLE, JNO, JNP, JNS, JNZ, JO, JP, JPE, JPO, JS, JZ) を追加
+-   `internal/codegen/x86gen.go` の `processOcode` 関数に JMP系命令のケースを追加し、`handleJcc` 関数を呼び出すように修正
+-   `internal/codegen/x86gen_jmp.go` に `handleJcc` 関数を実装し、各JMP系命令の機械語生成処理を実装
+    -   `generateJMPCode` 関数は JMP 命令のみに使用するように変更
+    -   各JMP系命令のオペコードは、`handleJcc` 関数内で定義
+    -   オフセットは `rel8` (1バイト) のみ対応
 
 ### JE命令の実装 (2025/03/14)
-- `internal/codegen/x86gen_jmp.go` に `generateJMPCode` 関数を追加し、JMP命令とJE命令の共通処理を実装
-- `handleJMP` 関数と `handleJE` 関数から `generateJMPCode` 関数を呼び出すように修正
-- `internal/codegen/x86gen.go` の `processOcode` 関数に `ocode.OpJE` のcaseを追加し、`handleJE` 関数を呼び出すように修正
-- `pkg/ocode/ocode.go` に `OpJE` を追加し、`enumer` を実行して `OcodeKind` を再生成
+
+-   `internal/codegen/x86gen_jmp.go` に `generateJMPCode` 関数を追加し、JMP命令とJE命令の共通処理を実装
+-   `handleJMP` 関数と `handleJE` 関数から `generateJMPCode` 関数を呼び出すように修正
+-   `internal/codegen/x86gen.go` の `processOcode` 関数に `ocode.OpJE` のcaseを追加し、`handleJE` 関数を呼び出すように修正
+-   `pkg/ocode/ocode.go` に `OpJE` を追加し、`enumer` を実行して `OcodeKind` を再生成
+
+### OUT命令の実装 (2025/03/26)
+
+-   `internal/pass1/pass1_inst_out.go` にOUT命令の処理を追加
+-   `internal/pass1/handlers.go` に `processOUT` 関数を登録
+-   `internal/codegen/x86gen_out.go` を作成し、OUT命令のエンコード処理を実装
+    -   `handleOUT` 関数を実装
+    -   現状は `OUT imm8, AL` のみに対応
+-   `internal/codegen/x86gen_test.go` にOUT命令のテストケースを追加
+-   `internal/codegen/x86gen.go` に `processOcode` 関数に `ocode.OpOUT` のケースを追加
 
 [過去の作業履歴はこちら](./archives/implementation_details_archive_20250313.md)

@@ -140,6 +140,20 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x3c, 0x00},
 		},
+		{
+			name: "OUT 0x21, AL",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOUT, Operands: []string{"0x21", "AL"}},
+			},
+			expected: []byte{0xe6, 0x21},
+		},
+		{
+			name: "OUT 0xa1, AL",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOUT, Operands: []string{"0xa1", "AL"}},
+			},
+			expected: []byte{0xe6, 0xa1},
+		},
 	}
 
 	for _, tt := range tests {

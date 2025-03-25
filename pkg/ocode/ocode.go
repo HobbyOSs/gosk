@@ -5,6 +5,7 @@ type OcodeKind int
 
 const (
 	OpL        OcodeKind = iota // e.g.) L k / L c1,c2,c3 / などスタックにpushする
+    OpOUT                       // OUT命令を追加
 	OpDB                        // DB n_1,n_2,n_3,..,n_k
 	OpDW                        // DW n_1,n_2,n_3,..,n_k
 	OpDD                        // DD n_1,n_2,n_3,..,n_k
