@@ -67,6 +67,9 @@ func init() {
 	)
 	opcodeEvalFns = lo.Assign(opcodeEvalFns, noParamFns)
 
+	// RET
+	opcodeEvalFns["RET"] = processRET
+
 	// MOV
 	opcodeEvalFns["MOV"] = processMOV
 

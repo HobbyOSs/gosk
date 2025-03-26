@@ -16,3 +16,32 @@ func TestGenerateX86NoParam(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleRET(t *testing.T) {
+	testCases := []struct {
+		name     string
+		ocode    ocode.Ocode
+		expected []byte
+		wantErr  bool
+	}{
+		{
+			name:     "RET instruction",
+			ocode:    ocode.Ocode{Kind: ocode.OpRET, Operands: nil},
+			expected: []byte{0xC3},
+			wantErr:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := handleRET(tc.ocode)
+
+			if tc.wantErr {
+				assert.Error(t, err, "handleRET() should return an error")
+			} else {
+				assert.NoError(t, err, "handleRET() should not return an error")
+				assert.Equal(t, tc.expected, result, "handleRET() should generate correct binary")
+			}
+		})
+	}
+}

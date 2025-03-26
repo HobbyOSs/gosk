@@ -177,6 +177,7 @@ const (
 	OpREP                       // REP
 	OpREPE                      // REPE
 	OpREPNE                     // REPNE
+	OpRET                       // RET (Added)
 	OpRETF                      // RETF
 	OpRETN                      // RETN
 	OpRSM                       // RSM

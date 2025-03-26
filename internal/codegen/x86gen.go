@@ -83,8 +83,10 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleSHL(params, ctx)
 	case ocode.OpSAR:
 		return handleSAR(params, ctx)
-	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN:
+	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN: // TODO: handleNoParamOpcode は削除して各種命令のハンドラを呼び出すようにする
 		return handleNoParamOpcode(oc), nil
+	case ocode.OpRET:
+		return handleRET(oc)
 	case ocode.OpIN:
 		return handleIN(params, ctx)
 	case ocode.OpOUT:
