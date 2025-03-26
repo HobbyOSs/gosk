@@ -89,3 +89,60 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 func handleAND(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	return generateLogicalCode(params.Operands, ctx, "AND")
 }
+
+func handleOR(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateLogicalCode(params.Operands, ctx, "OR")
+}
+
+func handleXOR(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateLogicalCode(params.Operands, ctx, "XOR")
+}
+
+func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	// オペランド数のチェック (NOTは1オペランド)
+	if len(params.Operands) != 1 {
+		return nil, fmt.Errorf("NOT requires 1 operand")
+	}
+
+	// オペランドの解析
+	ops := operand.NewOperandFromString(params.Operands[0])
+
+	// AsmDBからエンコーディングを取得
+	db := asmdb.NewInstructionDB()
+	encoding, err := db.FindEncoding("NOT", ops)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find encoding for NOT")
+	}
+
+	// エンコーディング情報を使用して機械語を生成
+	machineCode := make([]byte, 0)
+
+	// プレフィックスの追加
+	if ops.Require66h() {
+		machineCode = append(machineCode, 0x66)
+	}
+	// REX prefix handling removed based on user feedback
+
+	// オペコードの追加 (NOTはAddendを使用しない)
+	opcode, err := ResolveOpcode(encoding.Opcode, -1) // regNumは不要なので-1
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve opcode")
+	}
+	machineCode = append(machineCode, opcode)
+
+	// ModR/Mの追加（必要な場合）
+	if encoding.ModRM != nil {
+		// NOTは1オペランドなので、getModRMFromOperandsは使えない
+		// 必要な情報を直接渡してModR/Mを生成するヘルパーが必要かもしれない
+		// ここでは仮実装として、getModRMFromOperandsを流用してみる（要修正）
+		modrm, err := getModRMFromOperands(params.Operands, encoding, ctx.BitMode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate ModR/M for NOT")
+		}
+		machineCode = append(machineCode, modrm...)
+	}
+
+	// NOT命令は即値を取らない
+
+	return machineCode, nil
+}

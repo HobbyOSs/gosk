@@ -87,8 +87,11 @@ func init() {
 	opcodeEvalFns["DIV"] = processDIV
 	opcodeEvalFns["IDIV"] = processIDIV
 
-	// Logical Instructions (Add AND here)
+	// Logical Instructions
 	opcodeEvalFns["AND"] = processAND
+	opcodeEvalFns["OR"] = processOR
+	opcodeEvalFns["XOR"] = processXOR
+	opcodeEvalFns["NOT"] = processNOT
 
 	// OUT
 	opcodeEvalFns["OUT"] = processOUT

@@ -10,7 +10,7 @@
 - InstructionForm の Encoding を ModRM の要否で振り分け
 - OUT命令の実装
 - CALL命令の実装
-- AND命令の実装 (論理命令として分離)
+- 論理命令の実装 (AND, OR, XOR, NOT)
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応
@@ -27,7 +27,7 @@
 - `pkg/asmdb/instruction_search.go` の `filterForms` 関数を修正し、ModRM 要否によるフィルタリングロジックを実装
 - `pkg/asmdb/instruction_search_test.go` にテストケースを追加
 - CALL命令の実装
-- AND命令の実装 (pass1, codegen, test)
+- 論理命令の実装 (AND, OR, XOR, NOT) (pass1, codegen, test)
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

@@ -149,6 +149,178 @@ func (s *LogicalSuite) TestANDInstruction() {
 	}
 }
 
+func (s *LogicalSuite) TestORInstruction() {
+	tests := []struct {
+		name     string
+		asm      string
+		expected []byte
+	}{
+		{
+			name:     "OR AL, imm8",
+			asm:      "OR AL, 0x5A",
+			expected: []byte{0x0C, 0x5A}, // 0C ib
+		},
+		{
+			name:     "OR r8, imm8",
+			asm:      "OR CL, 0xAA",
+			expected: []byte{0x80, 0xC9, 0xAA}, // 80 /1 ib
+		},
+		// Add more OR test cases here later
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			code := fmt.Sprintf("ORG 0x7c00\n%s\nHLT", tt.asm)
+
+			temp, err := os.CreateTemp("", "logical_*.img")
+			s.Require().NoError(err)
+			defer os.Remove(temp.Name())
+
+			pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
+			s.Require().NoError(err)
+			_, _ = frontend.Exec(pt, temp.Name())
+
+			actual, err := ReadFileAsBytes(temp.Name())
+			s.Require().NoError(err)
+
+			expectedCode := tt.expected
+			actualCode := actual
+			if len(actual) > 0 && actual[len(actual)-1] == 0xf4 {
+				actualCode = actual[:len(actual)-1]
+			}
+
+			s.T().Logf("ASM: %s", tt.asm)
+			s.T().Logf("Expected length: %d, Actual length: %d", len(expectedCode), len(actualCode))
+			s.T().Logf("Expected bytes: %x", expectedCode)
+			s.T().Logf("Actual bytes:   %x", actualCode)
+
+			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
+				if _, ok := interface{}(s).(interface {
+					DumpDiff(expected, actual []byte, color bool) string
+				}); ok {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+				} else {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
+				}
+				s.FailNow("Generated machine code does not match expected")
+			}
+		})
+	}
+}
+
+func (s *LogicalSuite) TestXORInstruction() {
+	tests := []struct {
+		name     string
+		asm      string
+		expected []byte
+	}{
+		{
+			name:     "XOR AL, imm8",
+			asm:      "XOR AL, 0x5A",
+			expected: []byte{0x34, 0x5A}, // 34 ib
+		},
+		{
+			name:     "XOR r8, imm8",
+			asm:      "XOR CL, 0xAA",
+			expected: []byte{0x80, 0xF1, 0xAA}, // 80 /6 ib
+		},
+		// Add more XOR test cases here later
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			code := fmt.Sprintf("ORG 0x7c00\n%s\nHLT", tt.asm)
+
+			temp, err := os.CreateTemp("", "logical_*.img")
+			s.Require().NoError(err)
+			defer os.Remove(temp.Name())
+
+			pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
+			s.Require().NoError(err)
+			_, _ = frontend.Exec(pt, temp.Name())
+
+			actual, err := ReadFileAsBytes(temp.Name())
+			s.Require().NoError(err)
+
+			expectedCode := tt.expected
+			actualCode := actual
+			if len(actual) > 0 && actual[len(actual)-1] == 0xf4 {
+				actualCode = actual[:len(actual)-1]
+			}
+
+			s.T().Logf("ASM: %s", tt.asm)
+			s.T().Logf("Expected length: %d, Actual length: %d", len(expectedCode), len(actualCode))
+			s.T().Logf("Expected bytes: %x", expectedCode)
+			s.T().Logf("Actual bytes:   %x", actualCode)
+
+			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
+				if _, ok := interface{}(s).(interface {
+					DumpDiff(expected, actual []byte, color bool) string
+				}); ok {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+				} else {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
+				}
+				s.FailNow("Generated machine code does not match expected")
+			}
+		})
+	}
+}
+
+func (s *LogicalSuite) TestNOTInstruction() {
+	tests := []struct {
+		name     string
+		asm      string
+		expected []byte
+	}{
+		{
+			name:     "NOT r8",
+			asm:      "NOT CL",
+			expected: []byte{0xF6, 0xD1}, // F6 /2
+		},
+		// Add more NOT test cases here later
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			code := fmt.Sprintf("ORG 0x7c00\n%s\nHLT", tt.asm)
+
+			temp, err := os.CreateTemp("", "logical_*.img")
+			s.Require().NoError(err)
+			defer os.Remove(temp.Name())
+
+			pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
+			s.Require().NoError(err)
+			_, _ = frontend.Exec(pt, temp.Name())
+
+			actual, err := ReadFileAsBytes(temp.Name())
+			s.Require().NoError(err)
+
+			expectedCode := tt.expected
+			actualCode := actual
+			if len(actual) > 0 && actual[len(actual)-1] == 0xf4 {
+				actualCode = actual[:len(actual)-1]
+			}
+
+			s.T().Logf("ASM: %s", tt.asm)
+			s.T().Logf("Expected length: %d, Actual length: %d", len(expectedCode), len(actualCode))
+			s.T().Logf("Expected bytes: %x", expectedCode)
+			s.T().Logf("Actual bytes:   %x", actualCode)
+
+			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
+				if _, ok := interface{}(s).(interface {
+					DumpDiff(expected, actual []byte, color bool) string
+				}); ok {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+				} else {
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
+				}
+				s.FailNow("Generated machine code does not match expected")
+			}
+		})
+	}
+}
+
 // Other logical instruction tests can be added later
 
 func TestLogicalSuite(t *testing.T) {

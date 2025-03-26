@@ -68,9 +68,15 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleADD(params, ctx)
 	case ocode.OpCMP:
 		return handleCMP(params, ctx)
-	// Add AND handler
+	// Logical Instructions
 	case ocode.OpAND:
 		return handleAND(params, ctx)
+	case ocode.OpOR:
+		return handleOR(params, ctx)
+	case ocode.OpXOR:
+		return handleXOR(params, ctx)
+	case ocode.OpNOT:
+		return handleNOT(params, ctx)
 	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN:
 		return handleNoParamOpcode(oc), nil
 	case ocode.OpOUT:

@@ -13,6 +13,9 @@ const (
 	OpMOV                   // MOV dst, src
 	OpADD                   // ADD
 	OpAND                   // AND (Added)
+	OpOR                    // OR
+	OpXOR                   // XOR
+	OpNOT                   // NOT
 	OpAAA      // AAA
 	OpAAD      // AAD
 	OpAAM      // AAM

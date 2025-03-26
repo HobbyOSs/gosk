@@ -2,6 +2,7 @@ package pass1
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -39,4 +40,30 @@ func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string)
 // AND命令
 func processAND(env *Pass1, tokens []*token.ParseToken) {
 	processLogicalInst(env, tokens, "AND")
+}
+
+// OR命令
+func processOR(env *Pass1, tokens []*token.ParseToken) {
+	processLogicalInst(env, tokens, "OR")
+}
+
+// XOR命令
+func processXOR(env *Pass1, tokens []*token.ParseToken) {
+	processLogicalInst(env, tokens, "XOR")
+}
+
+// NOT命令
+func processNOT(env *Pass1, tokens []*token.ParseToken) {
+	if len(tokens) != 1 {
+		log.Fatalf("error: NOT instruction requires 1 operand, but got %d", len(tokens))
+	}
+	arg := tokens[0].AsString()
+
+	operands := operand.
+		NewOperandFromString(arg).
+		WithBitMode(env.BitMode)
+
+	size, _ := env.AsmDB.FindMinOutputSize("NOT", operands)
+	env.LOC += int32(size)
+	env.Client.Emit(fmt.Sprintf("NOT %s\n", arg))
 }
