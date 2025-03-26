@@ -87,6 +87,9 @@ func init() {
 	opcodeEvalFns["DIV"] = processDIV
 	opcodeEvalFns["IDIV"] = processIDIV
 
+	// Logical Instructions (Add AND here)
+	opcodeEvalFns["AND"] = processAND
+
 	// OUT
 	opcodeEvalFns["OUT"] = processOUT
 
@@ -144,10 +147,8 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		if !ok {
 			log.Fatal("error: EQU failed to pop token value")
 		}
-		// [TODO] 2025/03/21: EQUマクロの値 (*token.ParseToken) が *ast.ImmExp 以外の場合がある問題に対応するため、
-		// value の型チェックと *token.ParseToken への変換処理を追加したが、コンパイラエラーが発生したため一旦 revert。
-		// 今後、value の型を詳細に調査し、適切な型変換処理を実装する必要がある。
-		env.EquMap[key.AsString()] = value // Reverted to original structure
+
+		env.EquMap[key.AsString()] = value
 		log.Printf("debug: EquMap after DeclareStmt: %+v\n", env.EquMap)
 
 	case *ast.LabelStmt:
@@ -224,7 +225,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		TraverseAST(n.Factor, env)
 		if n.ConfigType == ast.Bits {
 			ok, token := env.Ctx.Pop()
-			if ok != true { // Modified line: added != true to check boolean value explicitly
+			if !ok {
 				log.Fatal("Failed to pop token")
 			}
 			bitMode, ok := ast.NewBitMode(token.ToInt())
@@ -400,12 +401,3 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		return
 	}
 }
-
-/*
-理由:
-- go test ./test/day03_harib00h_test.go -run TestHarib00h で失敗するため
-- EQU VMODE	EQU		0x0ff2 などで定義したVMODEなどの値が展開されずVMODEのままmov [VMODE],8のように処理されている
-
-原因:
-- pass1のhandlers.goのTraverseASTでEQU展開が不完全
-*/

@@ -285,5 +285,5 @@ func init() {
 	addImulFallbackEncodings()
 	addOutFallbackEncodings()
 	addMovFallbackEncodings()
-    addLgdtFallbackEncodings()
+	addLgdtFallbackEncodings()
 }

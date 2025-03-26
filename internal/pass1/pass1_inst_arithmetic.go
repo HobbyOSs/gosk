@@ -59,10 +59,6 @@ func processSBB(env *Pass1, tokens []*token.ParseToken) {
 
 // 比較命令
 func processCMP(env *Pass1, tokens []*token.ParseToken) {
-	// 1. オペランドの解析
-	// 2. asmdbでサイズ計算
-	// 3. ラベルの仮登録: SymTable にラベルを登録し、仮アドレスを割り当てる。
-	// 4. Ocodeの生成: env.Client.Emit を使用してOcodeを出力。
 	processArithmeticInst(env, tokens, "CMP")
 }
 

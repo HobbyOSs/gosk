@@ -23,10 +23,10 @@ func handleCALL(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	// ORG命令で設定されたDollarPositionを考慮する
 	currentAddr := int64(ctx.DollarPosition) + int64(params.MachineCodeLen)
 
-    // kind が OpCALL であることを確認
-    if params.OCode.Kind != ocode.OpCALL {
-        return nil, fmt.Errorf("invalid opcode kind for handleCALL: %v", params.OCode.Kind)
-    }
+	// kind が OpCALL であることを確認
+	if params.OCode.Kind != ocode.OpCALL {
+		return nil, fmt.Errorf("invalid opcode kind for handleCALL: %v", params.OCode.Kind)
+	}
 
 	// CALL rel32 (オペコード: e8, オフセット: 4 bytes)
 	offset := destAddr - currentAddr - 5
