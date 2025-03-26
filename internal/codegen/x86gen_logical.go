@@ -98,6 +98,18 @@ func handleXOR(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	return generateLogicalCode(params.Operands, ctx, "XOR")
 }
 
+func handleSHR(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateLogicalCode(params.Operands, ctx, "SHR")
+}
+
+func handleSHL(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateLogicalCode(params.Operands, ctx, "SHL")
+}
+
+func handleSAR(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	return generateLogicalCode(params.Operands, ctx, "SAR")
+}
+
 func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	// オペランド数のチェック (NOTは1オペランド)
 	if len(params.Operands) != 1 {

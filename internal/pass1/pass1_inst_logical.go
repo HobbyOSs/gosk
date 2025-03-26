@@ -67,3 +67,18 @@ func processNOT(env *Pass1, tokens []*token.ParseToken) {
 	env.LOC += int32(size)
 	env.Client.Emit(fmt.Sprintf("NOT %s\n", arg))
 }
+
+// SHR命令
+func processSHR(env *Pass1, tokens []*token.ParseToken) {
+	processLogicalInst(env, tokens, "SHR")
+}
+
+// SHL命令
+func processSHL(env *Pass1, tokens []*token.ParseToken) {
+	processLogicalInst(env, tokens, "SHL")
+}
+
+// SAR命令
+func processSAR(env *Pass1, tokens []*token.ParseToken) {
+	processLogicalInst(env, tokens, "SAR")
+}

@@ -11,6 +11,7 @@
 - OUT命令の実装
 - CALL命令の実装
 - 論理命令の実装 (AND, OR, XOR, NOT)
+- 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (一部テストはコメントアウト)
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応
@@ -28,6 +29,7 @@
 - `pkg/asmdb/instruction_search_test.go` にテストケースを追加
 - CALL命令の実装
 - 論理命令の実装 (AND, OR, XOR, NOT) (pass1, codegen, test)
+- 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (pass1, ocode, codegen, test) (一部テストはコメントアウト)
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

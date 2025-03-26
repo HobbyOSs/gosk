@@ -16,6 +16,9 @@ const (
 	OpOR                    // OR
 	OpXOR                   // XOR
 	OpNOT                   // NOT
+	OpSHR                   // SHR
+	OpSHL                   // SHL
+	OpSAR                   // SAR
 	OpAAA      // AAA
 	OpAAD      // AAD
 	OpAAM      // AAM
