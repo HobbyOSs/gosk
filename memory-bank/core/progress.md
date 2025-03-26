@@ -12,6 +12,7 @@
 - CALL命令の実装
 - 論理命令の実装 (AND, OR, XOR, NOT)
 - 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (一部テストはコメントアウト)
+- IN命令の実装 (pass1, codegen, fallback table)
 
 ## まだ必要な実装
 - JMP系命令 (Jcc命令) のrel32オフセット対応
@@ -30,6 +31,7 @@
 - CALL命令の実装
 - 論理命令の実装 (AND, OR, XOR, NOT) (pass1, codegen, test)
 - 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (pass1, ocode, codegen, test) (一部テストはコメントアウト)
+- IN命令の実装 (pass1, codegen, fallback table)
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

@@ -85,6 +85,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleSAR(params, ctx)
 	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN:
 		return handleNoParamOpcode(oc), nil
+	case ocode.OpIN:
+		return handleIN(params, ctx)
 	case ocode.OpOUT:
 		return handleOUT(params, ctx)
 	case ocode.OpCALL:

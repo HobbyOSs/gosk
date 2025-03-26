@@ -260,6 +260,64 @@ func addMovFallbackEncodings() {
 	}
 }
 
+// addInFallbackEncodings adds fallback encodings for IN instructions.
+// This function is called from instruction_table.go:init().
+func addInFallbackEncodings() {
+	instructionData.Instructions["IN"] = Instruction{
+		Summary: "Input from Port",
+		Forms: []InstructionForm{
+			{
+				Operands: &[]Operand{
+					{Type: "al", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Source (Port)
+				},
+				Encodings: []Encoding{
+					{
+						Opcode:    Opcode{Byte: "E4"},
+						Immediate: &Immediate{Size: 1, Value: "#1"}, // imm8 is the second operand (#1)
+					},
+				},
+			},
+			{
+				Operands: &[]Operand{
+					{Type: "ax", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Source (Port)
+				},
+				Encodings: []Encoding{
+					{
+						Opcode:    Opcode{Byte: "E5"},
+						Immediate: &Immediate{Size: 1, Value: "#1"}, // imm8 is the second operand (#1)
+					},
+				},
+			},
+			// Note: EAX form might exist for 32-bit, but sticking to AL/AX for now based on Wikipedia 8086 info
+			{
+				Operands: &[]Operand{
+					{Type: "al", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "dx", Input: Bool(true), Output: Bool(false)}, // Source (Port)
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "EC"},
+					},
+				},
+			},
+			{
+				Operands: &[]Operand{
+					{Type: "ax", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "dx", Input: Bool(true), Output: Bool(false)}, // Source (Port)
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "ED"},
+					},
+				},
+			},
+			// Note: EAX form might exist for 32-bit
+		},
+	}
+}
+
 // addLgdtFallbackEncodings adds fallback encodings for LGDT instruction.
 // This function is called from instruction_table.go:init().
 func addLgdtFallbackEncodings() {
@@ -286,4 +344,5 @@ func init() {
 	addOutFallbackEncodings()
 	addMovFallbackEncodings()
 	addLgdtFallbackEncodings()
+	addInFallbackEncodings() // Add call to the new function
 }

@@ -96,6 +96,9 @@ func init() {
 	opcodeEvalFns["SHL"] = processSHL
 	opcodeEvalFns["SAR"] = processSAR
 
+	// IN
+	opcodeEvalFns["IN"] = processIN
+
 	// OUT
 	opcodeEvalFns["OUT"] = processOUT
 

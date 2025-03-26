@@ -28,8 +28,11 @@
 
 1. **asmdb JSONファイルの調査**
    ```bash
-   # 特定の命令のエンコーディング情報を取得
+   # 特定の命令のエンコーディング情報を取得 (直接ファイル指定)
    jq '.instructions["INST_NAME"]' pkg/asmdb/json-x86-64/x86_64.json
+
+   # 特定の命令のエンコーディング情報を取得 (catとパイプを使用)
+   cat pkg/asmdb/json-x86-64/x86_64.json | jq '.instructions["INST_NAME"]'
 
    # オペランドタイプの一覧を取得
    jq '.instructions["INST_NAME"].forms[].operands[].type' pkg/asmdb/json-x86-64/x86_64.json
@@ -39,6 +42,10 @@
    - パイプを使用して段階的にフィルタリング
    - 必要な情報のみを抽出
    - 結果は可読性の高いフォーマットで出力
+
+2. **JSON DBに命令が存在しない場合の対応**
+   - `pkg/asmdb/json-x86-64/x86_64.json` に命令情報が存在しない場合は、`pkg/asmdb/instruction_table_fallback.go` にGo言語で命令のエンコーディング情報を直接追記します。
+   - 追記する際は、既存のフォーマットに合わせて `InstructionInfo` 構造体を定義します。
 
 ### ソースコード修正ポリシー
 
