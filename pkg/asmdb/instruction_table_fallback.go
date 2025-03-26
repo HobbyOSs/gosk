@@ -251,6 +251,32 @@ func addMovFallbackEncodings() {
 				},
 			},
 		},
+		// Add MOV r32, CR0 (0F 20 /r)
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "r32", Input: Bool(false), Output: Bool(true)},
+				{Type: "cr", Input: Bool(true), Output: Bool(false)}, // Assuming "cr" type for control registers
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "0F20"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#1", Rm: "#0"}, // reg should be CR number (0 for CR0), rm is r32
+				},
+			},
+		},
+		// Add MOV CR0, r32 (0F 22 /r)
+		InstructionForm{
+			Operands: &[]Operand{
+				{Type: "cr", Input: Bool(false), Output: Bool(true)}, // Assuming "cr" type for control registers
+				{Type: "r32", Input: Bool(true), Output: Bool(false)},
+			},
+			Encodings: []Encoding{
+				{
+					Opcode: Opcode{Byte: "0F22"},
+					ModRM:  &Modrm{Mode: "11", Reg: "#0", Rm: "#1"}, // reg should be CR number (0 for CR0), rm is r32
+				},
+			},
+		},
 	)
 
 	// 更新された Forms で "MOV" 命令を更新
@@ -268,7 +294,7 @@ func addInFallbackEncodings() {
 		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "al", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "al", Input: Bool(false), Output: Bool(true)},   // Destination
 					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Source (Port)
 				},
 				Encodings: []Encoding{
@@ -280,7 +306,7 @@ func addInFallbackEncodings() {
 			},
 			{
 				Operands: &[]Operand{
-					{Type: "ax", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "ax", Input: Bool(false), Output: Bool(true)},   // Destination
 					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Source (Port)
 				},
 				Encodings: []Encoding{

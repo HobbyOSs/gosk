@@ -192,26 +192,36 @@ func GetRegisterNumber(regName string) (int, error) {
 	}
 }
 
-// ResolveOpcode はOpcodeとレジスタ番号を受け取り、最終的なオペコードを算出する。
+// ResolveOpcode はOpcodeとレジスタ番号を受け取り、最終的なオペコードバイト列を算出する。
 // regNum はレジスタの番号（0-7）を表す。
-func ResolveOpcode(op asmdb.Opcode, regNum int) (byte, error) {
-	// Byteを16進数文字列から数値に変換
-	opcodeByte, err := strconv.ParseUint(op.Byte, 16, 8)
-	if err != nil {
-		return 0, fmt.Errorf("invalid opcode byte: %v", err)
+func ResolveOpcode(op asmdb.Opcode, regNum int) ([]byte, error) {
+	opBytes := []byte{}
+	opStr := op.Byte
+
+	// オペコード文字列をバイトごとに処理
+	if len(opStr)%2 != 0 {
+		return nil, fmt.Errorf("invalid opcode string length: %s", opStr)
+	}
+	for i := 0; i < len(opStr); i += 2 {
+		byteStr := opStr[i : i+2]
+		byteVal, err := strconv.ParseUint(byteStr, 16, 8)
+		if err != nil {
+			return nil, fmt.Errorf("invalid opcode byte string: %s in %s", byteStr, opStr)
+		}
+		opBytes = append(opBytes, byte(byteVal))
 	}
 
-	// Addendがnilなら基本オペコードをそのまま返す
-	if op.Addend == nil {
-		return byte(opcodeByte), nil
+	// Addendがある場合、最後のバイトにレジスタ番号を加算
+	if op.Addend != nil && len(opBytes) > 0 {
+		regBits := byte(regNum & 0x07)
+		lastByteIndex := len(opBytes) - 1
+		opBytes[lastByteIndex] |= regBits
+		log.Printf("debug: ResolveOpcode: base=%s, addend=%v, reg=%d, result=% x", opStr, op.Addend, regNum, opBytes)
+	} else {
+		log.Printf("debug: ResolveOpcode: base=%s, result=% x", opStr, opBytes)
 	}
 
-	// レジスタ番号の下位3ビットを取得してORする
-	regBits := byte(regNum & 0x07)
-	result := byte(opcodeByte) | regBits
-
-	log.Printf("debug: ResolveOpcode: base=%#x, addend=%v, reg=%d, result=%#x", opcodeByte, op.Addend, regNum, result)
-	return result, nil
+	return opBytes, nil
 }
 
 // getModRMFromOperands はオペランドからModR/Mバイトを生成する

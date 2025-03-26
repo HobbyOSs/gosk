@@ -44,6 +44,11 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 
 	log.Printf("debug: processOcode: %s, operands: %v\n", oc.Kind, oc.Operands)
 
+	// Check if the instruction is a no-parameter instruction handled by opcodeMap
+	if _, exists := opcodeMap[oc.Kind]; exists {
+		return handleNoParamOpcode(oc), nil
+	}
+
 	switch oc.Kind {
 	case ocode.OpL:
 		return handleL(oc.Operands, ctx.VS)
@@ -83,8 +88,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleSHL(params, ctx)
 	case ocode.OpSAR:
 		return handleSAR(params, ctx)
-	case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN: // TODO: handleNoParamOpcode は削除して各種命令のハンドラを呼び出すようにする
-		return handleNoParamOpcode(oc), nil
+	// case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN: // Moved to the check before switch
+	// 	return handleNoParamOpcode(oc), nil
 	case ocode.OpRET:
 		return handleRET(oc)
 	case ocode.OpIN:

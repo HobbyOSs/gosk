@@ -59,7 +59,7 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 		log.Printf("error: Failed to resolve opcode: %v", err)
 		return nil
 	}
-	machineCode = append(machineCode, opcode)
+	machineCode = append(machineCode, opcode...) // Use spread operator
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {

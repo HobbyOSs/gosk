@@ -55,7 +55,7 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve opcode")
 	}
-	machineCode = append(machineCode, opcode)
+	machineCode = append(machineCode, opcode...) // Use spread operator
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
@@ -140,7 +140,7 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve opcode")
 	}
-	machineCode = append(machineCode, opcode)
+	machineCode = append(machineCode, opcode...) // Use spread operator
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {

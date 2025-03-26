@@ -1,67 +1,45 @@
 package codegen
 
 import (
+	"encoding/binary"
+	"fmt"
 	"log"
 	"strings"
-
-	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand"
 )
 
 // handleLGDT handles the LGDT instruction and generates the appropriate machine code.
+// LGDT m -> 0F 01 /2
 func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 	if len(operands) != 1 {
-		log.Printf("error: LGDT requires 1 operand, got %d", len(operands))
-		return nil, nil
+		return nil, fmt.Errorf("LGDT requires 1 operand, got %d", len(operands))
 	}
 
-	// オペランドの解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
-		WithBitMode(ctx.BitMode)
+	opStr := operands[0]
+	// Expecting memory operand like "[ label ]"
+	if !strings.HasPrefix(opStr, "[") || !strings.HasSuffix(opStr, "]") {
+		return nil, fmt.Errorf("invalid LGDT operand format: %s", opStr)
+	}
+	label := strings.TrimSpace(opStr[1 : len(opStr)-1])
 
-	// AsmDBからエンコーディングを取得
-	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding("LGDT", ops)
-	if err != nil {
-		log.Printf("error: Failed to find encoding: %v", err)
-		return nil, err
+	// Lookup label address in symbol table
+	addr, ok := ctx.SymTable[label]
+	if !ok {
+		return nil, fmt.Errorf("label not found: %s", label)
 	}
 
-	// エンコーディング情報を使用して機械語を生成
-	machineCode := make([]byte, 0)
+	// Opcode: 0F 01
+	machineCode := []byte{0x0F, 0x01}
 
-	// オペコードの追加
-	opcode, err := ResolveOpcode(encoding.Opcode, 0) // LGDTではレジスタ番号は使用しない
-	if err != nil {
-		log.Printf("error: Failed to resolve opcode: %v", err)
-		return nil, err
-	}
-	machineCode = append(machineCode, opcode)
+	// ModR/M: mod=00, reg=2 (010), r/m=5 (101) -> 00010101 -> 0x15
+	// This indicates disp32 addressing mode.
+	machineCode = append(machineCode, 0x15)
 
-	// ModR/Mの追加
-	if encoding.ModRM != nil {
-		log.Printf("debug: ModRM: %+v", encoding.ModRM)
-		modrm, err := getModRMFromOperands(operands, encoding, ctx.BitMode)
-		if err != nil {
-			log.Printf("error: Failed to generate ModR/M: %v", err)
-			return nil, err
-		}
-		machineCode = append(machineCode, modrm...)
-	}
+	// Displacement: 32-bit address of the label
+	dispBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(dispBytes, uint32(addr))
+	machineCode = append(machineCode, dispBytes...)
 
-	// メモリオペランドの解決 (6バイトのデータを追加)
-	// TODO: オフセットの計算と追加
-	for _, opStr := range operands {
-		if _, _, disp, err := operand.ParseMemoryOperand(opStr, ctx.BitMode); err == nil {
-			// TODO: 6バイトのデータ (セグメントセレクタ、ベースアドレス、リミット) を追加
-			//       今は仮に0で埋める
-			for i := 0; i < 6; i++ {
-				machineCode = append(machineCode, disp...)
-			}
-		}
-	}
-
-	log.Printf("debug: Generated machine code: % x", machineCode)
+	log.Printf("debug: Generated LGDT machine code: % x", machineCode)
 
 	return machineCode, nil
 }
