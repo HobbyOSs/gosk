@@ -85,10 +85,27 @@ func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, 
 
 		rmVal, ok := rm16Table[baseKey]
 		if !ok {
-			// [bp]単体など含む特殊ケースの取りこぼしに注意
-			return 0, 0, nil, fmt.Errorf("unsupported 16bit mem operand: %q", baseKey)
+			// --- START MODIFICATION ---
+			// 16bitモードだが、32bitレジスタが使われているか試す
+			// (例: [ESI], [EBX+disp])
+			// この場合、アドレスサイズプレフィックス(0x67)が必要になる (呼び出し元で判断)
+			if len(regs) == 1 { // SIBは考慮しない
+				rmVal32, ok32 := rm32Table[regs[0]]
+				if ok32 {
+					// 32bitレジスタが見つかった
+					rmVal = rmVal32 // R/Mビットは32bitテーブルのものを使う
+					ok = true       // "見つかった"ことにする
+					// Mod/Dispの決定ロジックは後続のswitch-caseに任せる
+				}
+			}
+			if !ok {
+				// 16bitでも32bitでも見つからない場合
+				return 0, 0, nil, fmt.Errorf("unsupported 16bit mem operand: %q", baseKey)
+			}
+			// --- END MODIFICATION ---
 		}
 
+		// Mod/Dispの決定 (既存ロジック)
 		switch {
 		case !hasDisp:
 			// dispなし => mod=00。ただし [bp]単独はmod=00,r/m=110が disp16=0 扱い

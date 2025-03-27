@@ -19,6 +19,7 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 
 	// オペランドの解析
 	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
+		WithBitMode(ctx.BitMode).
 		WithForceImm8(true)
 
 	// AsmDBからエンコーディングを取得

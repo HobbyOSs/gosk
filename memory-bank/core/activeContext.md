@@ -1,17 +1,25 @@
 # Active Context
 
 ## 現在の作業の焦点
-- ModR/M 生成ロジックのリファクタリング検討。
 - `test/day03_harib00i_test.go` の残存エラー対応。
 
+## 直近の変更点
+- `pkg/operand/modrm_address.go` の `ParseMemoryOperand` を修正し、16ビットモードで32ビットレジスタ (`[ESI]` など) が使われた場合の R/M ビット解決に対応。これにより `unsupported 16bit mem operand` エラーは解消。
+- `Pass1` から `CodeGenClient` への `BitMode` 伝達ロジックを修正 (`SetBitMode` インターフェース追加と呼び出し)。
+- `codegen` の MOV, ADD ハンドラに `.WithBitMode()` 呼び出しを追加。
+
+## 残存エラー (day03_harib00i)
+- **MOV エンコーディングエラー**: `MOV r32, imm32/m32/label` 形式で多数発生。
+- **ADD エンコーディングエラー**: `ADD r32, r32/imm` 形式で発生。
+- **JMP rel32 未実装エラー**: `JMP DWORD ...` で発生。
+- **バイナリ長不一致**: `expected length 304 actual length 231`。
+
 ## 次のステップ
-- **ModR/M 生成ロジックのリファクタリング検討:**
-    - `internal/codegen/x86gen_utils.go` 内の複雑な手動パースは解消されたが、`pkg/operand` パッケージ側に、`bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装し、`codegen` 側はそれを呼び出すだけにするリファクタリングを引き続き検討する。
-- **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - エンコーディング未発見エラー (`Failed to find encoding: no matching encoding found`) の修正 (複数の `MOV`, `ADD` 命令)。
-        - 特にラベル (`bootpack`) や `[ EBX + offset ]` 形式のメモリオペランドを含む命令のエンコーディング選択ロジックを確認・修正。(`handleMOV` などが正しい `bitMode` を渡しているか、`asmdb` の検索ロジック自体に問題はないか)
-    - `Failed to process ocode: not implemented: JMP rel32` エラーの修正 (`JMP DWORD 2*8:0x0000001b`)。
-        - `internal/codegen/x86gen_jmp.go` の `handleJMP` 関数に `rel32` の処理を実装。
+- **エンコーディングエラー調査**:
+    - `pkg/operand/operand_impl.go` の `OperandTypes()` メソッドを調査する。
+    - 特に、サイズプレフィックスがないメモリオペランド (`[EBX+16]`) や、即値/ラベル (`bootpack`, `0x00280000`) のオペランドタイプ (`CodeM32`, `CodeIMM32` など) がどのように決定されているかを確認する。
+    - `asmdb.FindEncoding` がこれらの型を正しく使ってエンコーディングを検索できているか確認する。
+- **JMP rel32 の実装**: `internal/codegen/x86gen_jmp.go` の `handleJMP` 関数に `rel32` の処理を追加する。
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

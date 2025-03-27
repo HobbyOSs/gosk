@@ -16,16 +16,22 @@
 - RET命令の実装 (pass1, codegen, test)
 - ModR/M 生成ロジックの一部修正 (制御レジスタ対応、16bit/32bit 分岐改善)
 - `internal/codegen/x86gen_utils.go` のリファクタリング (`modeStr`共通化、`ParseMemoryOperand`利用、コメント翻訳等)
+- **ModR/M 生成エラー (`unsupported 16bit mem operand`) の部分修正 (`pkg/operand/modrm_address.go`)**
+- **`BitMode` 伝達ロジックの修正 (`client`, `ocode_client`, `pass1`)**
+- **`codegen` の MOV, ADD ハンドラに `.WithBitMode()` 追加**
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - エンコーディング未発見エラー (`Failed to find encoding: no matching encoding found`) の修正 (複数の `MOV`, `ADD` 命令)。
-    - `Failed to process ocode: not implemented: JMP rel32` エラーの修正 (`JMP DWORD 2*8:0x0000001b`)。
+    - **MOV エンコーディングエラー**: `MOV r32, imm32/m32/label` 形式。
+    - **ADD エンコーディングエラー**: `ADD r32, r32/imm` 形式。
+    - **JMP rel32 未実装エラー**: `JMP DWORD ...`。
+    - **バイナリ長不一致**。
+- **上記エンコーディングエラーの原因調査**: `pkg/operand/operand_impl.go` の `OperandTypes()` メソッド調査。
+- **JMP rel32 の実装**: `internal/codegen/x86gen_jmp.go`。
 - **ModR/M 生成ロジックのリファクタリング検討:**
-    - `internal/codegen/x86gen_utils.go` 内の複雑な手動パースは解消されたが、`pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討は継続。
+    - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討は継続。
 - JMP系命令 (Jcc命令) のrel32オフセット対応 (上記 JMP rel32 と関連)
 - RESBの計算処理の実装
-- メモリアドレッシング (エンコーディング未発見エラーと関連)
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - `internal/codegen` パッケージの不要パラメータ削除
 

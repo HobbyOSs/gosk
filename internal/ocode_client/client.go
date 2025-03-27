@@ -95,6 +95,11 @@ func (c *ocodeClient) SetSymbolTable(symTable map[string]int32) {
 	c.ctx.SymTable = symTable
 }
 
+// SetBitMode メソッドの実装
+func (c *ocodeClient) SetBitMode(mode ast.BitMode) {
+	c.ctx.BitMode = mode
+}
+
 // Exec メソッドの実装
 func (c *ocodeClient) Exec() ([]byte, error) {
 	// 保持しているContextを使用

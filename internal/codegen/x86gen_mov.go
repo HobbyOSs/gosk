@@ -18,6 +18,7 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 
 	// オペランドの解析
 	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
+		WithBitMode(ctx.BitMode).
 		WithForceRelAsImm(true)
 
 	// AsmDBからエンコーディングを取得

@@ -13,7 +13,7 @@ func handleIN(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 
 	dst := strings.ToUpper(params.Operands[0]) // Destination: AL or AX
-	src := params.Operands[1]                 // Source: imm8 or DX
+	src := params.Operands[1]                  // Source: imm8 or DX
 
 	var opcodeByte byte
 	var immValue uint64

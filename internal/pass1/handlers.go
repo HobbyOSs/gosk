@@ -245,6 +245,8 @@ func TraverseAST(node ast.Node, env *Pass1) {
 				log.Fatal("error: Failed to parse BITS")
 			}
 			env.BitMode = bitMode
+			// Notify the CodeGenClient (and its context) about the bit mode change
+			env.Client.SetBitMode(bitMode)
 		}
 
 	case *ast.MemoryAddrExp:
