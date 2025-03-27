@@ -77,6 +77,13 @@ func TestBaseOperand_OperandType(t *testing.T) {
 		{"Far Pointer", "FAR PTR [0x5678]", []OperandType{CodeM32}, false},
 		{"Pointer + Direct Address", "PTR [0x1234]", []OperandType{CodeM32}, false},
 		{"Far Pointer + Direct Address", "FAR PTR [0x5678]", []OperandType{CodeM32}, false},
+		// Harib00i 問題箇所
+		//{"MOV r32, label", "ESI, bootpack", []OperandType{CodeR32, CodeIMM32}, false},
+		//{"MOV r32, imm32", "EDI, 0x00280000", []OperandType{CodeR32, CodeIMM32}, false},
+		//{"MOV r32, m (no size prefix)", "ECX, [EBX+16]", []OperandType{CodeR32, CodeM32}, false},
+		//{"ADD r32, r32", "ESI, EBX", []OperandType{CodeR32, CodeR32}, false},
+		//{"ADD r32, imm (small)", "ESI, 4", []OperandType{CodeR32, CodeIMM32}, false}, // Expect IMM32 even for small imm in ADD
+		// --- End added ---
 	}
 
 	for _, tt := range tests {

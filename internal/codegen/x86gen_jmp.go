@@ -36,9 +36,15 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		case 2:
 			offset := destAddr - currentAddr - 3
 			machineCode = []byte{0xe9, byte(offset), byte(offset >> 8)}
-		default:
-			// TODO: rel32
-			return nil, fmt.Errorf("not implemented: JMP rel32")
+		default: // rel32
+			offset := destAddr - currentAddr - 5 // Opcode (1) + Offset (4) = 5 bytes
+			machineCode = []byte{
+				0xe9,
+				byte(offset),
+				byte(offset >> 8),
+				byte(offset >> 16),
+				byte(offset >> 24),
+			}
 		}
 		return machineCode, nil // JMPの場合はここでreturn
 	case ocode.OpJA:
@@ -112,9 +118,16 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	case 2:
 		offset := destAddr - currentAddr - 2
 		machineCode = []byte{0x0f, opcode + 0x10, byte(offset), byte(offset >> 8)}
-	default:
-		// TODO: rel32
-		return nil, fmt.Errorf("not implemented: Jcc rel32")
+	default: // rel32
+		offset := destAddr - currentAddr - 6 // Opcode (2) + Offset (4) = 6 bytes
+		machineCode = []byte{
+			0x0f,
+			opcode + 0x10, // Jcc rel32 opcode (e.g., 0x87 for JA)
+			byte(offset),
+			byte(offset >> 8),
+			byte(offset >> 16),
+			byte(offset >> 24),
+		}
 	}
 
 	return machineCode, nil

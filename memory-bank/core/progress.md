@@ -19,18 +19,18 @@
 - **ModR/M 生成エラー (`unsupported 16bit mem operand`) の部分修正 (`pkg/operand/modrm_address.go`)**
 - **`BitMode` 伝達ロジックの修正 (`client`, `ocode_client`, `pass1`)**
 - **`codegen` の MOV, ADD ハンドラに `.WithBitMode()` 追加**
+- **JMP rel32 / Jcc rel32 の実装**: `internal/codegen/x86gen_jmp.go` に `rel32` オフセット計算とエンコーディングを追加。
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - **MOV エンコーディングエラー**: `MOV r32, imm32/m32/label` 形式。
-    - **ADD エンコーディングエラー**: `ADD r32, r32/imm` 形式。
-    - **JMP rel32 未実装エラー**: `JMP DWORD ...`。
-    - **バイナリ長不一致**。
-- **上記エンコーディングエラーの原因調査**: `pkg/operand/operand_impl.go` の `OperandTypes()` メソッド調査。
-- **JMP rel32 の実装**: `internal/codegen/x86gen_jmp.go`。
+    - **MOV エンコーディングエラー**: `MOV r32, imm32/m32/label` 形式。(`Failed to find encoding`)
+    - **ADD エンコーディングエラー**: `ADD r32, r32/imm` 形式。(`Failed to find encoding for ADD`)
+    - **バイナリ長不一致**: `expected length 304 actual length 236` (68バイト不足)。JMP実装により5バイト増加したが、MOV/ADDのエンコーディングエラーが多数残存するため。
+- **上記エンコーディングエラーの原因調査**:
+    - `pkg/operand` パーサー (`participle`利用) が複数のオペランド (特にレジスタ、即値、ラベルの組み合わせ) を正しく認識・分類できていない問題が根深い。Lexerルール調整やキャッシュ無効化では解決せず。一旦保留。
+    - 次ステップとして `asmdb` (JSON定義、fallback table) や `codegen` (MOV/ADDハンドラ) 側のエンコーディング定義や呼び出しロジックを確認する。
 - **ModR/M 生成ロジックのリファクタリング検討:**
     - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討は継続。
-- JMP系命令 (Jcc命令) のrel32オフセット対応 (上記 JMP rel32 と関連)
 - RESBの計算処理の実装
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - `internal/codegen` パッケージの不要パラメータ削除
