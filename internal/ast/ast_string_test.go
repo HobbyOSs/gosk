@@ -1,45 +1,44 @@
 // internal/ast/ast_string_test.go
-package ast_test
+package ast
 
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/internal/ast" // プロジェクトのパスに合わせて修正
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExpToString(t *testing.T) {
 	tests := []struct {
 		name string
-		exp  ast.Exp
+		exp  Exp
 		want string
 	}{
 		{
 			name: "ImmExp with NumberFactor",
-			exp:  &ast.ImmExp{Factor: &ast.NumberFactor{Value: 123}},
+			exp:  &ImmExp{Factor: &NumberFactor{Value: 123}},
 			want: "123",
 		},
 		{
 			name: "ImmExp with HexFactor",
-			exp:  &ast.ImmExp{Factor: &ast.HexFactor{Value: "0x42"}},
+			exp:  &ImmExp{Factor: &HexFactor{Value: "0x42"}},
 			want: "0x42",
 		},
 		{
 			name: "ImmExp with IdentFactor",
-			exp:  &ast.ImmExp{Factor: &ast.IdentFactor{Value: "ESP"}},
+			exp:  &ImmExp{Factor: &IdentFactor{Value: "ESP"}},
 			want: "ESP",
 		},
 		{
 			name: "MemoryAddrExp with AddExp",
-			exp: &ast.MemoryAddrExp{
-				Left: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.IdentFactor{Value: "ESP"}},
+			exp: &MemoryAddrExp{
+				Left: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{Factor: &IdentFactor{Value: "ESP"}},
 					},
 					Operators: []string{"+"},
-					TailExps: []*ast.MultExp{
-						&ast.MultExp{
-							HeadExp: &ast.ImmExp{Factor: &ast.NumberFactor{Value: 4}},
+					TailExps: []*MultExp{
+						&MultExp{
+							HeadExp: &ImmExp{Factor: &NumberFactor{Value: 4}},
 						},
 					},
 				},
@@ -48,17 +47,17 @@ func TestExpToString(t *testing.T) {
 		},
 		{
 			name: "MemoryAddrExp with SegmentExp",
-			exp: &ast.MemoryAddrExp{
-				Left: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{
-							Factor: &ast.IdentFactor{Value: "CS"},
+			exp: &MemoryAddrExp{
+				Left: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{
+							Factor: &IdentFactor{Value: "CS"},
 						},
 					},
 				},
-				Right: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.HexFactor{Value: "0x20"}},
+				Right: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{Factor: &HexFactor{Value: "0x20"}},
 					},
 				},
 			},
@@ -66,14 +65,14 @@ func TestExpToString(t *testing.T) {
 		},
 		{
 			name: "AddExp",
-			exp: &ast.AddExp{
-				HeadExp: &ast.MultExp{
-					HeadExp: &ast.ImmExp{Factor: &ast.IdentFactor{Value: "ESP"}},
+			exp: &AddExp{
+				HeadExp: &MultExp{
+					HeadExp: &ImmExp{Factor: &IdentFactor{Value: "ESP"}},
 				},
 				Operators: []string{"+"},
-				TailExps: []*ast.MultExp{
-					&ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.NumberFactor{Value: 4}},
+				TailExps: []*MultExp{
+					&MultExp{
+						HeadExp: &ImmExp{Factor: &NumberFactor{Value: 4}},
 					},
 				},
 			},
@@ -81,22 +80,22 @@ func TestExpToString(t *testing.T) {
 		},
 		{
 			name: "MultExp",
-			exp: &ast.MultExp{
-				HeadExp:   &ast.ImmExp{Factor: &ast.NumberFactor{Value: 4}},
+			exp: &MultExp{
+				HeadExp:   &ImmExp{Factor: &NumberFactor{Value: 4}},
 				Operators: []string{"*"},
-				TailExps: []*ast.ImmExp{
-					&ast.ImmExp{Factor: &ast.IdentFactor{Value: "ESI"}},
+				TailExps: []*ImmExp{
+					&ImmExp{Factor: &IdentFactor{Value: "ESI"}},
 				},
 			},
 			want: "4 * ESI",
 		},
 		{
 			name: "MemoryAddrExp with DataType",
-			exp: &ast.MemoryAddrExp{
-				DataType: ast.Byte,
-				Left: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.IdentFactor{Value: "EAX"}},
+			exp: &MemoryAddrExp{
+				DataType: Byte,
+				Left: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{Factor: &IdentFactor{Value: "EAX"}},
 					},
 				},
 			},
@@ -104,16 +103,16 @@ func TestExpToString(t *testing.T) {
 		},
 		{
 			name: "SegmentExp with DataType",
-			exp: &ast.SegmentExp{
-				DataType: ast.Dword,
-				Left: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.IdentFactor{Value: "CS"}},
+			exp: &SegmentExp{
+				DataType: Dword,
+				Left: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{Factor: &IdentFactor{Value: "CS"}},
 					},
 				},
-				Right: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp: &ast.ImmExp{Factor: &ast.HexFactor{Value: "0x20"}},
+				Right: &AddExp{
+					HeadExp: &MultExp{
+						HeadExp: &ImmExp{Factor: &HexFactor{Value: "0x20"}},
 					},
 				},
 			},
@@ -123,7 +122,7 @@ func TestExpToString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := ast.ExpToString(tt.exp)
+			actual := ExpToString(tt.exp)
 			assert.Equal(t, tt.want, actual)
 		})
 	}

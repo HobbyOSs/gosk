@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Added import
 )
 
 // ModRMは ModR/Mバイトおよびディスプレースメントを保持するサンプル構造体
@@ -40,8 +42,8 @@ var rm32Table = map[string]byte{
 }
 
 // ParseMemoryOperand はメモリオペランド文字列(例: "[bx+si+0x10]" など)を
-// パースして (mod, rm, disp) を求める。bitMode には MODE_16BIT, MODE_32BIT を使う。
-func ParseMemoryOperand(memStr string, bitMode BitMode) (mod byte, rm byte, disp []byte, err error) {
+// パースして (mod, rm, disp) を求める。bitMode には cpu.MODE_16BIT, cpu.MODE_32BIT を使う。
+func ParseMemoryOperand(memStr string, bitMode cpu.BitMode) (mod byte, rm byte, disp []byte, err error) { // Changed to cpu.BitMode
 	if !strings.Contains(memStr, "[") && !strings.HasSuffix(memStr, "]") {
 		return 0, 0, nil, fmt.Errorf("invalid mem operand format: %s", memStr)
 	}
@@ -69,7 +71,7 @@ func ParseMemoryOperand(memStr string, bitMode BitMode) (mod byte, rm byte, disp
 	}
 
 	switch bitMode {
-	case MODE_16BIT:
+	case cpu.MODE_16BIT: // Changed to cpu.MODE_16BIT
 		baseKey := strings.Join(regs, "+") // 例: "bx+si"
 		if baseKey == "" && hasDisp {
 			// [0x0ff0] のような直接アドレッシングを処理する
@@ -128,7 +130,7 @@ func ParseMemoryOperand(memStr string, bitMode BitMode) (mod byte, rm byte, disp
 			disp = []byte{lo, hi}
 		}
 
-	case MODE_32BIT:
+	case cpu.MODE_32BIT: // Changed to cpu.MODE_32BIT
 		if len(regs) == 0 {
 			// [disp32] のケース ([0x1000] など)
 			mod = 0b00
@@ -174,7 +176,7 @@ func ParseMemoryOperand(memStr string, bitMode BitMode) (mod byte, rm byte, disp
 
 // CalcModRM は最終的な ModR/Mバイト + disp を生成する。
 // rmOperand が "[...]" の場合はメモリ、レジスタ名の場合は mod=11 とみなす。
-func CalcModRM(rmOperand string, regBits byte, bitMode BitMode) ([]byte, error) {
+func CalcModRM(rmOperand string, regBits byte, bitMode cpu.BitMode) ([]byte, error) { // Changed to cpu.BitMode
 	rmOperand = strings.TrimSpace(rmOperand)
 
 	// メモリオペランドかどうか
@@ -205,9 +207,9 @@ func CalcModRM(rmOperand string, regBits byte, bitMode BitMode) ([]byte, error) 
 	var rmVal byte
 	var ok bool
 	switch bitMode {
-	case MODE_16BIT:
+	case cpu.MODE_16BIT: // Changed to cpu.MODE_16BIT
 		rmVal, ok = regMap16[rLower]
-	case MODE_32BIT:
+	case cpu.MODE_32BIT: // Changed to cpu.MODE_32BIT
 		rmVal, ok = regMap32[rLower]
 	default:
 		return nil, fmt.Errorf("unsupported bitMode %d", bitMode)
@@ -240,11 +242,11 @@ func removePrefix(input string) string {
 
 	// パターンにマッチするか確認
 	matches := pattern.FindStringSubmatch(input)
-	if matches != nil && len(matches) > 2 {
+	if len(matches) > 2 {
 		// プレフィックスを取り除いた部分を返す
-		return matches[2]
+		return strings.TrimSpace(matches[2])
 	}
 
 	// マッチしない場合は元の文字列を返す
-	return input
+	return strings.TrimSpace(input)
 }

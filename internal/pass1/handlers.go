@@ -4,9 +4,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
+	// "github.com/HobbyOSs/gosk/internal/client" // Removed unused import
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep cpu import for NewBitMode
+	// "github.com/HobbyOSs/gosk/pkg/operand" // Removed unused import
 	"github.com/morikuni/failure"
 	"github.com/samber/lo"
 )
@@ -139,15 +141,15 @@ func push(env *Pass1, t *token.ParseToken) {
 	}
 }
 
-func TraverseAST(node ast.Node, env *Pass1) {
+func TraverseAST(node ast.Node, env *Pass1) { // Restored ast.Node
 	switch n := node.(type) {
-	case *ast.Program:
+	case *ast.Program: // Restored ast.Program
 		log.Println("trace: program handler!!!")
 		for _, stmt := range n.Statements {
 			TraverseAST(stmt, env)
 		}
 
-	case *ast.DeclareStmt:
+	case *ast.DeclareStmt: // Restored ast.DeclareStmt
 		log.Println("trace: declare handler!!!")
 		TraverseAST(n.Id, env)
 		ok, key := env.Ctx.Pop()
@@ -164,7 +166,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		env.EquMap[key.AsString()] = value
 		log.Printf("debug: EquMap after DeclareStmt: %+v\n", env.EquMap)
 
-	case *ast.LabelStmt:
+	case *ast.LabelStmt: // Restored ast.LabelStmt
 		// ラベルが存在するので、シンボルテーブルのラベルのレコードに現在のLOCを設定
 		log.Println("trace: label handler!!!")
 		TraverseAST(n.Label, env)
@@ -172,7 +174,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		label := strings.TrimSuffix(vLabel.AsString(), ":")
 		env.SymTable[label] = env.LOC
 
-	case *ast.MnemonicStmt:
+	case *ast.MnemonicStmt: // Restored ast.MnemonicStmt
 		log.Println("trace: mnemonic stmt handler!!!")
 		TraverseAST(n.Opcode, env)
 		vOpcode := pop(env)
@@ -201,7 +203,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		evalOpcodeFn(env, vOperands)
 		log.Printf("debug: [pass1] LOC = %d\n", env.LOC)
 
-	case *ast.OpcodeStmt:
+	case *ast.OpcodeStmt: // Restored ast.OpcodeStmt
 		log.Println("trace: opcode stmt handler!!!")
 		TraverseAST(n.Opcode, env)
 		vOpcode := pop(env)
@@ -220,28 +222,28 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		env.Client.Emit(opcode) // opcodeFnの中で実行できないので
 		log.Printf("debug: [pass1] LOC = %d\n", env.LOC)
 
-	case *ast.ExportSymStmt:
+	case *ast.ExportSymStmt: // Restored ast.ExportSymStmt
 		log.Println("trace: export sym stmt handler!!!")
 		//for _, factor := range n.Factors {
 		//	TraverseAST(factor, env)
 		//}
 
-	case *ast.ExternSymStmt:
+	case *ast.ExternSymStmt: // Restored ast.ExternSymStmt
 		log.Println("trace: extern sym stmt handler!!!")
 		//for _, factor := range n.Factors {
 		//	TraverseAST(factor, env)
 		//}
 
-	case *ast.ConfigStmt:
+	case *ast.ConfigStmt: // Restored ast.ConfigStmt
 		log.Println("trace: config stmt handler!!!")
 		// 使用するbit_modeは機械語サイズに影響するので読み取って設定する
 		TraverseAST(n.Factor, env)
-		if n.ConfigType == ast.Bits {
+		if n.ConfigType == ast.Bits { // Restored ast.Bits
 			ok, token := env.Ctx.Pop()
 			if !ok {
 				log.Fatal("Failed to pop token")
 			}
-			bitMode, ok := operand.NewBitMode(token.ToInt()) // Change ast.NewBitMode to operand.NewBitMode
+			bitMode, ok := cpu.NewBitMode(token.ToInt()) // Keep cpu.NewBitMode
 			if !ok {
 				log.Fatal("error: Failed to parse BITS")
 			}
@@ -250,7 +252,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 			env.Client.SetBitMode(bitMode)
 		}
 
-	case *ast.MemoryAddrExp:
+	case *ast.MemoryAddrExp: // Restored ast.MemoryAddrExp
 		log.Println("trace: memory addr exp handler!!!")
 		// Recursively traverse left and right sides of memory address expression
 		TraverseAST(n.Left, env)
@@ -262,7 +264,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		v := token.NewParseToken(token.TTIdentifier, n)
 		push(env, v)
 
-	case *ast.SegmentExp:
+	case *ast.SegmentExp: // Restored ast.SegmentExp
 		log.Println("trace: segment exp handler!!!")
 		TraverseAST(n.Left, env)
 		if n.Right != nil {
@@ -270,7 +272,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}
 		popAndPush(env)
 
-	case *ast.AddExp:
+	case *ast.AddExp: // Restored ast.AddExp
 		log.Println("trace: add exp handler!!!")
 		TraverseAST(n.HeadExp, env)
 		vHead := pop(env)
@@ -294,7 +296,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 			vTail[0].AsString() == "$" {
 			// 0xffff - $ という特殊系
 			v := token.NewParseToken(token.TTIdentifier,
-				ast.NewImmExp(ast.BaseExp{}, ast.NewIdentFactor(ast.BaseFactor{}, vHead.AsString()+"-$")),
+				ast.NewImmExp(ast.BaseExp{}, ast.NewIdentFactor(ast.BaseFactor{}, vHead.AsString()+"-$")), // Restored ast types
 			)
 			push(env, v)
 			return
@@ -317,12 +319,12 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}, acc)
 
 		v := token.NewParseToken(token.TTNumber,
-			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
+			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)), // Restored ast types
 		)
 		push(env, v)
 		return
 
-	case *ast.MultExp:
+	case *ast.MultExp: // Restored ast.MultExp
 		log.Println("trace: mult exp handler!!!")
 		TraverseAST(n.HeadExp, env)
 		vHead := pop(env)
@@ -358,20 +360,20 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		}, base)
 
 		v := token.NewParseToken(token.TTNumber,
-			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)),
+			ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, sum)), // Restored ast types
 		)
 		push(env, v)
 		return
 
-	case *ast.ImmExp:
+	case *ast.ImmExp: // Restored ast.ImmExp
 		log.Println("trace: imm exp handler!!!")
 		TraverseAST(n.Factor, env)
 
-		if ident, ok := n.Factor.(*ast.IdentFactor); ok {
+		if ident, ok := n.Factor.(*ast.IdentFactor); ok { // Restored ast.IdentFactor
 			if value, ok := env.EquMap[ident.Value]; ok {
 				log.Printf("debug: IdentFactor: %s found in EquMap: %+v\n", ident.Value, value)
 				// EQU対応; 置き換え対象の Factor を新しい Factor に変更する
-				if immExp, ok := value.Data.(*ast.ImmExp); ok {
+				if immExp, ok := value.Data.(*ast.ImmExp); ok { // Restored ast.ImmExp
 					n.Factor = immExp.Factor
 
 					pop(env)
@@ -384,7 +386,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		popAndPush(env)
 		return
 
-	case *ast.NumberFactor,
+	case *ast.NumberFactor, // Restored ast types
 		*ast.StringFactor,
 		*ast.HexFactor,
 		*ast.IdentFactor,
@@ -393,7 +395,7 @@ func TraverseAST(node ast.Node, env *Pass1) {
 		log.Printf("trace: %T factor: %+v\n", n, n)
 		var t *token.ParseToken
 		switch f := n.(type) {
-		case *ast.NumberFactor:
+		case *ast.NumberFactor: // Restored ast types
 			t = token.NewParseToken(token.TTNumber, ast.NewImmExp(ast.BaseExp{}, f))
 		case *ast.StringFactor:
 			t = token.NewParseToken(token.TTIdentifier, ast.NewImmExp(ast.BaseExp{}, f))

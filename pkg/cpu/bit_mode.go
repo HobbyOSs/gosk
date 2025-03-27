@@ -1,4 +1,4 @@
-package operand
+package cpu
 
 type BitMode int
 

@@ -1,6 +1,8 @@
 package operand
 
 import (
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Added import
+
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -10,13 +12,14 @@ var parsedOperandsCache = make(map[string][]*ParsedOperand)
 
 type OperandImpl struct {
 	Internal      string
-	BitMode       BitMode
+	BitMode       cpu.BitMode // Changed to cpu.BitMode
 	ForceImm8     bool
 	ForceRelAsImm bool
 }
 
 func NewOperandFromString(text string) Operands {
-	return &OperandImpl{Internal: text, BitMode: MODE_16BIT, ForceImm8: false, ForceRelAsImm: false}
+	// Changed MODE_16BIT to cpu.MODE_16BIT
+	return &OperandImpl{Internal: text, BitMode: cpu.MODE_16BIT, ForceImm8: false, ForceRelAsImm: false}
 }
 
 func (b *OperandImpl) WithForceRelAsImm(force bool) Operands {
@@ -106,12 +109,12 @@ func (b *OperandImpl) FromString(text string) Operands {
 	return &OperandImpl{Internal: text, BitMode: b.BitMode}
 }
 
-func (b *OperandImpl) WithBitMode(mode BitMode) Operands {
+func (b *OperandImpl) WithBitMode(mode cpu.BitMode) Operands { // Changed to cpu.BitMode
 	b.BitMode = mode
 	return b
 }
 
-func (b *OperandImpl) GetBitMode() BitMode {
+func (b *OperandImpl) GetBitMode() cpu.BitMode { // Changed to cpu.BitMode
 	return b.BitMode
 }
 
@@ -257,69 +260,6 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 
 	operandTypesCache[b.Internal] = types
 	return types
-}
-
-// Require66h はオペランドサイズプレフィックスが必要かどうかを判定する
-func (b *OperandImpl) Require66h() bool {
-	types := b.OperandTypes()
-	if len(types) == 0 {
-		return false
-	}
-
-	switch b.BitMode {
-	case MODE_16BIT:
-		// 16bitモードで32bitレジスタを使用する場合
-		for _, t := range types {
-			if t == CodeR32 || t == CodeM32 {
-				return true
-			}
-		}
-		// 16bitモードで32bit即値を使用する場合
-		if len(types) == 1 {
-			parser := getParser()
-			inst, err := parser.ParseString("", b.Internal)
-			if err == nil && len(inst.Operands) == 1 && inst.Operands[0].Imm != "" {
-				imm := getImmediateSizeFromValue(inst.Operands[0].Imm)
-				if imm == CodeIMM32 {
-					return true
-				}
-			}
-		}
-	case MODE_32BIT:
-		// 32bitモードで16bitレジスタを使用する場合
-		for _, t := range types {
-			if t == CodeR16 || t == CodeM16 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// Require67h はアドレスサイズプレフィックスが必要かどうかを判定する
-func (b *OperandImpl) Require67h() bool {
-	types := b.OperandTypes()
-	if len(types) == 0 {
-		return false
-	}
-
-	switch b.BitMode {
-	case MODE_16BIT:
-		// 16bitモードで32bitメモリアクセスを行う場合
-		for _, t := range types {
-			if t == CodeM32 {
-				return true
-			}
-		}
-	case MODE_32BIT:
-		// 32bitモードで16bitメモリアクセスを行う場合
-		for _, t := range types {
-			if t == CodeM16 {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (b *OperandImpl) CalcOffsetByteSize() int {

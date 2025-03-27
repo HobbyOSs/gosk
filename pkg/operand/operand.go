@@ -1,8 +1,10 @@
-package operand
+ package operand
 
-type Instruction struct {
+import "github.com/HobbyOSs/gosk/pkg/cpu"
+
+ type Instruction struct {
 	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
-}
+ }
 
 type ParsedOperand struct {
 	SegMem      string       `parser:"@SegMem"`
@@ -32,10 +34,10 @@ type Operands interface {
 	FromString(text string) Operands
 	CalcOffsetByteSize() int
 	DetectImmediateSize() int
-	WithBitMode(mode BitMode) Operands // Add back
+	WithBitMode(mode cpu.BitMode) Operands // Add back
 	WithForceImm8(force bool) Operands
 	WithForceRelAsImm(force bool) Operands
-	GetBitMode() BitMode // Add back
+	GetBitMode() cpu.BitMode // Add back
 	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
 	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
 	ParsedOperands() []*ParsedOperand

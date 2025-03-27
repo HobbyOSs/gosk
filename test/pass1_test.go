@@ -4,13 +4,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/pkg/cpu"
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
+	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	// Remove duplicate cpu import
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +57,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              0,
-				BitMode:          operand.MODE_32BIT, // Change ast.MODE_32BIT to operand.MODE_32BIT
+				BitMode:          cpu.MODE_32BIT, // Change cpu.MODE_32BIT to cpu.MODE_32BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -69,7 +70,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			map[string]*token.ParseToken{"CYLS": token.NewParseToken(token.TTNumber, buildImmExpFromValue(10))},
 			&pass1.Pass1{
 				LOC:              0,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -82,7 +83,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              1,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -95,7 +96,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			nil,
 			&pass1.Pass1{
 				LOC:              11,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -109,7 +110,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:              0x7c00,
 				DollarPosition:   0x7c00,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -123,7 +124,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:              18,
 				DollarPosition:   0,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -137,7 +138,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:              0x7dfe,
 				DollarPosition:   0,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         make(map[string]int32, 0),
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -153,7 +154,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:              0x7c00,
 				DollarPosition:   0x7c00,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable:         map[string]int32{"label": 0x7c00},
 				GlobalSymbolList: []string{},
 				ExternSymbolList: []string{},
@@ -212,7 +213,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			&pass1.Pass1{
 				LOC:            31860,
 				DollarPosition: 0x7c00,
-				BitMode:        operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:        cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				SymTable: map[string]int32{
 					"entry":   31824,
 					"putloop": 31839,
@@ -234,13 +235,13 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 			assert.True(t, ok)
 
 			// pass1のEvalを実行
-			ctx := &codegen.CodeGenContext{BitMode: operand.MODE_16BIT} // Change ast.MODE_16BIT to operand.MODE_16BIT
+			ctx := &codegen.CodeGenContext{BitMode: cpu.MODE_16BIT} // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			client, err := ocode_client.NewCodegenClient(ctx)
 			s.Require().NoError(err)
 
 			pass1 := &pass1.Pass1{
 				LOC:              0,
-				BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+				BitMode:          cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 				EquMap:           make(map[string]*token.ParseToken, 0),
 				SymTable:         make(map[string]int32, 0),
 				NextImmJumpID:    0,

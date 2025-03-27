@@ -8,13 +8,13 @@ import (
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Add operand import
 )
 
 // ocodeClient 構造体の定義
 type ocodeClient struct {
 	Ocodes  []ocode.Ocode
-	bitMode operand.BitMode // Change ast.BitMode to operand.BitMode
+	bitMode cpu.BitMode // Change cpu.BitMode to cpu.BitMode
 	ctx     *codegen.CodeGenContext // CodeGenContextを保持
 }
 
@@ -96,7 +96,7 @@ func (c *ocodeClient) SetSymbolTable(symTable map[string]int32) {
 }
 
 // SetBitMode メソッドの実装
-func (c *ocodeClient) SetBitMode(mode operand.BitMode) { // Change ast.BitMode to operand.BitMode
+func (c *ocodeClient) SetBitMode(mode cpu.BitMode) { // Change cpu.BitMode to cpu.BitMode
 	c.ctx.BitMode = mode
 }
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Restored operand import
 	"github.com/samber/lo"
 )
 

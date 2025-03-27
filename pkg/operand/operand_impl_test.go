@@ -2,7 +2,8 @@ package operand
 
 import (
 	"testing"
-	// Remove: "github.com/HobbyOSs/gosk/internal/ast"
+
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Added import
 )
 
 func TestBaseOperand_OperandType(t *testing.T) {
@@ -87,7 +88,8 @@ func TestBaseOperand_OperandType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &OperandImpl{Internal: tt.internal, BitMode: MODE_16BIT, ForceImm8: tt.forceImm8} // Remove ast. prefix
+			// Changed MODE_16BIT to cpu.MODE_16BIT
+			b := &OperandImpl{Internal: tt.internal, BitMode: cpu.MODE_16BIT, ForceImm8: tt.forceImm8}
 			if got := b.OperandTypes(); !equalOperandTypes(got, tt.expected) {
 				t.Errorf("OperandType() = %v, want %v", got, tt.expected)
 			}

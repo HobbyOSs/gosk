@@ -2,49 +2,51 @@ package operand
 
 import (
 	"testing"
+
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Added import
 )
 
 func TestRequire66h(t *testing.T) {
 	tests := []struct {
 		name     string
 		operand  string
-		bitMode  BitMode
+		bitMode  cpu.BitMode // Changed to cpu.BitMode
 		expected bool
 	}{
 		{
 			name:     "16bit mode with 32bit register",
 			operand:  "EAX",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit register",
 			operand:  "AX",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: false,
 		},
 		{
 			name:     "32bit mode with 16bit register",
 			operand:  "AX",
-			bitMode:  MODE_32BIT,
+			bitMode:  cpu.MODE_32BIT, // Changed to cpu.MODE_32BIT
 			expected: true,
 		},
 		{
 			name:     "32bit mode with 32bit register",
 			operand:  "EAX",
-			bitMode:  MODE_32BIT,
+			bitMode:  cpu.MODE_32BIT, // Changed to cpu.MODE_32BIT
 			expected: false,
 		},
 		{
 			name:     "16bit mode with 32bit immediate",
 			operand:  "0x12345678",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit immediate",
 			operand:  "0x1234",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: false,
 		},
 	}
@@ -63,31 +65,31 @@ func TestRequire67h(t *testing.T) {
 	tests := []struct {
 		name     string
 		operand  string
-		bitMode  BitMode
+		bitMode  cpu.BitMode // Changed to cpu.BitMode
 		expected bool
 	}{
 		{
 			name:     "16bit mode with 32bit memory access",
 			operand:  "DWORD [EBX]",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit memory access",
 			operand:  "WORD [BX]",
-			bitMode:  MODE_16BIT,
+			bitMode:  cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			expected: false,
 		},
 		{
 			name:     "32bit mode with 16bit memory access",
 			operand:  "WORD [BX]",
-			bitMode:  MODE_32BIT,
+			bitMode:  cpu.MODE_32BIT, // Changed to cpu.MODE_32BIT
 			expected: true,
 		},
 		{
 			name:     "32bit mode with 32bit memory access",
 			operand:  "DWORD [EBX]",
-			bitMode:  MODE_32BIT,
+			bitMode:  cpu.MODE_32BIT, // Changed to cpu.MODE_32BIT
 			expected: false,
 		},
 	}

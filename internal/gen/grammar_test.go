@@ -4,7 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
+	// Remove unused cpu import
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 )

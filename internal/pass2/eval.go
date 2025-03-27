@@ -6,15 +6,15 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/HobbyOSs/gosk/internal/ast" // Keep ast for program argument
+	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 type Pass2 struct {
-	BitMode          operand.BitMode // Change ast.BitMode to operand.BitMode
+	BitMode          cpu.BitMode // Keep cpu.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32
 	GlobalSymbolList []string
@@ -24,7 +24,7 @@ type Pass2 struct {
 	Client           client.CodegenClient // 中間言語
 }
 
-func (p *Pass2) Eval(program ast.Prog) ([]byte, error) {
+func (p *Pass2) Eval(program ast.Prog) ([]byte, error) { // Restored ast.Prog
 	// TODO: このあたりの受け渡しおかしい
 	ocodes := p.Client.GetOcodes()
 	p.Client.SetDollarPosition(p.DollarPos)

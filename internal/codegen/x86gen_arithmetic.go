@@ -3,11 +3,11 @@ package codegen
 import (
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
+	"strconv" // Added missing import
+	"strings" // Added missing import
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
 )
 
 // generateArithmeticCode は算術命令の機械語生成の共通処理を行う関数です。
@@ -36,6 +36,9 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 	// プレフィックスの追加
 	if ops.Require66h() {
 		machineCode = append(machineCode, 0x66)
+	}
+	if ops.Require67h() {
+		machineCode = append(machineCode, 0x67)
 	}
 
 	// オペコードの追加
@@ -83,6 +86,9 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 		}
 		if imm, err := getImmediateValue(operands[immIndex], encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
+		} else {
+			log.Printf("error: Failed to get immediate value: %v", err) // Added error handling
+			return nil, fmt.Errorf("failed to get immediate value")
 		}
 	}
 

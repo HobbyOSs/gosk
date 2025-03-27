@@ -1,17 +1,19 @@
 package codegen
 
 import (
+	"encoding/binary" // Added missing import
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Import operand package
+	"github.com/HobbyOSs/gosk/pkg/cpu"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
 )
 
 // GenerateModRM はエンコーディング情報とビットモードに基づいてModR/Mバイトを生成する
-func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
+func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode cpu.BitMode) ([]byte, error) { // Keep cpu.BitMode
 	if modRM == nil || modRM.ModRM == nil {
 		return nil, nil
 	}
@@ -80,7 +82,7 @@ func parseMode(modeStr string) byte {
 }
 
 // ModRMByOperand はモード、regオペランド、rmオペランド、ビットモードに基づいてModR/Mバイトを生成する
-func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
+func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode cpu.BitMode) ([]byte, error) { // Keep cpu.BitMode
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -130,7 +132,7 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 }
 
 // ModRMByValue はモード、固定reg値、rmオペランドに基づいてModR/Mバイトを生成する
-func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode operand.BitMode) []byte { // Change ast.BitMode to operand.BitMode
+func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode cpu.BitMode) []byte { // Keep cpu.BitMode
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -220,7 +222,7 @@ func ResolveOpcode(op asmdb.Opcode, regNum int) ([]byte, error) {
 	}
 
 	// Addendがある場合、最後のバイトにレジスタ番号を加算
-	if op.Addend != nil && len(opBytes) > 0 {
+	if op.Addend != nil && len(opBytes) > 0 && regNum >= 0 { // Added check for regNum >= 0
 		regBits := byte(regNum & 0x07)
 		lastByteIndex := len(opBytes) - 1
 		opBytes[lastByteIndex] |= regBits
@@ -233,7 +235,7 @@ func ResolveOpcode(op asmdb.Opcode, regNum int) ([]byte, error) {
 }
 
 // getModRMFromOperands はオペランドからModR/Mバイトを生成する
-func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
+func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode cpu.BitMode) ([]byte, error) { // Keep cpu.BitMode
 	modrmByte, err := GenerateModRM(operands, modRM, bitMode)
 	if err != nil {
 		return nil, err
@@ -250,4 +252,27 @@ func parseIndex(indexStr string) (int, error) {
 		return -1, fmt.Errorf("invalid index format")
 	}
 	return index, nil
+}
+
+// getImmediateValue はオペランド文字列から即値を取得する
+func getImmediateValue(operandStr string, size int) ([]byte, error) {
+
+	_operandStr := strings.TrimSpace(operandStr)
+	val, err := strconv.ParseInt(_operandStr, 0, 64) // 0 base allows auto-detection (e.g., 0x prefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse immediate value '%s': %w", _operandStr, err)
+	}
+
+	buf := make([]byte, size)
+	switch size {
+	case 1:
+		buf[0] = byte(val)
+	case 2:
+		binary.LittleEndian.PutUint16(buf, uint16(val))
+	case 4:
+		binary.LittleEndian.PutUint32(buf, uint32(val))
+	default:
+		return nil, fmt.Errorf("unsupported immediate size: %d", size)
+	}
+	return buf, nil
 }

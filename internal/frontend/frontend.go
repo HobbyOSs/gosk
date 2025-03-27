@@ -2,16 +2,20 @@ package frontend
 
 import (
 	"fmt"
+	"log" // Added missing import
 	"os"
+	"path/filepath" // Added missing import
 
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
+	// "github.com/HobbyOSs/gosk/internal/client" // Removed unused import
 	"github.com/HobbyOSs/gosk/internal/codegen"
+	"github.com/HobbyOSs/gosk/internal/gen" // Added missing import
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
@@ -26,19 +30,19 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 	defer dstFile.Close()
 
-	prog, ok := (parseTree).(ast.Prog)
+	prog, ok := (parseTree).(ast.Prog) // Restored ast.Prog
 	if !ok {
 		fmt.Printf("GOSK : failed to parse")
 		os.Exit(-1)
 	}
 
 	// pass1のEvalを実行
-	ctx := &codegen.CodeGenContext{BitMode: operand.MODE_16BIT} // Change ast.MODE_16BIT to operand.MODE_16BIT
+	ctx := &codegen.CodeGenContext{BitMode: cpu.MODE_16BIT} // Keep cpu.MODE_16BIT
 	client, _ := ocode_client.NewCodegenClient(ctx)
 
 	pass1 := &pass1.Pass1{
 		LOC:              0,
-		BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		BitMode:          cpu.MODE_16BIT, // Keep cpu.MODE_16BIT
 		EquMap:           make(map[string]*token.ParseToken, 0),
 		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},
@@ -72,4 +76,14 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 
 	return pass1, pass2
+}
+
+// ParseFile は指定されたファイルを解析します。
+func ParseFile(filename string) (any, error) { // Added ParseFile function based on usage in main.go
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		log.Fatalf("Failed to read file: %v", err)
+	}
+	// Use gen.Parse directly instead of creating a parser instance
+	return gen.Parse(filepath.Base(filename), content)
 }

@@ -1,12 +1,14 @@
 package codegen
 
 import (
+	// "fmt" // Removed unused import
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
+	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
 )
 
 // handleMOV handles the MOV instruction and generates the appropriate machine code.
@@ -35,6 +37,9 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	// プレフィックスの追加
 	if ops.Require66h() {
 		machineCode = append(machineCode, 0x66)
+	}
+	if ops.Require67h() {
+		machineCode = append(machineCode, 0x67)
 	}
 
 	// オペコードの追加
@@ -92,9 +97,23 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 		opStr := operands[immIndex]
 		// アドレスが即値扱いされるパターンと通常の即値を処理する
 		if addr, ok := ctx.SymTable[opStr]; ok {
-			machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF))
+			// Assuming immediate size dictates how many bytes of the address to use
+			switch encoding.Immediate.Size {
+			case 1:
+				machineCode = append(machineCode, byte(addr&0xFF))
+			case 2:
+				machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF))
+			case 4:
+				machineCode = append(machineCode, byte(addr&0xFF), byte((addr>>8)&0xFF), byte((addr>>16)&0xFF), byte((addr>>24)&0xFF))
+			default:
+				log.Printf("error: unsupported immediate size for symbol address: %d", encoding.Immediate.Size)
+				return nil
+			}
 		} else if imm, err := getImmediateValue(opStr, encoding.Immediate.Size); err == nil {
 			machineCode = append(machineCode, imm...)
+		} else {
+			log.Printf("error: Failed to get immediate value or symbol address for %s: %v", opStr, err) // Added error handling
+			return nil // Return nil on error
 		}
 	}
 

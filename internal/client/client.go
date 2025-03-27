@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/HobbyOSs/gosk/pkg/ocode"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Change import path
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Change import path
 )
 
 // CodegenClient インターフェースの定義
@@ -14,5 +14,5 @@ type CodegenClient interface {
 	SetOcodes(ocodes []ocode.Ocode)
 	SetDollarPosition(pos uint32)
 	SetSymbolTable(map[string]int32)
-	SetBitMode(mode operand.BitMode) // Change type to operand.BitMode
+	SetBitMode(mode cpu.BitMode) // Change type to cpu.BitMode
 }

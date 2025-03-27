@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
+	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
 )
 
 // generateLogicalCode は論理命令の機械語生成の共通処理を行う関数です。
@@ -18,6 +19,7 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 
 	// オペランドの解析
 	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
+		WithBitMode(ctx.BitMode). // Added WithBitMode
 		WithForceImm8(true) // 算術命令に合わせて一旦 true に設定
 
 	// AsmDBからエンコーディングを取得
@@ -33,6 +35,9 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 	// プレフィックスの追加
 	if ops.Require66h() {
 		machineCode = append(machineCode, 0x66)
+	}
+	if ops.Require67h() {
+		machineCode = append(machineCode, 0x67)
 	}
 
 	// オペコードの追加
@@ -117,7 +122,8 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(params.Operands[0])
+	ops := operand.NewOperandFromString(params.Operands[0]).
+		WithBitMode(ctx.BitMode) // Added WithBitMode
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()
@@ -132,6 +138,9 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	// プレフィックスの追加
 	if ops.Require66h() {
 		machineCode = append(machineCode, 0x66)
+	}
+	if ops.Require67h() {
+		machineCode = append(machineCode, 0x67)
 	}
 	// REX prefix handling removed based on user feedback
 

@@ -3,13 +3,14 @@ package pass1
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/internal/ast" // Keep ast for program argument
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep ast for program argument
 	"github.com/HobbyOSs/gosk/internal/codegen"
+	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/gen"
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
+	// Remove duplicate cpu import
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -29,7 +30,7 @@ func (s *Pass1EvalSuite) SetupSuite() {
 }
 
 type EvalTestParam struct {
-	bitMode     operand.BitMode // Change ast.BitMode to operand.BitMode
+	bitMode     cpu.BitMode // Change cpu.BitMode to cpu.BitMode
 	text        string
 	expectedLOC int32
 }
@@ -42,93 +43,93 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// * アセンブラ文の一部
 		// * 期待される機械語サイズ
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "ADD [BX], AX",
 			expectedLOC: 2,
 		},
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "INT 0x10",
 			expectedLOC: 2,
 		},
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "CALL waitkbdout",
 		// 	expectedLOC: 5,
 		// },
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV AL, [SI]",
 			expectedLOC: 2,
 		},
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV AX, 0",
 			expectedLOC: 3,
 		},
 		{
 			// 0xc6, 0x06, 0xf2, 0x0f, 0x08
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV BYTE [ 0x0ff2 ], 8",
 			expectedLOC: 5,
 		},
 		{
 			// 0xc7, 0x06, 0xf4, 0x0f, 0x40, 0x01
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV WORD [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
 		{
 			// MOV DWORD [VRAM],0x000a0000  ; VRAM=0x0ff8
 			// 0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
 			expectedLOC: 9,
 		},
 		{
 			// MOV [0x0ff0],CH
 			// 0x88,0x2e,0xf0,0x0f
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV [0x0ff0],CH",
 			expectedLOC: 4,
 		},
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "MOV CL, 0x0ff0",
 		// 	expectedLOC: 4,
 		// },
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "OR EAX, 0x00000001",
 		// 	expectedLOC: 4,
 		// },
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "IMUL ECX, 4608",
 		// 	expectedLOC: 7,
 		// },
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV BYTE [ 0x0ff0 ], CH",
 			expectedLOC: 4,
 		},
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "SUB ECX, 128",
 		// 	expectedLOC: 7,
 		// },
 		// {
-		// 	bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 		// 	text:        "MOV ECX, [EBX+16]",
 		// 	expectedLOC: 5,
 		// },
 		{
-			bitMode:     operand.MODE_32BIT, // Change ast.MODE_32BIT to operand.MODE_32BIT
+			bitMode:     cpu.MODE_32BIT, // Change cpu.MODE_32BIT to cpu.MODE_32BIT
 			text:        "MOV AX, SS",
 			expectedLOC: 3,
 		},
 		{
-			bitMode:     operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV [ 0x0ff1 ], AL",
 			expectedLOC: 3,
 		},

@@ -2,12 +2,12 @@ package pass1
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
-	"regexp"
-
 	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
+	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
 	"github.com/samber/lo"
 )
 
