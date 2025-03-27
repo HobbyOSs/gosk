@@ -22,3 +22,17 @@
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
+
+---
+## 直近の変更点 - 2025/03/27 アーカイブ
+- `internal/codegen/x86gen_utils.go`:
+    - `GetRegisterNumber` 関数を修正し、制御レジスタ (CR0, CR2, CR3, CR4) に対応。
+    - `ModRMByOperand` 関数を修正し、`bitMode` に基づいて 16bit/32bit メモリオペランド処理を分岐。
+        - 16bit モード処理を改善し、単純なレジスタ間接参照 (`[SI]`, `[DI]`) および直接アドレス (`[imm16]`) の ModR/M とディスプレースメントを生成するように修正。これにより `TestGenerateX86` スイートのデグレを解消。
+    - 未使用の `regexp` インポートを削除。
+    - `operand.ParseNumeric` の代わりにローカルヘルパー関数 `parseNumeric` を追加・使用。
+- `internal/codegen/x86gen_utils.go` のリファクタリング:
+    - `modeStr` の switch 文を共通関数 `parseMode` として切り出し。
+    - `ModRMByOperand` および `ModRMByValue` がメモリオペランド解析に `pkg/operand.ParseMemoryOperand` を使用するように修正。
+    - 冗長な16bitモードの手動解析ロジック、`parseNumeric` 関数、`encoding/binary` インポートを削除。
+    - 英語コメントを日本語に翻訳。

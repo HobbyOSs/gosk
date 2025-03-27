@@ -67,3 +67,31 @@
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
+
+---
+## 実装済み機能 (詳細) - 2025/03/27 アーカイブ
+- ASTノードの文字列化ヘルパー関数 `ExpToString` を `internal/ast` パッケージに実装
+- `FactorToString` 関数を `internal/ast/ast_factor_impl.go` に実装
+- `SegmentExp`, `AddExp`, `MultExp` の `TokenLiteral()` メソッドを `internal/ast/ast_exp_impl.go` で修正
+- `ExpToString` 関数のテストコードを `internal/ast/ast_string_test.go` に実装し、テストをパス
+- `pkg/asmdb/instruction_search.go` の `filterForms` 関数を修正し、ModRM 要否によるフィルタリングロジックを実装
+- `pkg/asmdb/instruction_search_test.go` にテストケースを追加
+- CALL命令の実装
+- 論理命令の実装 (AND, OR, XOR, NOT) (pass1, codegen, test)
+- 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (pass1, ocode, codegen, test) (一部テストはコメントアウト)
+- IN命令の実装 (pass1, codegen, fallback table)
+- RET命令の実装 (pass1, ocode, codegen, test)
+- `internal/codegen/x86gen.go`: `processOcode` 関数を修正し、オペランドなし命令 (`CLI` など) を `opcodeMap` を使って処理するように変更。
+- `internal/codegen/x86gen_lgdt.go`: `handleLGDT` 関数を修正し、`LGDT [label]` 形式を正しく処理するように変更。不要なインポートを削除。
+- `internal/codegen/x86gen_utils.go`:
+    - `ResolveOpcode` 関数を修正し、複数バイトのオペコード文字列 (`0F20` など) を処理できるように変更。戻り値を `[]byte` に変更。
+    - `GetRegisterNumber` 関数を修正し、制御レジスタ (CR0, CR2, CR3, CR4) に対応。
+    - `ModRMByOperand` 関数を修正し、`bitMode` に基づいて 16bit/32bit メモリオペランド処理を分岐。16bit モードの処理を改善。
+    - 未使用の `regexp` インポートを削除。
+    - ローカルヘルパー関数 `parseNumeric` を追加。
+- `internal/codegen/x86gen_utils.go` のリファクタリング:
+    - `modeStr` の switch 文を共通関数 `parseMode` として切り出し。
+    - `ModRMByOperand` および `ModRMByValue` がメモリオペランド解析に `pkg/operand.ParseMemoryOperand` を使用するように修正。
+    - 冗長な16bitモードの手動解析ロジック、`parseNumeric` 関数、`encoding/binary` インポートを削除。
+    - 英語コメントを日本語に翻訳。
+- `internal/codegen/x86gen_logical.go`, `x86gen_arithmetic.go`, `x86gen_mov.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
