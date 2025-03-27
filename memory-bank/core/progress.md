@@ -20,17 +20,22 @@
 - **`BitMode` 伝達ロジックの修正 (`client`, `ocode_client`, `pass1`)**
 - **`codegen` の MOV, ADD ハンドラに `.WithBitMode()` 追加**
 - **JMP rel32 / Jcc rel32 の実装**: `internal/codegen/x86gen_jmp.go` に `rel32` オフセット計算とエンコーディングを追加。
+- **`pkg/operand/requires.go` の修正 (2025/03/28)**:
+    - `Require66h` (オペランドサイズプレフィックス): 16bitモードでの32bit即値判定を `ParsedOperands()` ベースに修正。
+    - `Require67h` (アドレスサイズプレフィックス): 実効アドレスサイズに基づいて判定するようにロジックを修正。
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - **MOV エンコーディングエラー**: `MOV r32, imm32/m32/label` 形式。(`Failed to find encoding`)
-    - **ADD エンコーディングエラー**: `ADD r32, r32/imm` 形式。(`Failed to find encoding for ADD`)
-    - **バイナリ長不一致**: `expected length 304 actual length 236` (68バイト不足)。JMP実装により5バイト増加したが、MOV/ADDのエンコーディングエラーが多数残存するため。
-- **上記エンコーディングエラーの原因調査**:
-    - `pkg/operand` パーサー (`participle`利用) が複数のオペランド (特にレジスタ、即値、ラベルの組み合わせ) を正しく認識・分類できていない問題が根深い。Lexerルール調整やキャッシュ無効化では解決せず。一旦保留。
-    - 次ステップとして `asmdb` (JSON定義、fallback table) や `codegen` (MOV/ADDハンドラ) 側のエンコーディング定義や呼び出しロジックを確認する。
-- **ModR/M 生成ロジックのリファクタリング検討:**
-    - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討は継続。
+    - **`TestGenerateX86/MOV_SI_a_label` の失敗**: ラベル解決または `codegen` の問題。(`Failed to get immediate value or symbol address for a_label`)
+    - **MOV/ADD エンコーディングエラー (継続)**: `MOV r32, imm32/m32/label`, `ADD r32, r32/imm` 形式での `Failed to find encoding` エラー。(`pkg/operand` パーサーの問題の可能性が高い)
+    - **バイナリ長不一致 (継続)**: 上記エラーにより依然としてバイナリ長が不足している可能性が高い。
+- **`TestGenerateX86/MOV_SI_a_label` の失敗調査**:
+    - `internal/codegen/x86gen_mov.go` のラベル処理、およびラベル解決ロジック (`pass1`, `pass2`) の確認。
+- **エンコーディングエラーの原因調査 (継続)**:
+    - `pkg/operand` パーサーの問題は一旦保留。
+    - `asmdb` (JSON定義、fallback table) や `codegen` (MOV/ADDハンドラ) 側のエンコーディング定義や呼び出しロジックを確認する。
+- **ModR/M 生成ロジックのリファクタリング検討 (継続):**
+    - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討。
 - RESBの計算処理の実装
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - `internal/codegen` パッケージの不要パラメータ削除
