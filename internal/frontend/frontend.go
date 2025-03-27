@@ -11,6 +11,7 @@ import (
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
@@ -32,12 +33,12 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 
 	// pass1のEvalを実行
-	ctx := &codegen.CodeGenContext{BitMode: ast.MODE_16BIT}
+	ctx := &codegen.CodeGenContext{BitMode: operand.MODE_16BIT} // Change ast.MODE_16BIT to operand.MODE_16BIT
 	client, _ := ocode_client.NewCodegenClient(ctx)
 
 	pass1 := &pass1.Pass1{
 		LOC:              0,
-		BitMode:          ast.MODE_16BIT,
+		BitMode:          operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
 		EquMap:           make(map[string]*token.ParseToken, 0),
 		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},

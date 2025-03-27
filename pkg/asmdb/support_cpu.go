@@ -1,4 +1,4 @@
-package ast
+package asmdb
 
 import "strings"
 

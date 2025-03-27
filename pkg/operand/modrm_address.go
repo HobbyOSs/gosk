@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/HobbyOSs/gosk/internal/ast"
 )
 
 // ModRMは ModR/Mバイトおよびディスプレースメントを保持するサンプル構造体
@@ -42,8 +40,8 @@ var rm32Table = map[string]byte{
 }
 
 // ParseMemoryOperand はメモリオペランド文字列(例: "[bx+si+0x10]" など)を
-// パースして (mod, rm, disp) を求める。bitMode には ast.MODE_16BIT, ast.MODE_32BIT を使う。
-func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, disp []byte, err error) {
+// パースして (mod, rm, disp) を求める。bitMode には MODE_16BIT, MODE_32BIT を使う。
+func ParseMemoryOperand(memStr string, bitMode BitMode) (mod byte, rm byte, disp []byte, err error) {
 	if !strings.Contains(memStr, "[") && !strings.HasSuffix(memStr, "]") {
 		return 0, 0, nil, fmt.Errorf("invalid mem operand format: %s", memStr)
 	}
@@ -71,7 +69,7 @@ func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, 
 	}
 
 	switch bitMode {
-	case ast.MODE_16BIT:
+	case MODE_16BIT:
 		baseKey := strings.Join(regs, "+") // 例: "bx+si"
 		if baseKey == "" && hasDisp {
 			// [0x0ff0] のような直接アドレッシングを処理する
@@ -130,7 +128,7 @@ func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, 
 			disp = []byte{lo, hi}
 		}
 
-	case ast.MODE_32BIT:
+	case MODE_32BIT:
 		if len(regs) == 0 {
 			// [disp32] のケース ([0x1000] など)
 			mod = 0b00
@@ -176,7 +174,7 @@ func ParseMemoryOperand(memStr string, bitMode ast.BitMode) (mod byte, rm byte, 
 
 // CalcModRM は最終的な ModR/Mバイト + disp を生成する。
 // rmOperand が "[...]" の場合はメモリ、レジスタ名の場合は mod=11 とみなす。
-func CalcModRM(rmOperand string, regBits byte, bitMode ast.BitMode) ([]byte, error) {
+func CalcModRM(rmOperand string, regBits byte, bitMode BitMode) ([]byte, error) {
 	rmOperand = strings.TrimSpace(rmOperand)
 
 	// メモリオペランドかどうか
@@ -207,9 +205,9 @@ func CalcModRM(rmOperand string, regBits byte, bitMode ast.BitMode) ([]byte, err
 	var rmVal byte
 	var ok bool
 	switch bitMode {
-	case ast.MODE_16BIT:
+	case MODE_16BIT:
 		rmVal, ok = regMap16[rLower]
-	case ast.MODE_32BIT:
+	case MODE_32BIT:
 		rmVal, ok = regMap32[rLower]
 	default:
 		return nil, fmt.Errorf("unsupported bitMode %d", bitMode)

@@ -6,14 +6,15 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/ast" // Keep ast for program argument
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 type Pass2 struct {
-	BitMode          ast.BitMode
+	BitMode          operand.BitMode // Change ast.BitMode to operand.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32
 	GlobalSymbolList []string

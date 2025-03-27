@@ -1,16 +1,17 @@
 package pass1
 
 import (
-	"github.com/HobbyOSs/gosk/internal/ast"
+	"github.com/HobbyOSs/gosk/internal/ast" // Re-add ast import
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
+	"github.com/HobbyOSs/gosk/pkg/operand"
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 type Pass1 struct {
 	LOC              int32 // LOC(location of counter)
-	BitMode          ast.BitMode
+	BitMode          operand.BitMode // Change ast.BitMode to operand.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32 // Pass1のシンボルテーブル
 	NextImmJumpID    int              // 即値用のカウンタ

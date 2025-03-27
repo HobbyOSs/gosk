@@ -40,17 +40,17 @@
 - /cmd/: 各エントリポイント
   - gosk/: アセンブラのCLI
 - /internal/: 内部実装 (外部パッケージには非公開)
-  - ast/: AST (抽象構文木) 関連
+  - ast/: AST (抽象構文木) 関連 (BitMode, SupCPU は pkg/operand, pkg/asmdb へ移動)
   - frontend/: プログラムのエントリーポイント
   - gen/: PEG で記述されたパーサ
   - pass1/: AST の１回めの解析（機械語サイズとラベル、マクロ）
   - pass2/: AST の後処理（ELF,COFFファイルの処理、機械語生成はcodegenで実施）
   - codegen/: x86 コード生成
 - /pkg/: 外部公開モジュール
-  - asmdb/: x86アセンブラ命令情報
+  - asmdb/: x86アセンブラ命令情報 (SupCPU 関連を含む)
     - json-x86-64/x86_64.json: x86命令のオペランドやエンコード方式を格納したJSONデータ (git submodule)
     - JSONデータの検索機能を提供し、アセンブラ命令の実装に必要な情報を取得
-  - operand/: x86アセンブラオペランド処理ライブラリ
+  - operand/: x86アセンブラオペランド処理ライブラリ (BitMode 関連を含む)
   - ocode/: Ocode モジュール (中間言語の定義)
 
 ## コンポーネント間の関係

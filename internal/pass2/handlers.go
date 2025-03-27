@@ -5,6 +5,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Add operand import
 	"github.com/morikuni/failure"
 	"github.com/samber/lo"
 )
@@ -113,7 +114,7 @@ func TraverseAST(node ast.Node, env *Pass2) {
 			if !ok {
 				log.Fatal("Failed to pop token")
 			}
-			bitMode, ok := ast.NewBitMode(token.ToInt())
+			bitMode, ok := operand.NewBitMode(token.ToInt()) // Change ast.NewBitMode to operand.NewBitMode
 			if !ok {
 				log.Fatal("error: Failed to parse BITS")
 			}

@@ -3,8 +3,8 @@ package codegen
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Import operand package
 	"github.com/stretchr/testify/assert"
 )
 
@@ -168,7 +168,7 @@ func TestGenerateX86(t *testing.T) {
 			ctx := &CodeGenContext{
 				MachineCode:    make([]byte, 0),
 				VS:             nil,
-				BitMode:        ast.MODE_16BIT,
+				BitMode:        operand.MODE_16BIT, // Change ast.MODE_16BIT to operand.MODE_16BIT
 				DollarPosition: 0, // Assume DollarPosition is 0 for simplicity in this test
 				SymTable:       map[string]int32{},
 			}

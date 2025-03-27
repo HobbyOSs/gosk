@@ -1,8 +1,6 @@
 package operand
 
 import (
-	"github.com/HobbyOSs/gosk/internal/ast"
-
 	participle "github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -12,13 +10,13 @@ var parsedOperandsCache = make(map[string][]*ParsedOperand)
 
 type OperandImpl struct {
 	Internal      string
-	BitMode       ast.BitMode
+	BitMode       BitMode
 	ForceImm8     bool
 	ForceRelAsImm bool
 }
 
 func NewOperandFromString(text string) Operands {
-	return &OperandImpl{Internal: text, BitMode: ast.MODE_16BIT, ForceImm8: false, ForceRelAsImm: false}
+	return &OperandImpl{Internal: text, BitMode: MODE_16BIT, ForceImm8: false, ForceRelAsImm: false}
 }
 
 func (b *OperandImpl) WithForceRelAsImm(force bool) Operands {
@@ -108,12 +106,12 @@ func (b *OperandImpl) FromString(text string) Operands {
 	return &OperandImpl{Internal: text, BitMode: b.BitMode}
 }
 
-func (b *OperandImpl) WithBitMode(mode ast.BitMode) Operands {
+func (b *OperandImpl) WithBitMode(mode BitMode) Operands {
 	b.BitMode = mode
 	return b
 }
 
-func (b *OperandImpl) GetBitMode() ast.BitMode {
+func (b *OperandImpl) GetBitMode() BitMode {
 	return b.BitMode
 }
 
@@ -269,7 +267,7 @@ func (b *OperandImpl) Require66h() bool {
 	}
 
 	switch b.BitMode {
-	case ast.MODE_16BIT:
+	case MODE_16BIT:
 		// 16bitモードで32bitレジスタを使用する場合
 		for _, t := range types {
 			if t == CodeR32 || t == CodeM32 {
@@ -287,7 +285,7 @@ func (b *OperandImpl) Require66h() bool {
 				}
 			}
 		}
-	case ast.MODE_32BIT:
+	case MODE_32BIT:
 		// 32bitモードで16bitレジスタを使用する場合
 		for _, t := range types {
 			if t == CodeR16 || t == CodeM16 {
@@ -306,14 +304,14 @@ func (b *OperandImpl) Require67h() bool {
 	}
 
 	switch b.BitMode {
-	case ast.MODE_16BIT:
+	case MODE_16BIT:
 		// 16bitモードで32bitメモリアクセスを行う場合
 		for _, t := range types {
 			if t == CodeM32 {
 				return true
 			}
 		}
-	case ast.MODE_32BIT:
+	case MODE_32BIT:
 		// 32bitモードで16bitメモリアクセスを行う場合
 		for _, t := range types {
 			if t == CodeM16 {

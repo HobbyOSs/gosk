@@ -7,6 +7,11 @@
 - `pkg/operand/modrm_address.go` の `ParseMemoryOperand` を修正し、16ビットモードで32ビットレジスタ (`[ESI]` など) が使われた場合の R/M ビット解決に対応。これにより `unsupported 16bit mem operand` エラーは解消。
 - `Pass1` から `CodeGenClient` への `BitMode` 伝達ロジックを修正 (`SetBitMode` インターフェース追加と呼び出し)。
 - `codegen` の MOV, ADD ハンドラに `.WithBitMode()` 呼び出しを追加。
+- **リファクタリング**:
+    - `internal/ast/bit_mode.go` を `pkg/operand/bit_mode.go` に移動。
+    - `internal/ast/support_cpu.go` を `pkg/asmdb/support_cpu.go` に移動。
+    - 関連するインポートパスと型参照を修正。
+    - 循環参照を解消 (`BitMode` を `pkg/operand` に配置)。
 
 ## 残存エラー (day03_harib00i) - 2025/03/27 更新
 - **MOV/ADD エンコーディングエラー**:

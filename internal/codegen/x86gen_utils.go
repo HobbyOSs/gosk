@@ -6,13 +6,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand"
+	"github.com/HobbyOSs/gosk/pkg/operand" // Import operand package
 )
 
 // GenerateModRM はエンコーディング情報とビットモードに基づいてModR/Mバイトを生成する
-func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) ([]byte, error) {
+func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
 	if modRM == nil || modRM.ModRM == nil {
 		return nil, nil
 	}
@@ -81,7 +80,7 @@ func parseMode(modeStr string) byte {
 }
 
 // ModRMByOperand はモード、regオペランド、rmオペランド、ビットモードに基づいてModR/Mバイトを生成する
-func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode ast.BitMode) ([]byte, error) {
+func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -131,7 +130,7 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 }
 
 // ModRMByValue はモード、固定reg値、rmオペランドに基づいてModR/Mバイトを生成する
-func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.BitMode) []byte {
+func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode operand.BitMode) []byte { // Change ast.BitMode to operand.BitMode
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
@@ -234,7 +233,7 @@ func ResolveOpcode(op asmdb.Opcode, regNum int) ([]byte, error) {
 }
 
 // getModRMFromOperands はオペランドからModR/Mバイトを生成する
-func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) ([]byte, error) {
+func getModRMFromOperands(operands []string, modRM *asmdb.Encoding, bitMode operand.BitMode) ([]byte, error) { // Change ast.BitMode to operand.BitMode
 	modrmByte, err := GenerateModRM(operands, modRM, bitMode)
 	if err != nil {
 		return nil, err

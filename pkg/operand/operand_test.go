@@ -1,7 +1,6 @@
 package operand
 
 import (
-	"github.com/HobbyOSs/gosk/internal/ast"
 	"testing"
 )
 
@@ -9,43 +8,43 @@ func TestRequire66h(t *testing.T) {
 	tests := []struct {
 		name     string
 		operand  string
-		bitMode  ast.BitMode
+		bitMode  BitMode
 		expected bool
 	}{
 		{
 			name:     "16bit mode with 32bit register",
 			operand:  "EAX",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit register",
 			operand:  "AX",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: false,
 		},
 		{
 			name:     "32bit mode with 16bit register",
 			operand:  "AX",
-			bitMode:  ast.MODE_32BIT,
+			bitMode:  MODE_32BIT,
 			expected: true,
 		},
 		{
 			name:     "32bit mode with 32bit register",
 			operand:  "EAX",
-			bitMode:  ast.MODE_32BIT,
+			bitMode:  MODE_32BIT,
 			expected: false,
 		},
 		{
 			name:     "16bit mode with 32bit immediate",
 			operand:  "0x12345678",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit immediate",
 			operand:  "0x1234",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: false,
 		},
 	}
@@ -64,31 +63,31 @@ func TestRequire67h(t *testing.T) {
 	tests := []struct {
 		name     string
 		operand  string
-		bitMode  ast.BitMode
+		bitMode  BitMode
 		expected bool
 	}{
 		{
 			name:     "16bit mode with 32bit memory access",
 			operand:  "DWORD [EBX]",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: true,
 		},
 		{
 			name:     "16bit mode with 16bit memory access",
 			operand:  "WORD [BX]",
-			bitMode:  ast.MODE_16BIT,
+			bitMode:  MODE_16BIT,
 			expected: false,
 		},
 		{
 			name:     "32bit mode with 16bit memory access",
 			operand:  "WORD [BX]",
-			bitMode:  ast.MODE_32BIT,
+			bitMode:  MODE_32BIT,
 			expected: true,
 		},
 		{
 			name:     "32bit mode with 32bit memory access",
 			operand:  "DWORD [EBX]",
-			bitMode:  ast.MODE_32BIT,
+			bitMode:  MODE_32BIT,
 			expected: false,
 		},
 	}

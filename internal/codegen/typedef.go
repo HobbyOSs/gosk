@@ -1,6 +1,6 @@
 package codegen
 
-import "github.com/HobbyOSs/gosk/internal/ast"
+import "github.com/HobbyOSs/gosk/pkg/operand"
 import "github.com/HobbyOSs/gosk/pkg/variantstack"
 
 type Byte uint8
@@ -20,5 +20,5 @@ type CodeGenContext struct {
 	DollarPosition uint64
 	MachineCode    []byte
 	VS             *variantstack.VariantStack
-	BitMode        ast.BitMode
+	BitMode        operand.BitMode
 }
