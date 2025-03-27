@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/operand"
 )
 
-// GenerateModRM generates ModR/M byte based on encoding information and bit mode.
+// GenerateModRM はエンコーディング情報とビットモードに基づいてModR/Mバイトを生成する
 func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode) ([]byte, error) {
 	if modRM == nil || modRM.ModRM == nil {
 		return nil, nil
@@ -62,12 +61,8 @@ func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode ast.BitMode
 	}
 }
 
-// ModRMByOperand generates ModR/M byte based on mode, reg operand, rm operand and bit mode.
-func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode ast.BitMode) ([]byte, error) {
-	// ModR/M バイトの生成
-	// |  mod  |  reg  |  r/m  |
-	// | 7 6 | 5 4 3 | 2 1 0 |
-
+// parseMode は modeStr から mode バイトを解析する
+func parseMode(modeStr string) byte {
 	// modeの解析（2ビット）
 	var mode byte
 	switch modeStr {
@@ -82,6 +77,16 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	default:
 		mode = 0 // デフォルト値
 	}
+	return mode
+}
+
+// ModRMByOperand はモード、regオペランド、rmオペランド、ビットモードに基づいてModR/Mバイトを生成する
+func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode ast.BitMode) ([]byte, error) {
+	// ModR/M バイトの生成
+	// |  mod  |  reg  |  r/m  |
+	// | 7 6 | 5 4 3 | 2 1 0 |
+
+	mode := parseMode(modeStr) // modeの解析
 
 	// regの解析（3ビット）
 	reg, err := GetRegisterNumber(regOperand)
@@ -92,201 +97,64 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 
 	// r/mの解析
 	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		// bitModeに応じて処理を分岐
-		if bitMode == ast.MODE_32BIT { // 正しい定数を使用
-			// 32bitモードの場合: ParseMemoryOperandを使用
-			_, rmNum, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
-			if err != nil {
-				// エラーメッセージを修正: 32bit operand parsing error
-				return nil, fmt.Errorf("failed to parse 32bit memory operand '%s': %w", rmOperand, err)
-			}
-			rmBits := byte(rmNum)
-
-			modrmByte := mode | regBits | rmBits
-			log.Printf("debug: ModRMByOperand (mem32): mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, modrmByte)
-
-			out := []byte{modrmByte}
-			if disp != nil {
-				out = append(out, disp...)
-			}
-			return out, nil
-		} else if bitMode == ast.MODE_16BIT { // 正しい定数を使用
-			// 16bitモードの場合: Manually parse known 16-bit modes
-			memContentWithPrefix := strings.TrimSpace(rmOperand[1 : len(rmOperand)-1]) // Content inside []
-			// Remove size prefix (BYTE, WORD, etc.) if present
-			memContent := memContentWithPrefix
-			if strings.HasPrefix(memContent, "BYTE ") {
-				memContent = strings.TrimSpace(memContent[5:])
-			}
-			if strings.HasPrefix(memContent, "WORD ") {
-				memContent = strings.TrimSpace(memContent[5:])
-			}
-			// DWORD should not appear in 16-bit mode, but handle defensively
-			if strings.HasPrefix(memContent, "DWORD ") {
-				memContent = strings.TrimSpace(memContent[6:])
-			}
-
-			var modeBits byte
-			var rmBits byte
-			var disp []byte
-			var dispVal int64
-			var dispErr error
-			basePart := memContent
-			dispSize := 0
-
-			// Check for displacement
-			if strings.Contains(memContent, "+") {
-				parts := strings.SplitN(memContent, "+", 2)
-				basePart = strings.TrimSpace(parts[0])
-				dispStr := strings.TrimSpace(parts[1])
-				dispVal, dispErr = parseNumeric(dispStr) // Use local parseNumeric
-				if dispErr != nil {
-					return nil, fmt.Errorf("invalid 16bit displacement '%s': %w", dispStr, dispErr)
-				}
-			} else if strings.Contains(memContent, "-") {
-				// Note: Intel syntax usually doesn't use base-disp, but handle it defensively
-				parts := strings.SplitN(memContent, "-", 2)
-				basePart = strings.TrimSpace(parts[0])
-				dispStr := strings.TrimSpace(parts[1])
-				dispVal, dispErr = parseNumeric(dispStr) // Use local parseNumeric
-				if dispErr != nil {
-					return nil, fmt.Errorf("invalid 16bit displacement '%s': %w", dispStr, dispErr)
-				}
-				dispVal = -dispVal // Handle subtraction
-			}
-
-			// Determine rm bits and preliminary mode/disp based on basePart
-			isDirectAddress := false
-			switch basePart {
-			case "BX+SI":
-				rmBits = 0b000
-			case "BX+DI":
-				rmBits = 0b001
-			case "BP+SI":
-				rmBits = 0b010
-			case "BP+DI":
-				rmBits = 0b011
-			case "SI":
-				rmBits = 0b100
-			case "DI":
-				rmBits = 0b101
-			case "BP":
-				rmBits = 0b110 // Special case: [BP] alone implies Mode 01 with disp8=0
-			case "BX":
-				rmBits = 0b111
-			default:
-				// Check for direct address [imm16]
-				directAddrVal, directAddrErr := parseNumeric(basePart) // Use local parseNumeric
-				if directAddrErr == nil {
-					rmBits = 0b110        // R/M = 110 for direct address
-					modeBits = 0b00000000 // Mode = 00
-					dispVal = directAddrVal
-					dispSize = 2 // Direct address always uses 16-bit displacement
-					isDirectAddress = true
-					dispErr = nil // Clear potential error from basePart parsing
-				} else {
-					// Use original rmOperand in error message for clarity
-					return nil, fmt.Errorf("unsupported 16bit base/combination in ModRMByOperand: '%s' from '%s'", basePart, rmOperand)
-				}
-			}
-
-			// Determine final mode and displacement bytes based on dispVal and basePart
-			if !isDirectAddress {
-				if dispErr == nil && dispVal != 0 {
-					if dispVal >= -128 && dispVal <= 127 {
-						modeBits = 0b01000000 // Mode 01 (8-bit disp)
-						dispSize = 1
-					} else if dispVal >= -32768 && dispVal <= 32767 { // Check 16-bit range
-						modeBits = 0b10000000 // Mode 10 (16-bit disp)
-						dispSize = 2
-					} else {
-						return nil, fmt.Errorf("16bit displacement out of range: %d", dispVal)
-					}
-				} else if basePart == "BP" { // Special case for [BP] or [BP+0] -> Mode 01, disp8=0
-					modeBits = 0b01000000
-					dispSize = 1
-					dispVal = 0 // Ensure dispVal is 0
-				} else { // No displacement (and not [BP] alone)
-					modeBits = 0b00000000 // Mode 00
-					dispSize = 0
-					dispVal = 0
-				}
-			}
-
-			// Prepare displacement bytes
-			if dispSize > 0 {
-				disp = make([]byte, dispSize)
-				if dispSize == 1 {
-					disp[0] = byte(dispVal)
-				} else { // dispSize == 2
-					binary.LittleEndian.PutUint16(disp, uint16(dispVal))
-				}
-			} else {
-				disp = nil
-			}
-
-			modrmByte := modeBits | regBits | rmBits
-			log.Printf("debug: ModRMByOperand (mem16): calcMode=%b, reg=%s(%b), rm=%s(%b), result=%#x, disp=% x", modeBits, regOperand, regBits, rmOperand, rmBits, modrmByte, disp)
-
-			out := []byte{modrmByte}
-			if disp != nil {
-				out = append(out, disp...)
-			}
-			return out, nil
-
-		} else {
-			return nil, fmt.Errorf("unknown bitMode: %d", bitMode)
+		// メモリオペランドの場合: pkg/operand.ParseMemoryOperand を使用
+		modBits, rmBits, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse memory operand '%s' (mode:%d): %w", rmOperand, bitMode, err)
 		}
+
+		// 注釈: operand.ParseMemoryOperand は mod ビット (00, 01, 10) を直接返す。
+		// parseMode(modeStr) から得られる 'mode' 変数は、命令定義からの意図されたアドレッシングモード (#0, #1, #2, 11) を示す可能性がある。
+		// 実際に必要なエンコーディングを反映するため、ParseMemoryOperand によって返された mod ビットを使用すべきである。
+		modrmByte := modBits | regBits | rmBits
+		log.Printf("debug: ModRMByOperand (mem): modeStr=%s, reg=%s(%b), rm=%s(%b), parsedMod=%b, parsedRm=%b, result=%#x, disp=% x",
+			modeStr, regOperand, regBits, rmOperand, rmBits, modBits, rmBits, modrmByte, disp)
+
+		out := []byte{modrmByte}
+		if disp != nil {
+			out = append(out, disp...)
+		}
+		return out, nil
 	}
 
-	// r/m がレジスタの場合
+	// r/m がレジスタの場合 (mod=11)
 	rm, err := GetRegisterNumber(rmOperand)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get register number for %s: %w", rmOperand, err)
 	}
 	rmBits := byte(rm)
 
+	// parseMode によって決定された mode を使用
 	out := mode | regBits | rmBits
 	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, out)
 	return []byte{out}, nil
 }
 
-// ModRMByValue generates ModR/M byte based on mode, fixed reg value, and rm operand.
+// ModRMByValue はモード、固定reg値、rmオペランドに基づいてModR/Mバイトを生成する
 func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.BitMode) []byte {
 	// ModR/M バイトの生成
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
 
-	// modeの解析（2ビット）
-	var mode byte
-	switch modeStr {
-	case "#0": // レジスタ間接参照
-		mode = 0b00000000
-	case "#1": // 8ビット変位レジスタ間接参照
-		mode = 0b01000000
-	case "#2": // 32ビット変位レジスタ間接参照
-		mode = 0b10000000
-	case "11": // レジスタ
-		mode = 0b11000000
-	default:
-		mode = 0 // デフォルト値
-	}
+	mode := parseMode(modeStr) // modeの解析
 
 	// regの解析（3ビット）
 	regBits := byte(regValue) << 3
 
 	// r/mの解析（3ビット）
-	// メモリの場合は0として扱う
 	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		_, rm, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+		// メモリオペランドの場合: pkg/operand.ParseMemoryOperand を使用
+		modBits, rmBits, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
 		if err != nil {
-			log.Printf("error: Failed to parse memory operand for rm: %v", err)
+			log.Printf("error: Failed to parse memory operand for rm in ModRMByValue: %v", err)
+			// []byte{0} の代わりにエラーを返すことを検討
 			return []byte{0}
 		}
-		rmBits := byte(rm)
 
-		modrmByte := mode | regBits | rmBits
-		log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, modrmByte)
+		// パースされた mod/rm ビットを使用
+		modrmByte := modBits | regBits | rmBits
+		log.Printf("debug: ModRMByValue (mem): modeStr=%s, reg=%d(%b), rm=%s(%b), parsedMod=%b, parsedRm=%b, result=%#x, disp=% x",
+			modeStr, regValue, regBits, rmOperand, rmBits, modBits, rmBits, modrmByte, disp)
 
 		out := []byte{modrmByte}
 		if disp != nil {
@@ -295,6 +163,7 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.Bi
 		return out
 	}
 
+	// r/m がレジスタの場合 (mod=11)
 	rm, err := GetRegisterNumber(rmOperand)
 	if err != nil {
 		log.Printf("error: Failed to get register number for rm: %v", err)
@@ -302,6 +171,7 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.Bi
 	}
 	rmBits := byte(rm)
 
+	// parseMode によって決定された mode を使用
 	out := mode | regBits | rmBits
 	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, out)
 	return []byte{out}
@@ -381,29 +251,4 @@ func parseIndex(indexStr string) (int, error) {
 		return -1, fmt.Errorf("invalid index format")
 	}
 	return index, nil
-}
-
-// parseNumeric (copied from pkg/operand/operand_util.go)
-// 文字列の数値(例: "16", "0x0ff0", "-123")をint64に変換
-func parseNumeric(s string) (int64, error) {
-	s = strings.ToLower(strings.TrimSpace(s))
-	negative := false
-	if strings.HasPrefix(s, "-") {
-		negative = true
-		s = s[1:]
-	}
-
-	base := 10
-	if strings.HasPrefix(s, "0x") {
-		base = 16
-		s = s[2:]
-	}
-	val, err := strconv.ParseInt(s, base, 64)
-	if err != nil {
-		return 0, err
-	}
-	if negative {
-		val = -val
-	}
-	return val, nil
 }
