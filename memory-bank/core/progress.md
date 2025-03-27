@@ -14,11 +14,17 @@
 - 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (一部テストはコメントアウト)
 - IN命令の実装 (pass1, codegen, fallback table)
 - RET命令の実装 (pass1, codegen, test)
+- ModR/M 生成ロジックの一部修正 (制御レジスタ対応、16bit/32bit 分岐改善)
 
 ## まだ必要な実装
-- JMP系命令 (Jcc命令) のrel32オフセット対応
+- **`test/day03_harib00i_test.go` の残存エラー対応:**
+    - エンコーディング未発見エラー (`Failed to find encoding: no matching encoding found`) の修正 (複数の `MOV`, `ADD` 命令)。
+    - `Failed to process ocode: not implemented: JMP rel32` エラーの修正 (`JMP DWORD 2*8:0x0000001b`)。
+- **ModR/M 生成ロジックのリファクタリング:**
+    - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能を実装する検討。
+- JMP系命令 (Jcc命令) のrel32オフセット対応 (上記 JMP rel32 と関連)
 - RESBの計算処理の実装
-- メモリアドレッシング
+- メモリアドレッシング (エンコーディング未発見エラーと関連)
 - `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - `internal/codegen` パッケージの不要パラメータ削除
 
@@ -36,7 +42,12 @@
 - RET命令の実装 (pass1, ocode, codegen, test)
 - `internal/codegen/x86gen.go`: `processOcode` 関数を修正し、オペランドなし命令 (`CLI` など) を `opcodeMap` を使って処理するように変更。
 - `internal/codegen/x86gen_lgdt.go`: `handleLGDT` 関数を修正し、`LGDT [label]` 形式を正しく処理するように変更。不要なインポートを削除。
-- `internal/codegen/x86gen_utils.go`: `ResolveOpcode` 関数を修正し、複数バイトのオペコード文字列 (`0F20` など) を処理できるように変更。戻り値を `[]byte` に変更。
+- `internal/codegen/x86gen_utils.go`:
+    - `ResolveOpcode` 関数を修正し、複数バイトのオペコード文字列 (`0F20` など) を処理できるように変更。戻り値を `[]byte` に変更。
+    - `GetRegisterNumber` 関数を修正し、制御レジスタ (CR0, CR2, CR3, CR4) に対応。
+    - `ModRMByOperand` 関数を修正し、`bitMode` に基づいて 16bit/32bit メモリオペランド処理を分岐。16bit モードの処理を改善。
+    - 未使用の `regexp` インポートを削除。
+    - ローカルヘルパー関数 `parseNumeric` を追加。
 - `internal/codegen/x86gen_logical.go`, `x86gen_arithmetic.go`, `x86gen_mov.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
 
 ## 関連情報

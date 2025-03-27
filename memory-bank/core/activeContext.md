@@ -1,20 +1,26 @@
 # Active Context
 
 ## 現在の作業の焦点
-- `test/day03_harib00i_test.go` のテスト失敗に対するデバッグ作業中。
+- ModR/M 生成ロジックのリファクタリング検討。
+- `test/day03_harib00i_test.go` の残存エラー対応。
 
 ## 直近の変更点
-- `internal/codegen/x86gen.go`: `processOcode` 関数を修正し、オペランドなし命令 (`CLI` など) を `opcodeMap` を使って処理するように変更。
-- `internal/codegen/x86gen_lgdt.go`: `handleLGDT` 関数を修正し、`LGDT [label]` 形式を正しく処理するように変更。不要なインポートを削除。
-- `internal/codegen/x86gen_utils.go`: `ResolveOpcode` 関数を修正し、複数バイトのオペコード文字列 (`0F20` など) を処理できるように変更。戻り値を `[]byte` に変更。
-- `internal/codegen/x86gen_logical.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
-- `internal/codegen/x86gen_arithmetic.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
-- `internal/codegen/x86gen_mov.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
+- `internal/codegen/x86gen_utils.go`:
+    - `GetRegisterNumber` 関数を修正し、制御レジスタ (CR0, CR2, CR3, CR4) に対応。
+    - `ModRMByOperand` 関数を修正し、`bitMode` に基づいて 16bit/32bit メモリオペランド処理を分岐。
+        - 16bit モード処理を改善し、単純なレジスタ間接参照 (`[SI]`, `[DI]`) および直接アドレス (`[imm16]`) の ModR/M とディスプレースメントを生成するように修正。これにより `TestGenerateX86` スイートのデグレを解消。
+    - 未使用の `regexp` インポートを削除。
+    - `operand.ParseNumeric` の代わりにローカルヘルパー関数 `parseNumeric` を追加・使用。
 
 ## 次のステップ
-- `MOV r32, CR0` および `MOV CR0, r32` 命令の処理に関するエラー (`Failed to generate ModR/M: failed to get register number for CR0`) の修正。
-    - `pkg/asmdb/instruction_table_fallback.go` のエンコーディング定義修正。
-    - `internal/codegen/x86gen_mov.go` の `handleMOV` 関数修正。
+- **ModR/M 生成ロジックのリファクタリング:**
+    - `internal/codegen/x86gen_utils.go` の `ModRMByOperand` 関数内の 16bit モード処理は、現在手動でのパースに依存しており、複雑でエラーが発生しやすい。
+    - `pkg/operand` パッケージ側に、`bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装し、`codegen` 側はそれを呼び出すだけにするリファクタリングを検討する。
+- **`test/day03_harib00i_test.go` の残存エラー対応:**
+    - エンコーディング未発見エラー (`Failed to find encoding: no matching encoding found`) の修正 (複数の `MOV`, `ADD` 命令)。
+        - 特にラベル (`bootpack`) や `[ EBX + offset ]` 形式のメモリオペランドを含む命令のエンコーディング選択ロジックを確認・修正。(`handleMOV` などが正しい `bitMode` を渡しているか、`asmdb` の検索ロジック自体に問題はないか)
+    - `Failed to process ocode: not implemented: JMP rel32` エラーの修正 (`JMP DWORD 2*8:0x0000001b`)。
+        - `internal/codegen/x86gen_jmp.go` の `handleJMP` 関数に `rel32` の処理を実装。
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

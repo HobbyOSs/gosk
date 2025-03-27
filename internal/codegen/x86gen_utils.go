@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log"
 	"strconv"
@@ -91,16 +92,154 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 
 	// r/mの解析
 	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		modrmBytes, err := operand.CalcModRM(rmOperand, byte(reg), bitMode)
-		if err != nil {
-			return nil, err
+		// bitModeに応じて処理を分岐
+		if bitMode == ast.MODE_32BIT { // 正しい定数を使用
+			// 32bitモードの場合: ParseMemoryOperandを使用
+			_, rmNum, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+			if err != nil {
+				// エラーメッセージを修正: 32bit operand parsing error
+				return nil, fmt.Errorf("failed to parse 32bit memory operand '%s': %w", rmOperand, err)
+			}
+			rmBits := byte(rmNum)
+
+			modrmByte := mode | regBits | rmBits
+			log.Printf("debug: ModRMByOperand (mem32): mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, modrmByte)
+
+			out := []byte{modrmByte}
+			if disp != nil {
+				out = append(out, disp...)
+			}
+			return out, nil
+		} else if bitMode == ast.MODE_16BIT { // 正しい定数を使用
+			// 16bitモードの場合: Manually parse known 16-bit modes
+			memContentWithPrefix := strings.TrimSpace(rmOperand[1 : len(rmOperand)-1]) // Content inside []
+			// Remove size prefix (BYTE, WORD, etc.) if present
+			memContent := memContentWithPrefix
+			if strings.HasPrefix(memContent, "BYTE ") {
+				memContent = strings.TrimSpace(memContent[5:])
+			}
+			if strings.HasPrefix(memContent, "WORD ") {
+				memContent = strings.TrimSpace(memContent[5:])
+			}
+			// DWORD should not appear in 16-bit mode, but handle defensively
+			if strings.HasPrefix(memContent, "DWORD ") {
+				memContent = strings.TrimSpace(memContent[6:])
+			}
+
+			var modeBits byte
+			var rmBits byte
+			var disp []byte
+			var dispVal int64
+			var dispErr error
+			basePart := memContent
+			dispSize := 0
+
+			// Check for displacement
+			if strings.Contains(memContent, "+") {
+				parts := strings.SplitN(memContent, "+", 2)
+				basePart = strings.TrimSpace(parts[0])
+				dispStr := strings.TrimSpace(parts[1])
+				dispVal, dispErr = parseNumeric(dispStr) // Use local parseNumeric
+				if dispErr != nil {
+					return nil, fmt.Errorf("invalid 16bit displacement '%s': %w", dispStr, dispErr)
+				}
+			} else if strings.Contains(memContent, "-") {
+				// Note: Intel syntax usually doesn't use base-disp, but handle it defensively
+				parts := strings.SplitN(memContent, "-", 2)
+				basePart = strings.TrimSpace(parts[0])
+				dispStr := strings.TrimSpace(parts[1])
+				dispVal, dispErr = parseNumeric(dispStr) // Use local parseNumeric
+				if dispErr != nil {
+					return nil, fmt.Errorf("invalid 16bit displacement '%s': %w", dispStr, dispErr)
+				}
+				dispVal = -dispVal // Handle subtraction
+			}
+
+			// Determine rm bits and preliminary mode/disp based on basePart
+			isDirectAddress := false
+			switch basePart {
+			case "BX+SI":
+				rmBits = 0b000
+			case "BX+DI":
+				rmBits = 0b001
+			case "BP+SI":
+				rmBits = 0b010
+			case "BP+DI":
+				rmBits = 0b011
+			case "SI":
+				rmBits = 0b100
+			case "DI":
+				rmBits = 0b101
+			case "BP":
+				rmBits = 0b110 // Special case: [BP] alone implies Mode 01 with disp8=0
+			case "BX":
+				rmBits = 0b111
+			default:
+				// Check for direct address [imm16]
+				directAddrVal, directAddrErr := parseNumeric(basePart) // Use local parseNumeric
+				if directAddrErr == nil {
+					rmBits = 0b110        // R/M = 110 for direct address
+					modeBits = 0b00000000 // Mode = 00
+					dispVal = directAddrVal
+					dispSize = 2 // Direct address always uses 16-bit displacement
+					isDirectAddress = true
+					dispErr = nil // Clear potential error from basePart parsing
+				} else {
+					// Use original rmOperand in error message for clarity
+					return nil, fmt.Errorf("unsupported 16bit base/combination in ModRMByOperand: '%s' from '%s'", basePart, rmOperand)
+				}
+			}
+
+			// Determine final mode and displacement bytes based on dispVal and basePart
+			if !isDirectAddress {
+				if dispErr == nil && dispVal != 0 {
+					if dispVal >= -128 && dispVal <= 127 {
+						modeBits = 0b01000000 // Mode 01 (8-bit disp)
+						dispSize = 1
+					} else if dispVal >= -32768 && dispVal <= 32767 { // Check 16-bit range
+						modeBits = 0b10000000 // Mode 10 (16-bit disp)
+						dispSize = 2
+					} else {
+						return nil, fmt.Errorf("16bit displacement out of range: %d", dispVal)
+					}
+				} else if basePart == "BP" { // Special case for [BP] or [BP+0] -> Mode 01, disp8=0
+					modeBits = 0b01000000
+					dispSize = 1
+					dispVal = 0 // Ensure dispVal is 0
+				} else { // No displacement (and not [BP] alone)
+					modeBits = 0b00000000 // Mode 00
+					dispSize = 0
+					dispVal = 0
+				}
+			}
+
+			// Prepare displacement bytes
+			if dispSize > 0 {
+				disp = make([]byte, dispSize)
+				if dispSize == 1 {
+					disp[0] = byte(dispVal)
+				} else { // dispSize == 2
+					binary.LittleEndian.PutUint16(disp, uint16(dispVal))
+				}
+			} else {
+				disp = nil
+			}
+
+			modrmByte := modeBits | regBits | rmBits
+			log.Printf("debug: ModRMByOperand (mem16): calcMode=%b, reg=%s(%b), rm=%s(%b), result=%#x, disp=% x", modeBits, regOperand, regBits, rmOperand, rmBits, modrmByte, disp)
+
+			out := []byte{modrmByte}
+			if disp != nil {
+				out = append(out, disp...)
+			}
+			return out, nil
+
+		} else {
+			return nil, fmt.Errorf("unknown bitMode: %d", bitMode)
 		}
-		// 生成されたModRMバイトとディスプレースメントを組み合わせ
-		// 上位バイトにmode、次にModRM、その後ろにディスプレースメントを配置
-		// modrmのあとに [0x0ff0] のようなメモリアドレスが続く場合にここで動く
-		return modrmBytes, nil
 	}
 
+	// r/m がレジスタの場合
 	rm, err := GetRegisterNumber(rmOperand)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get register number for %s: %w", rmOperand, err)
@@ -171,15 +310,15 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode ast.Bi
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する
 func GetRegisterNumber(regName string) (int, error) {
 	switch regName {
-	case "AL", "AX", "EAX", "RAX", "ES":
+	case "AL", "AX", "EAX", "RAX", "ES", "CR0":
 		return 0, nil
 	case "CL", "CX", "ECX", "RCX", "CS":
 		return 1, nil
-	case "DL", "DX", "EDX", "RDX", "SS":
+	case "DL", "DX", "EDX", "RDX", "SS", "CR2":
 		return 2, nil
-	case "BL", "BX", "EBX", "RBX", "DS":
+	case "BL", "BX", "EBX", "RBX", "DS", "CR3":
 		return 3, nil
-	case "AH", "SP", "ESP", "RSP", "FS":
+	case "AH", "SP", "ESP", "RSP", "FS", "CR4":
 		return 4, nil
 	case "CH", "BP", "EBP", "RBP", "GS":
 		return 5, nil
@@ -242,4 +381,29 @@ func parseIndex(indexStr string) (int, error) {
 		return -1, fmt.Errorf("invalid index format")
 	}
 	return index, nil
+}
+
+// parseNumeric (copied from pkg/operand/operand_util.go)
+// 文字列の数値(例: "16", "0x0ff0", "-123")をint64に変換
+func parseNumeric(s string) (int64, error) {
+	s = strings.ToLower(strings.TrimSpace(s))
+	negative := false
+	if strings.HasPrefix(s, "-") {
+		negative = true
+		s = s[1:]
+	}
+
+	base := 10
+	if strings.HasPrefix(s, "0x") {
+		base = 16
+		s = s[2:]
+	}
+	val, err := strconv.ParseInt(s, base, 64)
+	if err != nil {
+		return 0, err
+	}
+	if negative {
+		val = -val
+	}
+	return val, nil
 }
