@@ -1,6 +1,8 @@
 package operand
 
 import (
+	"log" // Import log package
+
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Added import
 
 	participle "github.com/alecthomas/participle/v2"
@@ -37,14 +39,21 @@ func (b *OperandImpl) ParsedOperands() []*ParsedOperand {
 		return cached
 	}
 
-	parser := getParser()
-	inst, err := parser.ParseString("", b.Internal)
-	if err != nil || len(inst.Operands) == 0 {
-		return []*ParsedOperand{} // エラー時は空のスライスを返し、キャッシュしない
+	inst := b.getInternalParsed()
+	if inst == nil || inst.FirstOperand == nil {
+		return []*ParsedOperand{}
 	}
 
-	parsedOperandsCache[b.Internal] = inst.Operands
-	return inst.Operands
+	allOperands := []*ParsedOperand{inst.FirstOperand}
+	for _, rest := range inst.RestOperands {
+		if rest.Operand != nil {
+			allOperands = append(allOperands, rest.Operand)
+		}
+	}
+
+	// キャッシュは元のキーで良いか？ -> ParsedOperandsの結果自体は変わらないはず
+	parsedOperandsCache[b.Internal] = allOperands
+	return allOperands
 }
 
 func (b *OperandImpl) InternalString() string {
@@ -61,6 +70,8 @@ func (b *OperandImpl) getInternalParsed() *Instruction {
 	parser := getParser()
 	inst, err := parser.ParseString("", b.Internal)
 	if err != nil {
+		// パースエラーの詳細をログ出力
+		log.Printf("debug: Failed to parse operand string '%s': %v", b.Internal, err)
 		return nil
 	}
 	internalParsedCache[b.Internal] = inst
@@ -77,8 +88,15 @@ func (b *OperandImpl) InternalStrings() []string {
 		return []string{}
 	}
 
+	allOperands := []*ParsedOperand{inst.FirstOperand}
+	for _, rest := range inst.RestOperands {
+		if rest.Operand != nil {
+			allOperands = append(allOperands, rest.Operand)
+		}
+	}
+
 	var results []string
-	for _, parsed := range inst.Operands {
+	for _, parsed := range allOperands {
 		switch {
 		case parsed.SegMem != "":
 			results = append(results, parsed.SegMem)
@@ -124,8 +142,15 @@ func (b *OperandImpl) DetectImmediateSize() int {
 		return 0
 	}
 
-	if len(inst.Operands) == 1 {
-		parsed := inst.Operands[0]
+	allOperands := []*ParsedOperand{inst.FirstOperand}
+	for _, rest := range inst.RestOperands {
+		if rest.Operand != nil {
+			allOperands = append(allOperands, rest.Operand)
+		}
+	}
+
+	if len(allOperands) == 1 {
+		parsed := allOperands[0]
 		if parsed.Imm != "" {
 			s := getImmediateSizeFromValue(parsed.Imm)
 			switch s {
@@ -140,7 +165,7 @@ func (b *OperandImpl) DetectImmediateSize() int {
 		return 0
 	}
 
-	for _, parsed := range inst.Operands {
+	for _, parsed := range allOperands {
 		if parsed.DirectMem != nil && parsed.DirectMem.Prefix != nil {
 			t := getMemorySizeFromPrefix(*parsed.DirectMem.Prefix + " " + parsed.DirectMem.Addr)
 			switch t {
@@ -190,12 +215,15 @@ var operandLexer = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Colon", Pattern: `:`},
 	{Name: "Whitespace", Pattern: `[ \t\n\r]+`},
 	{Name: "MemSizePrefix", Pattern: `(BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)`},
-	{Name: "Seg", Pattern: `(CS|DS|ES|FS|GS|SS)`},
-	{Name: "Reg", Pattern: `([ABCD]X|E?[ABCD]X|[ABCD]L|[ABCD]H|SI|DI|SP|BP|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
+	// Reg を Seg や Rel より先に定義して優先度を上げる
+	// 16/32ビットレジスタを明確に分離 (E? を削除)
+	{Name: "Reg", Pattern: `(EAX|EBX|ECX|EDX|ESI|EDI|ESP|EBP|AX|BX|CX|DX|SI|DI|SP|BP|[ABCD]L|[ABCD]H|MM[0-7]|XMM[0-9]|YMM[0-9]|TR[0-7]|CR[0-7]|DR[0-7])`},
+	{Name: "Seg", Pattern: `(CS|DS|ES|FS|GS|SS)`}, // Reg の後に定義
 	{Name: "DirectMem", Pattern: `(?:FAR\s+PTR|NEAR\s+PTR|PTR)?\s*\[\s*0x[a-fA-F0-9]+\s*\]`},
 	{Name: "IndirectMem", Pattern: `(?:BYTE|WORD|DWORD|QWORD|XMMWORD|YMMWORD|ZMMWORD)?\s*\[\s*(?:[A-Za-z_][A-Za-z0-9_]*|\w+\+\w+|\w+-\w+|0x[a-fA-F0-9]+|\d+)\s*\]`},
 	{Name: "Imm", Pattern: `(0x[a-fA-F0-9]+|-?\d+)`},
-	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*\w+`},
+	// \w+ だとレジスタ名にマッチしてしまうため、一般的な識別子のパターンに変更
+	{Name: "Rel", Pattern: `(?:SHORT|FAR PTR)?\s*[A-Za-z_][A-Za-z0-9_]*`},
 	{Name: "String", Pattern: `"(?:\\.|[^"\\])*"`},
 })
 
@@ -217,8 +245,15 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		return []OperandType{OperandType("unknown")}
 	}
 
+	allOperands := []*ParsedOperand{inst.FirstOperand}
+	for _, rest := range inst.RestOperands {
+		if rest.Operand != nil {
+			allOperands = append(allOperands, rest.Operand)
+		}
+	}
+
 	var types []OperandType
-	for _, parsed := range inst.Operands {
+	for _, parsed := range allOperands {
 		switch {
 		case parsed.SegMem != "":
 			types = append(types, CodeM16)
@@ -241,22 +276,25 @@ func (b *OperandImpl) OperandTypes() []OperandType {
 		case parsed.IndirectMem != nil:
 			types = append(types, CodeM)
 		case parsed.Rel != "":
-			// ラベル指定
-			if b.ForceRelAsImm {
-				types = append(types, CodeIMM) // ForceRelAsImm が true なら Imm として扱う
+			// ラベル指定の処理
+			isShort := len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" // TODO: case insensitive?
+			if !b.ForceRelAsImm && isShort {
+				// ForceRelAsImm=false かつ SHORT label の場合のみ REL8
+				types = append(types, CodeREL8)
+			} else if !b.ForceRelAsImm {
+				// ForceRelAsImm=false かつ SHORT でない場合 (JMP/CALL label など) は REL32
+				types = append(types, CodeREL32)
 			} else {
-				if len(parsed.Rel) >= 5 && parsed.Rel[:5] == "SHORT" {
-					types = append(types, CodeREL8)
-				} else {
-					types = append(types, CodeREL32)
-				}
+				// ForceRelAsImm=true またはその他のラベル (MOV r32, label など) は IMM
+				// サイズは resolveOperandSizes で決定される
+				types = append(types, CodeIMM)
 			}
 		default:
 			types = append(types, OperandType("unknown"))
 		}
 	}
 	// サイズ未確定のimm/memを他のオペランドから決定
-	types = b.resolveOperandSizes(types, inst.Operands)
+	types = b.resolveOperandSizes(types, allOperands) // inst.Operands を allOperands に変更
 
 	operandTypesCache[b.Internal] = types
 	return types
@@ -268,8 +306,15 @@ func (b *OperandImpl) CalcOffsetByteSize() int {
 		return 0
 	}
 
+	allOperands := []*ParsedOperand{inst.FirstOperand}
+	for _, rest := range inst.RestOperands {
+		if rest.Operand != nil {
+			allOperands = append(allOperands, rest.Operand)
+		}
+	}
+
 	var total int
-	for _, op := range inst.Operands {
+	for _, op := range allOperands {
 		// 例: op.IndirectMem == "[EBX+16]" とか op.DirectMem == "[0x0ff0]" とかが入る
 		if op.IndirectMem != nil {
 			size := calcMemOffsetSize(op.IndirectMem.Mem)

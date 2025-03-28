@@ -2,9 +2,17 @@
 
 import "github.com/HobbyOSs/gosk/pkg/cpu"
 
- type Instruction struct {
-	Operands []*ParsedOperand `parser:"@@(',' @@)*"`
- }
+// Instruction 構造体を変更: 最初のオペランドと後続を分離
+type Instruction struct {
+	FirstOperand *ParsedOperand   `parser:"@@"`
+	RestOperands []*CommaOperand `parser:"@@*"` // カンマと後続オペランドの繰り返し
+}
+
+// CommaOperand 構造体を追加
+type CommaOperand struct {
+	Comma   string         `parser:"@Comma"` // カンマトークンをキャプチャ
+	Operand *ParsedOperand `parser:"@@"`
+}
 
 type ParsedOperand struct {
 	SegMem      string       `parser:"@SegMem"`

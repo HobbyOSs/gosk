@@ -95,3 +95,18 @@
     - 冗長な16bitモードの手動解析ロジック、`parseNumeric` 関数、`encoding/binary` インポートを削除。
     - 英語コメントを日本語に翻訳。
 - `internal/codegen/x86gen_logical.go`, `x86gen_arithmetic.go`, `x86gen_mov.go`: `ResolveOpcode` の変更に合わせて `append` を修正 (`opcode...`)。
+
+---
+## 実装済み機能 (詳細) - 2025/03/29 アーカイブ (pkg/operand パーサー修正前)
+- **`pkg/operand/requires.go` の修正 (2025/03/28)**:
+    - `Require66h` (オペランドサイズプレフィックス): 16bitモードでの32bit即値判定を `ParsedOperands()` ベースに修正。
+    - `Require67h` (アドレスサイズプレフィックス): 実効アドレスサイズに基づいて判定するようにロジックを修正。
+- **`pkg/operand/requires.go` のリファクタリング (2025/03/28)**:
+    - `Require66h`, `Require67h` 関数を小さく分割し、可読性と保守性を向上。
+    - `is32bitRegInIndirectMem` 関数で正規表現を使用するように修正。
+- **`internal/codegen/x86gen_test.go` の修正 (2025/03/28)**:
+    - `TestGenerateX86/MOV_SI_a_label` テストケースを `TestGenerateX86/MOV SI, 0x0000` に修正。
+---
+## 実装済み機能 (詳細) - 2025/03/29 アーカイブ (pkg/operand パーサー基本修正後)
+- **`pkg/operand` パーサー修正 (2025/03/29):**
+    - `participle` ベースのパーサーにおけるレキサールール、パーサー定義、型決定ロジックの基本的な問題を修正。 (`TestBaseOperand_OperandType` が成功)

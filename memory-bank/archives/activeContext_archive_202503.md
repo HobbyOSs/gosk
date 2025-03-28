@@ -36,3 +36,28 @@
     - `ModRMByOperand` および `ModRMByValue` がメモリオペランド解析に `pkg/operand.ParseMemoryOperand` を使用するように修正。
     - 冗長な16bitモードの手動解析ロジック、`parseNumeric` 関数、`encoding/binary` インポートを削除。
     - 英語コメントを日本語に翻訳。
+
+---
+## 2025/03/29 アーカイブ (pkg/operand パーサー基本修正後)
+
+## 現在の作業の焦点
+- `pkg/operand` のパーサー (`participle` ベース) の基本的な問題を修正。
+- 引き続き `test/day03_harib00i_test.go` のエラー (エンコーディングエラー、バイナリ長不一致) 対応。
+
+## 直近の変更点
+- **`pkg/operand` パーサー修正 (2025/03/29):**
+    - `pkg/operand` のテスト (`TestBaseOperand_OperandType`) で失敗していたオペランド解析の問題を特定。
+    - TDD アプローチで `pkg/operand/operand_impl_test.go` にテストケースを追加。
+    - `pkg/operand/operand_impl.go` のレキサールール (`Reg`, `Seg` の順序) を修正。
+    - `pkg/operand/operand.go` のパーサー定義 (`Instruction`, `CommaOperand` 構造体) を修正。
+    - `pkg/operand/operand_impl.go` の `OperandTypes` ロジック (ラベルの扱い) を修正。
+    - `pkg/operand/operand_impl_test.go` のテストケース (`MOV r32, label`) で `ForceRelAsImm=true` を設定。
+    - 上記修正により `pkg/operand` のテスト (`TestBaseOperand_OperandType`) が成功。
+
+## 次のステップ
+- `test/day03_harib00i_test.go` を再実行し、エラー内容を確認する。
+- エラー内容に基づき、エンコーディングエラーやバイナリ長不一致の原因を調査・修正する。
+    - `asmdb` (JSON, fallback) のエンコーディング定義確認
+    - `codegen` (MOV, ADD ハンドラ) のロジック確認
+- **`Require67h` の TODO コメント解消**:
+    - `[disp32]` や `[0x12345678]` のケースを正しく判定できるように `requireAddressSizePrefix` 関数を改善する。(`CalcOffsetByteSize` の改善または個別のオペランドサイズ計算が必要)

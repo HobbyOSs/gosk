@@ -28,14 +28,14 @@
     - `is32bitRegInIndirectMem` 関数で正規表現を使用するように修正。
 - **`internal/codegen/x86gen_test.go` の修正 (2025/03/28)**:
     - `TestGenerateX86/MOV_SI_a_label` テストケースを `TestGenerateX86/MOV SI, 0x0000` に修正。
+- **`pkg/operand` パーサー修正 (2025/03/29):**
+    - `participle` ベースのパーサーにおけるレキサールール、パーサー定義、型決定ロジックの基本的な問題を修正。 (`TestBaseOperand_OperandType` が成功)
 
 ## まだ必要な実装
-- **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - **MOV/ADD エンコーディングエラー (継続)**: `MOV r32, imm32/m32/label`, `ADD r32, r32/imm` 形式での `Failed to find encoding` エラー。(`pkg/operand` パーサーの問題の可能性が高い)
-    - **バイナリ長不一致 (継続)**: 上記エラーにより依然としてバイナリ長が不足している可能性が高い。
-- **エンコーディングエラーの原因調査 (継続)**:
-    - `pkg/operand` パーサーの問題は一旦保留。
-    - `asmdb` (JSON定義、fallback table) や `codegen` (MOV/ADDハンドラ) 側のエンコーディング定義や呼び出しロジックを確認する。
+- **`test/day03_harib00i_test.go` のエラー対応 (継続):**
+    - エンコーディングエラー、バイナリ長不一致
+- **`Require67h` の TODO コメント解消**:
+    - `[disp32]` や `[0x12345678]` のケースを正しく判定できるように `requireAddressSizePrefix` 関数を改善する。(`CalcOffsetByteSize` の改善または個別のオペランドサイズ計算が必要)
 - **ModR/M 生成ロジックのリファクタリング検討 (継続):**
     - `pkg/operand` 側に `bitMode` を考慮した統一的なメモリオペランド解析・ModR/M 生成機能 (`ParseMemoryOperand` の改善または新規関数) を実装する検討。
 - RESBの計算処理の実装
