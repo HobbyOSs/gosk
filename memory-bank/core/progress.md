@@ -23,14 +23,16 @@
 - **`pkg/operand/requires.go` の修正 (2025/03/28)**:
     - `Require66h` (オペランドサイズプレフィックス): 16bitモードでの32bit即値判定を `ParsedOperands()` ベースに修正。
     - `Require67h` (アドレスサイズプレフィックス): 実効アドレスサイズに基づいて判定するようにロジックを修正。
+- **`pkg/operand/requires.go` のリファクタリング (2025/03/28)**:
+    - `Require66h`, `Require67h` 関数を小さく分割し、可読性と保守性を向上。
+    - `is32bitRegInIndirectMem` 関数で正規表現を使用するように修正。
+- **`internal/codegen/x86gen_test.go` の修正 (2025/03/28)**:
+    - `TestGenerateX86/MOV_SI_a_label` テストケースを `TestGenerateX86/MOV SI, 0x0000` に修正。
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` の残存エラー対応:**
-    - **`TestGenerateX86/MOV_SI_a_label` の失敗**: ラベル解決または `codegen` の問題。(`Failed to get immediate value or symbol address for a_label`)
     - **MOV/ADD エンコーディングエラー (継続)**: `MOV r32, imm32/m32/label`, `ADD r32, r32/imm` 形式での `Failed to find encoding` エラー。(`pkg/operand` パーサーの問題の可能性が高い)
     - **バイナリ長不一致 (継続)**: 上記エラーにより依然としてバイナリ長が不足している可能性が高い。
-- **`TestGenerateX86/MOV_SI_a_label` の失敗調査**:
-    - `internal/codegen/x86gen_mov.go` のラベル処理、およびラベル解決ロジック (`pass1`, `pass2`) の確認。
 - **エンコーディングエラーの原因調査 (継続)**:
     - `pkg/operand` パーサーの問題は一旦保留。
     - `asmdb` (JSON定義、fallback table) や `codegen` (MOV/ADDハンドラ) 側のエンコーディング定義や呼び出しロジックを確認する。

@@ -78,11 +78,11 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0xbc, 0x00, 0x7c},
 		},
 		{
-			name: "MOV SI, a_label",
+			name: "MOV SI, 0x0000", // pass2フェーズではラベル参照ではなく、具体的なアドレス値を使用することになる
 			ocodes: []ocode.Ocode{
-				{Kind: ocode.OpMOV, Operands: []string{"SI", "a_label"}},
+				{Kind: ocode.OpMOV, Operands: []string{"SI", "0x0000"}},
 			},
-			expected: []byte{0xbe, 0x00, 0x00},
+			expected: []byte{0xbe, 0x00, 0x00}, // MOV SI, 0x0000 = be 00 00
 		},
 		{
 			name: "MOV AL, [ SI ]",
