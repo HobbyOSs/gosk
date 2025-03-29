@@ -34,12 +34,12 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	// エンコーディング情報を使用して機械語を生成
 	machineCode := make([]byte, 0)
 
-	// プレフィックスの追加
-	if ops.Require66h() {
-		machineCode = append(machineCode, 0x66)
-	}
+	// プレフィックスの追加 (0x67 アドレスサイズ, 0x66 オペランドサイズ の順)
 	if ops.Require67h() {
 		machineCode = append(machineCode, 0x67)
+	}
+	if ops.Require66h() {
+		machineCode = append(machineCode, 0x66)
 	}
 
 	// オペコードの追加
@@ -113,7 +113,7 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			machineCode = append(machineCode, imm...)
 		} else {
 			log.Printf("error: Failed to get immediate value or symbol address for %s: %v", opStr, err) // Added error handling
-			return nil // Return nil on error
+			return nil                                                                                  // Return nil on error
 		}
 	}
 
