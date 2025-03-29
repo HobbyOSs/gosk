@@ -24,8 +24,8 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 		log.Printf("Error creating operands from string in %s: %v", instName, err)
 		return nil, fmt.Errorf("failed to create operands from string")
 	}
-	ops = ops.WithBitMode(ctx.BitMode).
-		WithForceImm8(true) // Assuming forceImm8 is still needed
+	ops = ops.WithBitMode(ctx.BitMode)
+	// WithForceImm8(true) // Remove this line, as it might interfere with encoding selection for imm16
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()

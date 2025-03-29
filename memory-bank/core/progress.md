@@ -55,6 +55,14 @@
     - `test/diff.go` の `DumpDiff` 関数に `useANSIColor` 引数を追加し、ANSIカラーを使用しないdiff出力オプションを追加。
     - `github.com/akedrou/textdiff` を依存関係に追加。
     - 関連するテストファイルの `DumpDiff` 呼び出し箇所を更新。
+- **ADD 命令エンコーディング問題の修正 (2025/03/29)**:
+    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を削除。
+    - `pkg/asmdb/instruction_search.go`:
+        - `filterForms` でアキュムレータ形式を優先するように修正。
+        - `FindEncoding` の `lo.MinBy` でエンコーディング定義上の即値サイズを使用し、8ビットに収まる場合は `imm8` を優先するように比較ロジックを修正。Nil チェックを追加。
+    - `pkg/ng_operand`: `ImmediateValueFitsIn8Bits` メソッドを追加・実装。
+    - `pkg/asmdb/encoding.go`: `GetOutputSize` に nil チェックを追加。
+    - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI1` が両方パスするようになった。
 
 ## まだ必要な実装
 - **`pkg/ng_operand` への段階的置換**:

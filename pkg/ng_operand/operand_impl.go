@@ -505,4 +505,27 @@ func (o *OperandPegImpl) DisplacementBytes() []byte {
 }
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。
+// ImmediateValueFitsIn8Bits は、即値オペランドの値が8ビットに収まるかどうかを返します。
+// 複数の即値がある場合は、最初の即値オペランドをチェックします。
+func (o *OperandPegImpl) ImmediateValueFitsIn8Bits() bool {
+	// Add nil check for parsedOperands
+	if o.parsedOperands == nil {
+		log.Printf("warn: ImmediateValueFitsIn8Bits called with nil parsedOperands")
+		return false
+	}
+
+	immOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		return p != nil && (p.Type == CodeIMM || p.Type == CodeIMM8 || p.Type == CodeIMM16 || p.Type == CodeIMM32 || p.Type == CodeIMM64)
+	})
+
+	// Add nil check for immOperand even if found is true (for extra safety)
+	if found && immOperand != nil {
+		val := immOperand.Immediate
+		return val >= -128 && val <= 127
+	}
+
+	return false // 即値オペランドが見つからない場合 or immOperand was nil
+}
+
+// ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。
 // isR8Type と isR64Type も operand_util.go に追加しました。

@@ -15,23 +15,33 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 	var builder strings.Builder
 
 	// Calculate size based on REX
-	if e.REX != nil && e.REX.Mandatory {
-		size := e.REX.getSize()
-		builder.WriteString(fmt.Sprintf(" rex:%d", size))
-		outputSize += size
+	if e.REX != nil { // Check if REX is not nil
+		if e.REX.Mandatory { // Check Mandatory only if REX is not nil
+			size := e.REX.getSize()
+			builder.WriteString(fmt.Sprintf(" rex:%d", size))
+			outputSize += size
+		}
 	}
 
+
 	// Calculate size based on VEX
-	if e.VEX != nil {
+	if e.VEX != nil { // Check if VEX is not nil
 		size := e.VEX.getSize()
 		builder.WriteString(fmt.Sprintf(" vex:%d", size))
 		outputSize += size
 	}
 
 	// Calculate size based on Opcode
-	sizeOpcode := e.Opcode.getSize()
-	builder.WriteString(fmt.Sprintf(" opcode:%d", sizeOpcode))
-	outputSize += sizeOpcode
+	// Check if Opcode is not the zero value before getting its size
+	var zeroOpcode Opcode // Create a zero value Opcode for comparison
+	if e.Opcode != zeroOpcode {
+		sizeOpcode := e.Opcode.getSize()
+		builder.WriteString(fmt.Sprintf(" opcode:%d", sizeOpcode))
+		outputSize += sizeOpcode
+	} else {
+		log.Printf("warn: Encoding has zero Opcode field: %+v", e) // Log warning if Opcode is zero
+	}
+
 
 	// Calculate size based on ModRM
 	if e.ModRM != nil {
@@ -51,14 +61,14 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 	}
 
 	// Calculate size based on DataOffset
-	if e.DataOffset != nil {
+	if e.DataOffset != nil { // Check if DataOffset is not nil
 		size := e.DataOffset.Size
 		builder.WriteString(fmt.Sprintf(" data_offset:%d", size))
 		outputSize += size
 	}
 
 	// Calculate size based on CodeOffset
-	if e.CodeOffset != nil {
+	if e.CodeOffset != nil { // Check if CodeOffset is not nil
 		size := e.CodeOffset.Size
 		builder.WriteString(fmt.Sprintf(" code_offset:%d", size))
 		outputSize += size

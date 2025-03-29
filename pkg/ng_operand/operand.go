@@ -44,4 +44,6 @@ type Operands interface {
 	// メモリオペランドがない場合や、ディスプレースメントがない場合は nil を返します。
 	// バイト列のサイズは BitMode に基づいて決定されます。
 	DisplacementBytes() []byte
+	// ImmediateValueFitsIn8Bits は、即値オペランドの値が8ビットに収まるかどうかを返します。
+	ImmediateValueFitsIn8Bits() bool
 }

@@ -141,6 +141,13 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0x3c, 0x00},
 		},
 		{
+			name: "ADD AX, 0x0020",
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpADD, Operands: []string{"AX", "0x0020"}},
+			},
+			expected: []byte{0x05, 0x20, 0x00}, // ADD AX, imm16
+		},
+		{
 			name: "OUT 0x21, AL",
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpOUT, Operands: []string{"0x21", "AL"}},
