@@ -1,11 +1,12 @@
 package asmdb
 
 import (
-	"errors"
+	"errors" // Keep only one errors import
 	"log"
 	"regexp"
+	// "fmt" // Remove unused fmt import
 
-	"github.com/HobbyOSs/gosk/pkg/operand" // Restored operand import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
@@ -27,7 +28,7 @@ func NewInstructionDB() *InstructionDB {
 }
 
 // FindEncoding は指定された命令とオペランドに対応するエンコーディングを検索します。
-func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) (*Encoding, error) {
+func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operands) (*Encoding, error) { // Use ng_operand.Operands
 	instr, err := GetInstructionByOpcode(opcode)
 	if err != nil {
 		return nil, errors.New("instruction not found")
@@ -57,7 +58,7 @@ func (db *InstructionDB) FindEncoding(opcode string, operands operand.Operands) 
 }
 
 // ModRM 要否によるフィルタリング(accがあるときのみのルール)
-func filterEncodings(form InstructionForm, operands operand.Operands) []*Encoding {
+func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Encoding { // Use ng_operand.Operands
 
 	encodings := make([]*Encoding, 0)
 
@@ -68,19 +69,9 @@ func filterEncodings(form InstructionForm, operands operand.Operands) []*Encodin
 		return encodings
 	}
 
-	hasDirectMem := false
-	hasIndirectMem := false
-
-	for _, op := range operands.ParsedOperands() {
-		// 直接アドレッシングではModRMが不要
-		if op.DirectMem != nil {
-			hasDirectMem = true
-		}
-		// 間接アドレッシングではModRMが必要
-		if op.IndirectMem != nil {
-			hasIndirectMem = true
-		}
-	}
+	// Use methods from ng_operand.Operands interface
+	hasDirectMem := operands.IsDirectMemory()
+	hasIndirectMem := operands.IsIndirectMemory()
 
 	for _, e := range form.Encodings {
 		// 直接アドレッシングではModRMが不要なのでエンコーディングとしては除外
@@ -96,7 +87,7 @@ func filterEncodings(form InstructionForm, operands operand.Operands) []*Encodin
 	return encodings
 }
 
-func filterForms(forms []InstructionForm, operands operand.Operands) []InstructionForm {
+func filterForms(forms []InstructionForm, operands ng_operand.Operands) []InstructionForm { // Use ng_operand.Operands
 	var filteredForms []InstructionForm
 
 	// アキュムレータレジスタを優先的に検索
@@ -123,7 +114,7 @@ func filterForms(forms []InstructionForm, operands operand.Operands) []Instructi
 }
 
 // GetPrefixSize はプレフィックスバイトのサイズを計算します
-func (db *InstructionDB) GetPrefixSize(operands operand.Operands) int {
+func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // Use ng_operand.Operands
 	size := 0
 
 	// operand size prefix (0x66)のみ必要
@@ -134,7 +125,7 @@ func (db *InstructionDB) GetPrefixSize(operands operand.Operands) int {
 	return size
 }
 
-func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Operands) (int, error) {
+func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Operands) (int, error) { // Use ng_operand.Operands
 	encoding, err := db.FindEncoding(opcode, operands)
 	if err != nil {
 		return 0, err
@@ -151,7 +142,7 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands operand.Opera
 	return minOutputSize, nil
 }
 
-func matchOperandsWithAccumulator(formOperands []Operand, queryOperands operand.Operands) bool {
+func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
 	// formOperandsにアキュムレータレジスタが含まれているかチェック
 	if !hasAccumulator(queryOperands) {
 		return false
@@ -159,7 +150,7 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands operand.
 
 	// アキュムレータレジスタを優先的にマッチングするロジック
 	for i, operand := range formOperands {
-		queryType := queryOperands.OperandTypes()[i].String()
+		queryType := string(queryOperands.OperandTypes()[i]) // Convert OperandType to string
 		if operand.Type != queryType {
 			// アキュムレータレジスタの場合、特定の条件でマッチングを試みる
 			if (operand.Type == "al" && queryType == "r8") ||
@@ -173,7 +164,7 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands operand.
 	return true
 }
 
-func hasAccumulator(queryOperands operand.Operands) bool {
+func hasAccumulator(queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
 	hasAccumulator := lo.SomeBy(queryOperands.InternalStrings(), func(op string) bool {
 		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, op)
 		return matched
@@ -181,13 +172,13 @@ func hasAccumulator(queryOperands operand.Operands) bool {
 	return hasAccumulator
 }
 
-func matchOperandsStrict(formOperands []Operand, queryOperands operand.Operands) bool {
+func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
 	if formOperands == nil || len(formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
 
 	for i, operand := range formOperands {
-		queryType := queryOperands.OperandTypes()[i].String()
+		queryType := string(queryOperands.OperandTypes()[i]) // Convert OperandType to string
 		if operand.Type != queryType {
 			return false
 		}
@@ -195,13 +186,13 @@ func matchOperandsStrict(formOperands []Operand, queryOperands operand.Operands)
 	return true
 }
 
-func matchOperandsRelaxed(formOperands []Operand, queryOperands operand.Operands) bool {
+func matchOperandsRelaxed(formOperands []Operand, queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
 	if formOperands == nil || len(formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
 
 	for i, operand := range formOperands {
-		queryType := queryOperands.OperandTypes()[i].String()
+		queryType := string(queryOperands.OperandTypes()[i]) // Convert OperandType to string
 		if operand.Type != queryType {
 			// 条件が緩和された場合; sregはr16としても一致を試みる
 			if queryType == "sreg" && operand.Type == "r16" {

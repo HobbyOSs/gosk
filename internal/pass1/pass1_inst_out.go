@@ -1,12 +1,11 @@
 package pass1
 
 import (
-	"fmt"
+	"fmt" // Keep only one fmt import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
@@ -15,11 +14,25 @@ func processOUT(env *Pass1, tokens []*token.ParseToken) {
 		return token.AsString()
 	})
 
-	operands := operand.
-		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode).
-		WithForceRelAsImm(true)
-	size, _ := env.AsmDB.FindMinOutputSize("OUT", operands)
+	// Use ng_operand.FromString factory function
+	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error creating operands from string in OUT: %v\n", err)
+		return // エラーが発生したら処理を中断
+	}
+
+	// Set BitMode and ForceRelAsImm
+	operands = operands.WithBitMode(env.BitMode).
+		WithForceRelAsImm(true) // Keep this flag for OUT
+
+	// Restore LOC calculation
+	size, err := env.AsmDB.FindMinOutputSize("OUT", operands)
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error finding min output size for OUT %s: %v\n", strings.Join(args, ","), err)
+		return // エラーが発生したら処理を中断
+	}
 	env.LOC += int32(size)
 
 	deb := fmt.Sprintf("OUT %s\n", strings.Join(args, ","))

@@ -33,4 +33,10 @@ type Operands interface {
 	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
 	// Require67h は、アドレスサイズプレフィックス (0x67) が必要かどうかを返します。
 	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
+	// IsDirectMemory は、オペランドに直接メモリアドレスが含まれるかどうかを返します。
+	IsDirectMemory() bool
+	// IsIndirectMemory は、オペランドに間接メモリアドレスが含まれるかどうかを返します。
+	IsIndirectMemory() bool
+	// GetMemoryInfo は、最初のメモリオペランドの詳細情報を返します。見つからない場合は nil と false を返します。
+	GetMemoryInfo() (*MemoryInfo, bool)
 }

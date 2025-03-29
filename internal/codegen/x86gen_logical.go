@@ -6,8 +6,7 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 
 // generateLogicalCode は論理命令の機械語生成の共通処理を行う関数です。
@@ -18,8 +17,12 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
-		WithBitMode(ctx.BitMode). // Added WithBitMode
+	ops, err := ng_operand.FromString(strings.Join(operands, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		return nil, fmt.Errorf("failed to create operands from string in %s", instName)
+	}
+	ops = ops.WithBitMode(ctx.BitMode). // Added WithBitMode
 		WithForceImm8(true)       // 算術命令に合わせて一旦 true に設定
 
 	// AsmDBからエンコーディングを取得
@@ -122,8 +125,12 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(params.Operands[0]).
-		WithBitMode(ctx.BitMode) // Added WithBitMode
+	ops, err := ng_operand.FromString(params.Operands[0])
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		return nil, fmt.Errorf("failed to create operands from string in NOT")
+	}
+	ops = ops.WithBitMode(ctx.BitMode) // Added WithBitMode
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()

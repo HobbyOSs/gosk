@@ -7,7 +7,7 @@ import (
 	"strings" // Added missing import
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 
 // generateArithmeticCode は算術命令の機械語生成の共通処理を行う関数です。
@@ -18,9 +18,14 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
-		WithBitMode(ctx.BitMode).
-		WithForceImm8(true)
+	ops, err := ng_operand.FromString(strings.Join(operands, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		log.Printf("Error creating operands from string in %s: %v", instName, err)
+		return nil, fmt.Errorf("failed to create operands from string")
+	}
+	ops = ops.WithBitMode(ctx.BitMode).
+		WithForceImm8(true) // Assuming forceImm8 is still needed
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()

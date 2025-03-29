@@ -248,7 +248,7 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 		})
 	})
 
-	// パターン2: 単一の即値オペランドは IMM32 にデフォルト設定 (forceImm8 でない場合)
+	// パターン2: 単一の即値オペランドは IMM32 にデフォルト設定 (forceImm8 でない場合) // <- ロジックを元に戻す
 	if len(types) == 1 && !o.forceImm8 {
 		if lo.Contains([]OperandType{CodeIMM, CodeIMM8, CodeIMM16}, types[0]) {
 			types[0] = CodeIMM32
@@ -327,27 +327,57 @@ func (o *OperandPegImpl) CalcOffsetByteSize() int {
 }
 
 // DetectImmediateSize は即値オペランドのサイズ (バイト単位) を検出します。
-// TODO: 複数のオペランドを処理する。現在は最初の即値オペランドをチェックしています。
-// 解決された型ではなく、実際の即値に基づいてサイズを決定します。
+// 基本的に OperandTypes() で解決された型に基づきますが、単一オペランドの場合は
+// 値が収まる最小サイズを返すように調整します。
+// TODO: 複数の即値オペランドが存在する場合の考慮が必要かもしれません。
 func (o *OperandPegImpl) DetectImmediateSize() int {
-	immOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
-		return p != nil && (p.Type == CodeIMM || p.Type == CodeIMM8 || p.Type == CodeIMM16 || p.Type == CodeIMM32 || p.Type == CodeIMM64)
-	})
+	// まず OperandTypes() を呼び出して型を解決
+	resolvedTypes := o.OperandTypes()
 
-	if found {
-		val := immOperand.Immediate
-		switch {
-		case val >= -128 && val <= 127:
-			return 1 // 8ビットに収まる (符号付き)
-		case val >= -32768 && val <= 32767:
-			return 2 // 16ビットに収まる (符号付き)
-		case val >= -2147483648 && val <= 2147483647:
-			return 4 // 32ビットに収まる (符号付き)
-		default:
-			return 8 // それ以外は64ビットと仮定
+	// 解決された型の中から即値型を探す (最初のもの)
+	var immType OperandType = CodeUNKNOWN
+	var immIndex int = -1
+	for i, t := range resolvedTypes {
+		if t == CodeIMM8 || t == CodeIMM16 || t == CodeIMM32 || t == CodeIMM64 {
+			immType = t
+			immIndex = i
+			break
 		}
 	}
-	return 0 // 即値オペランドが見つかりません
+
+	if immIndex != -1 {
+		// 単一オペランドで、解決された型が IMM32 だが、
+		// 元の値はより小さいサイズに収まる場合、その最小サイズを返す
+		if len(o.parsedOperands) == 1 && immType == CodeIMM32 {
+			if immIndex < len(o.parsedOperands) && o.parsedOperands[immIndex] != nil {
+				val := o.parsedOperands[immIndex].Immediate
+				if val >= -128 && val <= 127 {
+					return 1 // 8ビットに収まる
+				}
+				if val >= -32768 && val <= 32767 {
+					return 2 // 16ビットに収まる
+				}
+				// それ以外（32ビットにしか収まらない）場合はそのまま IMM32 のサイズ 4 を返す
+			}
+			// parsedOperands が取得できない異常系、フォールバックして4を返す
+			return 4
+		}
+
+		// 上記以外の場合（複数オペランド、または解決型が IMM32 以外）は
+		// 解決された型に基づいてサイズを返す
+		switch immType {
+		case CodeIMM8:
+			return 1
+		case CodeIMM16:
+			return 2
+		case CodeIMM32:
+			return 4
+		case CodeIMM64:
+			return 8
+		}
+	}
+
+	return 0 // 即値オペランドが見つからない
 }
 
 func (o *OperandPegImpl) WithBitMode(mode cpu.BitMode) Operands {
@@ -367,6 +397,35 @@ func (o *OperandPegImpl) WithForceRelAsImm(force bool) Operands {
 
 func (o *OperandPegImpl) GetBitMode() cpu.BitMode {
 	return o.bitMode
+}
+
+// IsDirectMemory は、オペランドに直接メモリアドレスが含まれるかどうかを返します。
+// 直接アドレスは [displacement] の形式と判断します。
+func (o *OperandPegImpl) IsDirectMemory() bool {
+	return lo.SomeBy(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		// Memory フィールドが存在し、BaseReg と IndexReg が両方空であること
+		return p != nil && p.Memory != nil && p.Memory.BaseReg == "" && p.Memory.IndexReg == ""
+	})
+}
+
+// IsIndirectMemory は、オペランドに間接メモリアドレスが含まれるかどうかを返します。
+// 間接アドレスはレジスタを含む形式 (例: [EAX], [ESI+4]) と判断します。
+func (o *OperandPegImpl) IsIndirectMemory() bool {
+	return lo.SomeBy(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		// Memory フィールドが存在し、BaseReg または IndexReg の少なくとも一方が空でないこと
+		return p != nil && p.Memory != nil && (p.Memory.BaseReg != "" || p.Memory.IndexReg != "")
+	})
+}
+
+// GetMemoryInfo は、最初のメモリオペランドの詳細情報を返します。見つからない場合は nil と false を返します。
+func (o *OperandPegImpl) GetMemoryInfo() (*MemoryInfo, bool) {
+	memOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		return p != nil && p.Memory != nil
+	})
+	if found {
+		return memOperand.Memory, true
+	}
+	return nil, false
 }
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。

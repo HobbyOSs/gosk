@@ -9,7 +9,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu"
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Re-import ng_operand
 )
 
 // GenerateModRM はエンコーディング情報とビットモードに基づいてModR/Mバイトを生成する
@@ -87,7 +87,7 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
 
-	mode := parseMode(modeStr) // modeの解析
+	// mode := parseMode(modeStr) // mode は calculateModRM で決定される
 
 	// regの解析（3ビット）
 	reg, err := GetRegisterNumber(regOperand)
@@ -98,24 +98,37 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 
 	// r/mの解析
 	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		// メモリオペランドの場合: pkg/operand.ParseMemoryOperand を使用
-		modBits, rmBits, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+		// --- ng_operand を使用した ModR/M 生成ロジック ---
+		rmOps, err := ng_operand.FromString(rmOperand)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse memory operand '%s' (mode:%d): %w", rmOperand, bitMode, err)
+			return nil, fmt.Errorf("failed to parse rmOperand '%s': %w", rmOperand, err)
+		}
+		rmOps = rmOps.WithBitMode(bitMode) // Ensure correct bit mode
+
+		// Use the new GetMemoryInfo method
+		memInfo, found := rmOps.GetMemoryInfo()
+		if !found || memInfo == nil { // Add nil check for memInfo
+			// This case should ideally not happen due to the check above, but handle defensively
+			return nil, fmt.Errorf("could not get memory info from operand: %s", rmOperand)
 		}
 
-		// 注釈: operand.ParseMemoryOperand は mod ビット (00, 01, 10) を直接返す。
-		// parseMode(modeStr) から得られる 'mode' 変数は、命令定義からの意図されたアドレッシングモード (#0, #1, #2, 11) を示す可能性がある。
-		// 実際に必要なエンコーディングを反映するため、ParseMemoryOperand によって返された mod ビットを使用すべきである。
-		modrmByte := modBits | regBits | rmBits
-		log.Printf("debug: ModRMByOperand (mem): modeStr=%s, reg=%s(%b), rm=%s(%b), parsedMod=%b, parsedRm=%b, result=%#x, disp=% x",
-			modeStr, regOperand, regBits, rmOperand, rmBits, modBits, rmBits, modrmByte, disp)
+		// --- ModR/M and Displacement Calculation ---
+		modrmByte, sibByte, dispBytes, err := calculateModRM(memInfo, bitMode, regBits) // Pass regBits for context
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate ModR/M for '%s': %w", rmOperand, err)
+		}
 
 		out := []byte{modrmByte}
-		if disp != nil {
-			out = append(out, disp...)
+		if sibByte != 0 { // Check if SIB byte is present
+			out = append(out, sibByte)
 		}
+		if len(dispBytes) > 0 {
+			out = append(out, dispBytes...)
+		}
+		log.Printf("debug: ModRMByOperand (mem): reg=%s(%b), rm=%s, result=%#x, sib=%#x, disp=% x",
+			regOperand, regBits, rmOperand, modrmByte, sibByte, dispBytes)
 		return out, nil
+
 	}
 
 	// r/m がレジスタの場合 (mod=11)
@@ -125,9 +138,10 @@ func ModRMByOperand(modeStr string, regOperand string, rmOperand string, bitMode
 	}
 	rmBits := byte(rm)
 
-	// parseMode によって決定された mode を使用
-	out := mode | regBits | rmBits
-	log.Printf("debug: GenerateModRM: mode=%s(%b), reg=%s(%b), rm=%s(%b), result=%#x", modeStr, mode, regOperand, regBits, rmOperand, rmBits, out)
+	// レジスタの場合は mod=11 固定
+	mod := byte(0b11000000)
+	out := mod | regBits | rmBits
+	log.Printf("debug: GenerateModRM (reg): reg=%s(%b), rm=%s(%b), result=%#x", regOperand, regBits, rmOperand, rmBits, out)
 	return []byte{out}, nil
 }
 
@@ -137,31 +151,46 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode cpu.Bi
 	// |  mod  |  reg  |  r/m  |
 	// | 7 6 | 5 4 3 | 2 1 0 |
 
-	mode := parseMode(modeStr) // modeの解析
+	// mode := parseMode(modeStr) // mode は calculateModRM で決定される
 
 	// regの解析（3ビット）
 	regBits := byte(regValue) << 3
 
 	// r/mの解析（3ビット）
 	if strings.Contains(rmOperand, "[") && strings.HasSuffix(rmOperand, "]") {
-		// メモリオペランドの場合: pkg/operand.ParseMemoryOperand を使用
-		modBits, rmBits, disp, err := operand.ParseMemoryOperand(rmOperand, bitMode)
+		// --- ng_operand を使用した ModR/M 生成ロジック ---
+		rmOps, err := ng_operand.FromString(rmOperand)
 		if err != nil {
-			log.Printf("error: Failed to parse memory operand for rm in ModRMByValue: %v", err)
-			// []byte{0} の代わりにエラーを返すことを検討
-			return []byte{0}
+			log.Printf("error: Failed to parse rmOperand '%s' in ModRMByValue: %v", rmOperand, err)
+			return []byte{0} // Consider returning error
+		}
+		rmOps = rmOps.WithBitMode(bitMode) // Ensure correct bit mode
+
+		// Use the new GetMemoryInfo method
+		memInfo, found := rmOps.GetMemoryInfo()
+		if !found || memInfo == nil { // Add nil check for memInfo
+			log.Printf("error: Could not get memory info from operand in ModRMByValue: %s", rmOperand)
+			return []byte{0} // Consider returning error
 		}
 
-		// パースされた mod/rm ビットを使用
-		modrmByte := modBits | regBits | rmBits
-		log.Printf("debug: ModRMByValue (mem): modeStr=%s, reg=%d(%b), rm=%s(%b), parsedMod=%b, parsedRm=%b, result=%#x, disp=% x",
-			modeStr, regValue, regBits, rmOperand, rmBits, modBits, rmBits, modrmByte, disp)
+		// --- ModR/M and Displacement Calculation ---
+		modrmByte, sibByte, dispBytes, err := calculateModRM(memInfo, bitMode, regBits) // Pass regBits for context
+		if err != nil {
+			log.Printf("error: Failed to calculate ModR/M for '%s' in ModRMByValue: %v", rmOperand, err)
+			return []byte{0} // Consider returning error
+		}
 
 		out := []byte{modrmByte}
-		if disp != nil {
-			out = append(out, disp...)
+		if sibByte != 0 { // Check if SIB byte is present
+			out = append(out, sibByte)
 		}
+		if len(dispBytes) > 0 {
+			out = append(out, dispBytes...)
+		}
+		log.Printf("debug: ModRMByValue (mem): reg=%d(%b), rm=%s, result=%#x, sib=%#x, disp=% x",
+			regValue, regBits, rmOperand, modrmByte, sibByte, dispBytes)
 		return out
+
 	}
 
 	// r/m がレジスタの場合 (mod=11)
@@ -172,11 +201,183 @@ func ModRMByValue(modeStr string, regValue int, rmOperand string, bitMode cpu.Bi
 	}
 	rmBits := byte(rm)
 
-	// parseMode によって決定された mode を使用
-	out := mode | regBits | rmBits
-	log.Printf("debug: ModRMByValue: mode=%s(%b), reg=%d(%b), rm=%s(%b), result=%#x", modeStr, mode, regValue, regBits, rmOperand, rmBits, out)
+	// レジスタの場合は mod=11 固定
+	mod := byte(0b11000000)
+	out := mod | regBits | rmBits
+	log.Printf("debug: ModRMByValue (reg): reg=%d(%b), rm=%s(%b), result=%#x", regValue, regBits, rmOperand, rmBits, out)
 	return []byte{out}
 }
+
+// calculateModRM は MemoryInfo から ModR/M, SIB, Displacement を計算する
+// regBits は ModR/M の reg フィールド (ビット3-5)
+// TODO: SIBバイトの処理を実装する
+func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byte) (modrmByte byte, sibByte byte, dispBytes []byte, err error) {
+	var mod byte
+	var rm byte
+	disp := mem.Displacement
+	// BaseReg も IndexReg もなく、Displacement がある場合は直接アドレス
+	isDirectAddr := mem.BaseReg == "" && mem.IndexReg == ""
+	hasDisp := mem.Displacement != 0 || isDirectAddr // Direct address always has displacement
+
+	// Determine mod based on displacement size and addressing mode
+	if !hasDisp && !isDirectAddr { // No displacement and not direct address
+		mod = 0b00000000
+	} else if disp >= -128 && disp <= 127 {
+		mod = 0b01000000 // disp8
+	} else {
+		// disp16 or disp32
+		mod = 0b10000000
+	}
+
+	// --- 16-bit Addressing (Table 2-1) ---
+	if bitMode == cpu.MODE_16BIT {
+		sibByte = 0 // No SIB in 16-bit mode
+		switch {
+		case mem.BaseReg == "BX" && mem.IndexReg == "SI": rm = 0b000
+		case mem.BaseReg == "BX" && mem.IndexReg == "DI": rm = 0b001
+		case mem.BaseReg == "BP" && mem.IndexReg == "SI": rm = 0b010
+		case mem.BaseReg == "BP" && mem.IndexReg == "DI": rm = 0b011
+		case mem.BaseReg == "" && mem.IndexReg == "SI": rm = 0b100
+		case mem.BaseReg == "" && mem.IndexReg == "DI": rm = 0b101
+		case mem.BaseReg == "BP" && mem.IndexReg == "":
+			rm = 0b110
+			// [BP] requires displacement, even if 0
+			if !hasDisp {
+				mod = 0b01000000 // Use disp8=0
+				disp = 0
+				hasDisp = true
+			}
+		case isDirectAddr: // Direct address [disp16]
+			mod = 0b00000000
+			rm = 0b110
+			hasDisp = true // Always has 16-bit displacement
+		case mem.BaseReg == "BX" && mem.IndexReg == "": rm = 0b111
+		// --- Cases not directly in Table 2-1 but implied ---
+		case mem.BaseReg == "SI" && mem.IndexReg == "": rm = 0b100 // Treat [SI] as [SI+disp]
+		case mem.BaseReg == "DI" && mem.IndexReg == "": rm = 0b101 // Treat [DI] as [DI+disp]
+		default:
+			return 0, 0, nil, fmt.Errorf("unsupported 16-bit addressing mode: Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
+		}
+
+		// Adjust mod if displacement exists but mod is currently 00 (except for direct address)
+		if hasDisp && mod == 0b00000000 && rm != 0b110 {
+			if disp >= -128 && disp <= 127 {
+				mod = 0b01000000 // Use disp8
+			} else {
+				mod = 0b10000000 // Use disp16
+			}
+		}
+
+		// Generate displacement bytes
+		if hasDisp {
+			if mod == 0b01000000 { // disp8
+				dispBytes = []byte{byte(disp)}
+			} else { // disp16 (mod=10 or mod=00,r/m=110)
+				dispBytes = make([]byte, 2)
+				binary.LittleEndian.PutUint16(dispBytes, uint16(disp))
+			}
+		}
+		modrmByte = mod | regBits | rm
+		return modrmByte, sibByte, dispBytes, nil
+	}
+
+	// --- 32-bit Addressing (Table 2-2) ---
+	sibByte = 0 // Default: no SIB byte
+	needsSIB := false
+
+	switch {
+	case isDirectAddr: // Direct address [disp32]
+		mod = 0b00000000
+		rm = 0b101
+		hasDisp = true
+	case mem.BaseReg == "EBP" && mem.IndexReg == "": // [EBP] or [EBP+disp]
+		rm = 0b101
+		if !hasDisp { // [EBP] needs disp8=0
+			mod = 0b01000000
+			disp = 0
+			hasDisp = true
+		}
+	case mem.BaseReg == "ESP" || mem.IndexReg != "": // Needs SIB byte
+		rm = 0b100
+		needsSIB = true
+	case mem.BaseReg == "EAX" && mem.IndexReg == "": rm = 0b000
+	case mem.BaseReg == "ECX" && mem.IndexReg == "": rm = 0b001
+	case mem.BaseReg == "EDX" && mem.IndexReg == "": rm = 0b010
+	case mem.BaseReg == "EBX" && mem.IndexReg == "": rm = 0b011
+	// case mem.BaseReg == "ESP": handled by SIB case
+	// case mem.BaseReg == "EBP": handled above
+	case mem.BaseReg == "ESI" && mem.IndexReg == "": rm = 0b110
+	case mem.BaseReg == "EDI" && mem.IndexReg == "": rm = 0b111
+	default:
+		return 0, 0, nil, fmt.Errorf("unsupported 32-bit addressing mode: Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
+	}
+
+	// Adjust mod if displacement exists but mod is currently 00 (except for direct address and [EBP] cases)
+	if hasDisp && mod == 0b00000000 && rm != 0b101 {
+		if disp >= -128 && disp <= 127 {
+			mod = 0b01000000 // Use disp8
+		} else {
+			mod = 0b10000000 // Use disp32
+		}
+	}
+
+	// Generate SIB byte if needed (TODO: Implement fully based on Table 2-3)
+	if needsSIB {
+		log.Printf("WARN: SIB byte generation not fully implemented for Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
+		// Placeholder SIB calculation (likely incorrect for many cases)
+		var scale byte
+		switch mem.Scale {
+		case 1: scale = 0b00000000
+		case 2: scale = 0b01000000
+		case 4: scale = 0b10000000
+		case 8: scale = 0b11000000
+		default: scale = 0b00000000 // Default to scale 1 if not specified or invalid
+		}
+
+		var indexNum int = 4 // Default to index=none (ESP)
+		if mem.IndexReg != "" && mem.IndexReg != "ESP" { // ESP cannot be index
+			indexNum, err = GetRegisterNumber(mem.IndexReg)
+			if err != nil {
+				return 0, 0, nil, fmt.Errorf("invalid index register in SIB: %s", mem.IndexReg)
+			}
+		}
+
+		var baseNum int = 5 // Default to base=none ([disp32] or [EBP+disp])
+		if mem.BaseReg != "" {
+			baseNum, err = GetRegisterNumber(mem.BaseReg)
+			if err != nil {
+				return 0, 0, nil, fmt.Errorf("invalid base register in SIB: %s", mem.BaseReg)
+			}
+			// Special case for mod=00, base=EBP
+			if mod == 0b00000000 && baseNum == 5 {
+				mod = 0b01000000 // Use disp8=0
+				disp = 0
+				hasDisp = true
+			}
+		} else if mod == 0b00000000 { // No base register and mod=00 -> [disp32] or [index*scale+disp32]
+			baseNum = 5 // Use base=none encoding
+			mod = 0b00000000 // Ensure mod is 00 for disp32
+			hasDisp = true // Requires disp32
+		}
+
+
+		sibByte = scale | (byte(indexNum) << 3) | byte(baseNum)
+	}
+
+	// Generate displacement bytes
+	if hasDisp {
+		if mod == 0b01000000 { // disp8
+			dispBytes = []byte{byte(disp)}
+		} else { // disp32 (mod=10 or mod=00 with rm=101 or SIB with base=101)
+			dispBytes = make([]byte, 4)
+			binary.LittleEndian.PutUint32(dispBytes, uint32(disp))
+		}
+	}
+
+	modrmByte = mod | regBits | rm
+	return modrmByte, sibByte, dispBytes, nil
+}
+
 
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する
 func GetRegisterNumber(regName string) (int, error) {

@@ -1,14 +1,13 @@
 package codegen
 
 import (
-	// "fmt" // Removed unused import
-	"log"
-	"strconv"
-	"strings"
+	// "fmt" // Remove unused fmt import
+	"log"     // Keep only one log import
+	"strconv" // Keep only one strconv import
+	"strings" // Keep only one strings import
 
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 
 // handleMOV handles the MOV instruction and generates the appropriate machine code.
@@ -19,8 +18,13 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	}
 
 	// オペランドの解析
-	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
-		WithBitMode(ctx.BitMode).
+	ops, err := ng_operand.FromString(strings.Join(operands, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		log.Printf("Error creating operands from string in MOV: %v", err)
+		return nil
+	}
+	ops = ops.WithBitMode(ctx.BitMode).
 		WithForceRelAsImm(true)
 
 	// AsmDBからエンコーディングを取得
@@ -76,14 +80,18 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			return nil
 		}
 		machineCode = append(machineCode, modrm...)
-	} else {
-		// ModRMがない場合は
-		// メモリオペランドが有る場合のoffset取得して設定する必要が有る場合が有る
-		for _, opStr := range operands {
-			if _, _, disp, err := operand.ParseMemoryOperand(opStr, ctx.BitMode); err == nil {
-				machineCode = append(machineCode, disp...)
-			}
-		}
+	// } else {
+	// TODO: Handle case where ModRM is nil but displacement might be needed.
+	// This requires inspecting the parsed operands from 'ops'.
+	// The old logic using operand.ParseMemoryOperand needs replacement.
+	// This might be handled within getModRMFromOperands or requires new logic here.
+	// For now, commenting out the old logic.
+	// // ModRMがない場合は
+	// // メモリオペランドが有る場合のoffset取得して設定する必要が有る場合が有る
+	// for _, opStr := range operands {
+	// 	// Replace operand.ParseMemoryOperand logic
+	// 	// Need to get displacement from ng_operand.Operands 'ops'
+	// }
 	}
 
 	// 即値の追加(必要な場合)

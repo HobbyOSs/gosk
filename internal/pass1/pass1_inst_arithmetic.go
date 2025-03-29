@@ -1,13 +1,12 @@
 package pass1
 
 import (
-	"fmt"
+	"fmt" // Keep only one fmt import
 	"regexp"
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
@@ -23,17 +22,31 @@ func processArithmeticInst(env *Pass1, tokens []*token.ParseToken, instName stri
 		isAccumulator = matched
 	}
 
-	operands := operand.
-		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode)
+	// Use ng_operand.FromString factory function
+	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error creating operands from string in %s: %v\n", instName, err)
+		return // エラーが発生したら処理を中断
+	}
 
-	// アキュムレータでない場合は `force_imm8` を有効にする
+	// Set BitMode and ForceImm8
+	operands = operands.WithBitMode(env.BitMode)
 	if !isAccumulator {
 		operands = operands.WithForceImm8(true)
 	}
 
-	size, _ := env.AsmDB.FindMinOutputSize(instName, operands)
+	// Restore LOC calculation
+	size, err := env.AsmDB.FindMinOutputSize(instName, operands)
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error finding min output size for %s %s: %v\n", instName, strings.Join(args, ","), err)
+		// エラーが発生しても LOC を加算しないようにする（あるいはデフォルトサイズを加算するか検討）
+		return // エラーが発生したら処理を中断
+	}
 	env.LOC += int32(size)
+
+	// Emit する文字列は元のオペランド文字列を使用
 	env.Client.Emit(fmt.Sprintf("%s %s\n", instName, strings.Join(args, ",")))
 }
 

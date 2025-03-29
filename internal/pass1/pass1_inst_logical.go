@@ -1,14 +1,13 @@
 package pass1
 
 import (
-	"fmt"
-	"log"
-	"regexp"
+	"fmt"    // Keep only one fmt import
+	"log"    // Keep only one log import
+	"regexp" // Keep only one regexp import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
-	"github.com/HobbyOSs/gosk/pkg/operand" // Added import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
@@ -24,17 +23,29 @@ func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string)
 		isAccumulator = matched
 	}
 
-	operands := operand.
-		NewOperandFromString(strings.Join(args, ",")).
-		WithBitMode(env.BitMode)
+	// Use ng_operand.FromString factory function
+	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error creating operands from string in %s: %v\n", instName, err)
+		return // エラーが発生したら処理を中断
+	}
 
-	// アキュムレータでない場合は `force_imm8` を有効にする
+	// Set BitMode and ForceImm8
+	operands = operands.WithBitMode(env.BitMode)
 	if !isAccumulator {
 		operands = operands.WithForceImm8(true)
 	}
 
-	size, _ := env.AsmDB.FindMinOutputSize(instName, operands)
+	// Restore LOC calculation
+	size, err := env.AsmDB.FindMinOutputSize(instName, operands)
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error finding min output size for %s %s: %v\n", instName, strings.Join(args, ","), err)
+		return // エラーが発生したら処理を中断
+	}
 	env.LOC += int32(size)
+
 	env.Client.Emit(fmt.Sprintf("%s %s\n", instName, strings.Join(args, ",")))
 }
 
@@ -60,12 +71,26 @@ func processNOT(env *Pass1, tokens []*token.ParseToken) {
 	}
 	arg := tokens[0].AsString()
 
-	operands := operand.
-		NewOperandFromString(arg).
-		WithBitMode(env.BitMode)
+	// Use ng_operand.FromString factory function
+	operands, err := ng_operand.FromString(arg)
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error creating operands from string in NOT: %v\n", err)
+		return // エラーが発生したら処理を中断
+	}
 
-	size, _ := env.AsmDB.FindMinOutputSize("NOT", operands)
+	// Set BitMode
+	operands = operands.WithBitMode(env.BitMode)
+
+	// Restore LOC calculation
+	size, err := env.AsmDB.FindMinOutputSize("NOT", operands)
+	if err != nil {
+		// TODO: より適切なエラーハンドリングを行う
+		fmt.Printf("Error finding min output size for NOT %s: %v\n", arg, err)
+		return // エラーが発生したら処理を中断
+	}
 	env.LOC += int32(size)
+
 	env.Client.Emit(fmt.Sprintf("NOT %s\n", arg))
 }
 
