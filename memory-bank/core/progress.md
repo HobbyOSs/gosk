@@ -56,12 +56,11 @@
     - `github.com/akedrou/textdiff` を依存関係に追加。
     - 関連するテストファイルの `DumpDiff` 呼び出し箇所を更新。
 - **ADD 命令エンコーディング問題の修正 (2025/03/29)**:
-    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を削除。
-    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を有効に戻した。
+    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を有効に戻した。（結果的にこれが両立する鍵だった）
     - `pkg/ng_operand/operand_impl.go`: `resolveDependentSizes` で `imm8` を `imm16` にアップグレードするロジックを削除。
     - `pkg/asmdb/instruction_search.go`:
-        - `matchOperandsWithAccumulator`: 即値タイプの比較を緩和。
-        - `FindEncoding`: アキュムレータ専用 Form を優先するロジックを修正。
+        - `matchOperandsWithAccumulator`: 即値タイプの比較を緩和 (`imm8` と `imm16` を区別しない)。
+        - `FindEncoding`: アキュムレータ専用 Form が見つかった場合、そのエンコーディングのみを候補とするように修正。
         - `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
     - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI,1` の両方、および関連する `TestHarib00c`, `TestHarib00d`, `TestHarib00g` が PASS するようになった。
 

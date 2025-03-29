@@ -110,3 +110,14 @@
 ## 実装済み機能 (詳細) - 2025/03/29 アーカイブ (pkg/operand パーサー基本修正後)
 - **`pkg/operand` パーサー修正 (2025/03/29):**
     - `participle` ベースのパーサーにおけるレキサールール、パーサー定義、型決定ロジックの基本的な問題を修正。 (`TestBaseOperand_OperandType` が成功)
+
+---
+## 実装済み機能 (詳細) - 2025/03/29 アーカイブ (ADD 命令エンコーディング問題修正後)
+- **ADD 命令エンコーディング問題の修正 (2025/03/29)**:
+    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を有効に戻した。（結果的にこれが両立する鍵だった）
+    - `pkg/ng_operand/operand_impl.go`: `resolveDependentSizes` で `imm8` を `imm16` にアップグレードするロジックを削除。
+    - `pkg/asmdb/instruction_search.go`:
+        - `matchOperandsWithAccumulator`: 即値タイプの比較を緩和 (`imm8` と `imm16` を区別しない)。
+        - `FindEncoding`: アキュムレータ専用 Form が見つかった場合、そのエンコーディングのみを候補とするように修正。
+        - `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
+    - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI,1` の両方、および関連する `TestHarib00c`, `TestHarib00d`, `TestHarib00g` が PASS するようになった。
