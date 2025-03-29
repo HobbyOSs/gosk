@@ -95,7 +95,7 @@ func TestCalcModRM(t *testing.T) {
 		{
 			name:      "16bit mem disp8",
 			rmOperand: "[bx+si+0x10]",
-			regBits:   0b010, // 例: reg=010 => DX
+			regBits:   0b010,          // 例: reg=010 => DX
 			bitMode:   cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			// mod=01, rm=000 => 01 010 000 => 01010000(0x50)？
 			// ただしここはバイト合成順に注意
@@ -106,7 +106,7 @@ func TestCalcModRM(t *testing.T) {
 		{
 			name:      "16bit register operand bx => mod=11, rm=011",
 			rmOperand: "bx",
-			regBits:   0b011, // (BXとかBLあたり)
+			regBits:   0b011,          // (BXとかBLあたり)
 			bitMode:   cpu.MODE_16BIT, // Changed to cpu.MODE_16BIT
 			// mod=11(0xC0), reg=011<<3=0x18, rm=011 => combine => 1100 0000 + 0001 1000 + 0000 1011...
 			// (ここは計算順に注意) => 0xDB

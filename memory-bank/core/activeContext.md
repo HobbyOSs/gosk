@@ -2,10 +2,27 @@
 
 ## 現在の作業の焦点
 - **オペランドパーサー移行 (`pkg/ng_operand`)**:
-    - pigeon peg ベースの新しいパーサー (`pkg/ng_operand`) の実装を進める。
-    - `pkg/operand` から移植したテストコード (`operand_impl_test.go`) が通るように、`operand_impl.go` の `OperandPegImpl` 構造体とメソッド（特に `OperandTypes`）を実装・修正する。
+    - `pkg/ng_operand/operand_impl.go` の `OperandTypes` メソッドにおけるサイズ解決ロジックの修正。
+    - `pkg/ng_operand/operand_type_test.go` のテスト (`TestOperandPegImpl_OperandType`) をパスさせることを目指す。
 
 ## 直近の変更点
+- **コードクリーンアップ (2025/03/29):**
+    - `go fmt ./...` と `go mod tidy` を実行。
+- **テストファイル分割 (2025/03/29):**
+    - `pkg/ng_operand/operand_impl_test.go` を以下のファイルに分割:
+        - `operand_type_test.go` (`TestOperandPegImpl_OperandType`)
+        - `detect_immediate_size_test.go` (`TestOperandPegImpl_DetectImmediateSize`)
+        - `parse_operands_test.go` (`TestParseOperands_FromString`)
+- **`requires` 関数のリファクタリング (2025/03/29):**
+    - `pkg/ng_operand/requires.go` を作成し、`Require66h` と `Require67h` を `OperandPegImpl` のメソッドとして移動。
+    - `operand_impl.go` から該当メソッドを削除。
+    - `operand_test.go` (分割前のファイル) の呼び出し箇所を修正。
+- **`OperandPegImpl` 構造体変更 (2025/03/29):**
+    - `operand_impl.go` の `OperandPegImpl` 構造体が単一の `*ParsedOperandPeg` ではなく、`[]*ParsedOperandPeg` を保持するように変更。
+    - 関連するメソッド (`NewOperandPegImpl`, `FromString`, `InternalString`, `InternalStrings`, `Serialize`, `OperandTypes`, `CalcOffsetByteSize`, `DetectImmediateSize`) を修正。
+- **`OperandTypes` サイズ解決ロジック修正 (2025/03/29):**
+    - `operand_impl.go` の `OperandTypes`, `resolveMemorySize`, `resolveDependentSizes` メソッドを複数回修正し、即値・メモリ・ラベルのサイズ解決ロジックを改善。
+    - `operand_type_test.go` 内で `ParseOperands` 呼び出し時に適切なビットモードを設定するように修正。
 - **オペランドテストコード移植 (2025/03/29):**
     - `pkg/operand/operand_impl_test.go` を `pkg/ng_operand/operand_impl_test.go` にコピー。
     - `pkg/ng_operand/parser.go` に複数オペランド対応の `ParseOperands` 関数を追加（戻り値は `[]*ParsedOperandPeg`）。
@@ -26,11 +43,12 @@
     - participleベースのパーサーの基本的な問題を修正 (`TestBaseOperand_OperandType` が成功)。
 
 ## 次のステップ
-- **`pkg/ng_operand/operand_impl.go` の実装**:
-    - `OperandPegImpl` 構造体の設計見直し（`[]*ParsedOperandPeg` を保持するように変更するか検討）。
-    - `OperandTypes` メソッドに、ビットモードやオペランド間の依存関係を考慮した完全な型解決ロジックを実装する（`imm`/`m` のサイズ決定）。
-    - `CalcOffsetByteSize`, `DetectImmediateSize`, `Require66h`, `Require67h` などのメソッドを実装・修正する。
-    - `operand_impl_test.go` のテストが成功するように実装を進める。
+- **`pkg/ng_operand/operand_impl.go` の `OperandTypes` 修正**:
+    - `operand_type_test.go` の失敗ケースに基づき、`OperandTypes`, `resolveMemorySize`, `resolveDependentSizes` のサイズ解決ロジックをさらに修正する。
+    - 特に、単独即値の `imm32` 解決、`forceImm8` の優先適用、セグメントオーバーライド付きレジスタのメモリ解決を重点的に見直す。
+- **テスト実行と修正**:
+    - `operand_type_test.go` のテスト (`TestOperandPegImpl_OperandType`) を実行し、パスするまで修正を繰り返す。
+    - `detect_immediate_size_test.go` (`TestOperandPegImpl_DetectImmediateSize`) と `parse_operands_test.go` (`TestParseOperands_FromString`) も実行し、必要に応じて修正する。
 - **段階的置換**: `pkg/ng_operand` のテストが安定したら、`internal/pass1` などから `pkg/operand` の利用箇所を `pkg/ng_operand` に置き換えていく。
 
 ## 関連情報

@@ -38,13 +38,18 @@
     - `pkg/operand/operand_impl_test.go` を `pkg/ng_operand/operand_impl_test.go` に移植。
     - PEG 文法 (`operand_grammar.peg`) を修正し、パースエラーを解消。
     - テストコード内の型解決ロジックを暫定的に実装（一部テストは失敗中）。
+- **`pkg/ng_operand` リファクタリング (2025/03/29)**:
+    - `OperandPegImpl` 構造体が `[]*ParsedOperandPeg` を保持するように変更。
+    - `OperandTypes` メソッドのサイズ解決ロジックを修正（進行中）。
+    - `requires.go` を作成し、`Require66h`, `Require67h` をメソッドとして移動。
+    - テストファイルを `operand_type_test.go`, `detect_immediate_size_test.go`, `parse_operands_test.go` に分割。
+    - `operand_type_test.go` で適切なビットモードを設定するように修正。
 
 ## まだ必要な実装
 - **`pkg/ng_operand` の実装完了**:
-    - **型解決ロジックの実装**: `operand_impl.go` の `OperandTypes` メソッド等に、ビットモードやオペランド間の依存関係を考慮した完全な型解決ロジックを実装する（特に `imm` および `m` のサイズ決定）。
-    - **メソッド実装**: `CalcOffsetByteSize`, `DetectImmediateSize`, `Require66h`, `Require67h` などのメソッドを完全に実装する。
-    - **テスト修正/成功**: `operand_impl_test.go` のテストがすべて成功するように実装を修正する。
-    - **構造体設計検討**: `OperandPegImpl` が複数のオペランド (`[]*ParsedOperandPeg`) を保持できるように設計を見直すことを検討する。
+    - **型解決ロジックの実装完了**: `operand_impl.go` の `OperandTypes` メソッド等のサイズ解決ロジックを完成させ、`operand_type_test.go` のテストをパスさせる。
+    - **メソッド実装**: `CalcOffsetByteSize`, `DetectImmediateSize` メソッドを完全に実装し、関連テスト (`detect_immediate_size_test.go` など) をパスさせる。
+    - **テスト拡充**: `parse_operands_test.go` に多様なケースを追加する。
 - **`pkg/ng_operand` への段階的置換**:
     - `internal/pass1`, `internal/codegen`, `pkg/asmdb` など、`pkg/operand` を利用している箇所を `pkg/ng_operand` に置き換える。
     - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネームする。

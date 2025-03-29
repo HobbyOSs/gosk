@@ -1,10 +1,10 @@
- package operand
+package operand
 
 import "github.com/HobbyOSs/gosk/pkg/cpu"
 
 // Instruction 構造体を変更: 最初のオペランドと後続を分離
 type Instruction struct {
-	FirstOperand *ParsedOperand   `parser:"@@"`
+	FirstOperand *ParsedOperand  `parser:"@@"`
 	RestOperands []*CommaOperand `parser:"@@*"` // カンマと後続オペランドの繰り返し
 }
 
@@ -46,7 +46,7 @@ type Operands interface {
 	WithForceImm8(force bool) Operands
 	WithForceRelAsImm(force bool) Operands
 	GetBitMode() cpu.BitMode // Add back
-	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
-	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
+	Require66h() bool        // オペランドサイズプレフィックスが必要かどうか
+	Require67h() bool        // アドレスサイズプレフィックスが必要かどうか
 	ParsedOperands() []*ParsedOperand
 }

@@ -59,7 +59,8 @@ func TestRequire66h(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ParseOperandString failed for '%s': %v", tt.operand, err)
 			}
-			op := NewOperandPegImpl(parsedOp).WithBitMode(tt.bitMode) // Needs implementation of methods in OperandPegImpl
+			// Pass a slice containing the single parsed operand
+			op := NewOperandPegImpl([]*ParsedOperandPeg{parsedOp}).WithBitMode(tt.bitMode)
 			if got := op.Require66h(); got != tt.expected {
 				t.Errorf("Require66h() for operand '%s' = %v, want %v", tt.operand, got, tt.expected)
 			}
@@ -110,7 +111,8 @@ func TestRequire67h(t *testing.T) {
 			if err != nil {
 				t.Fatalf("ParseOperandString failed for '%s': %v", tt.operand, err)
 			}
-			op := NewOperandPegImpl(parsedOp).WithBitMode(tt.bitMode) // Needs implementation of methods in OperandPegImpl
+			// Pass a slice containing the single parsed operand
+			op := NewOperandPegImpl([]*ParsedOperandPeg{parsedOp}).WithBitMode(tt.bitMode)
 			if got := op.Require67h(); got != tt.expected {
 				t.Errorf("Require67h() for operand '%s' = %v, want %v", tt.operand, got, tt.expected)
 			}

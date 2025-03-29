@@ -1,4 +1,4 @@
- package ng_operand // Changed package name
+package ng_operand // Changed package name
 
 import "github.com/HobbyOSs/gosk/pkg/cpu" // Keep cpu import for BitMode
 
@@ -37,7 +37,7 @@ import "github.com/HobbyOSs/gosk/pkg/cpu" // Keep cpu import for BitMode
 
 // Operands interface (Copied from pkg/operand/operand.go)
 type Instruction struct {
-	FirstOperand *ParsedOperand   `parser:"@@"`
+	FirstOperand *ParsedOperand  `parser:"@@"`
 	RestOperands []*CommaOperand `parser:"@@*"` // カンマと後続オペランドの繰り返し
 }
 
@@ -79,7 +79,7 @@ type Operands interface {
 	WithForceImm8(force bool) Operands
 	WithForceRelAsImm(force bool) Operands
 	GetBitMode() cpu.BitMode // Add back
-	Require66h() bool // オペランドサイズプレフィックスが必要かどうか
-	Require67h() bool // アドレスサイズプレフィックスが必要かどうか
+	Require66h() bool        // オペランドサイズプレフィックスが必要かどうか
+	Require67h() bool        // アドレスサイズプレフィックスが必要かどうか
 	// ParsedOperands() []*ParsedOperand // Removed, will be replaced later with ParsedOperandPeg version
 }
