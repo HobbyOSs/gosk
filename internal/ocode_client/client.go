@@ -7,14 +7,14 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/codegen"
-	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
 // ocodeClient 構造体の定義
 type ocodeClient struct {
 	Ocodes  []ocode.Ocode
-	bitMode cpu.BitMode // Change cpu.BitMode to cpu.BitMode
+	bitMode cpu.BitMode             // Change cpu.BitMode to cpu.BitMode
 	ctx     *codegen.CodeGenContext // CodeGenContextを保持
 }
 

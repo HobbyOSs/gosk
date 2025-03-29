@@ -3,13 +3,13 @@ package pass1
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep ast for program argument
-	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
+	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep ast for program argument
 	// Remove duplicate cpu import
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"

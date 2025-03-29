@@ -14,7 +14,7 @@ import (
 func setUpColog(logLevel colog.Level) { // Keep logLevel param for potential future use, but ignore it for now
 	colog.Register()
 	colog.SetDefaultLevel(colog.LInfo) // Keep default level as Info
-	colog.SetMinLevel(colog.LDebug) // テスト時は常に Debug レベル
+	colog.SetMinLevel(colog.LDebug)    // テスト時は常に Debug レベル
 	colog.SetFlags(log.Lshortfile)
 	colog.SetFormatter(&colog.StdFormatter{Colors: false})
 }

@@ -4,13 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/HobbyOSs/gosk/pkg/cpu"
+	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
-	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/cpu"
 	// Remove duplicate cpu import
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"

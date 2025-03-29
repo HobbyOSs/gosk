@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Change import path
+	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 
 // CodegenClient インターフェースの定義

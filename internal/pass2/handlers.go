@@ -156,11 +156,11 @@ func TraverseAST(node ast.Node, env *Pass2) { // Restored ast.Node
 
 		// Commenting out the block using ops as lo is not used
 		/*
-		if vHead.TokenType == token.TTHex &&
-			ops[0] == "-" &&
-			vTail[0].AsString() == "$" {
-			// 0xffff - $ という特殊系
-			v := token.NewParseToken(token.TTIdentifier,
+			if vHead.TokenType == token.TTHex &&
+				ops[0] == "-" &&
+				vTail[0].AsString() == "$" {
+				// 0xffff - $ という特殊系
+				v := token.NewParseToken(token.TTIdentifier,
 		*/
 		// Placeholder logic since ops is not available
 		if vHead.TokenType == token.TTHex {

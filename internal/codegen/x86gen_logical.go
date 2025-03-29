@@ -20,7 +20,7 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 	// オペランドの解析
 	ops := operand.NewOperandFromString(strings.Join(operands, ",")).
 		WithBitMode(ctx.BitMode). // Added WithBitMode
-		WithForceImm8(true) // 算術命令に合わせて一旦 true に設定
+		WithForceImm8(true)       // 算術命令に合わせて一旦 true に設定
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()

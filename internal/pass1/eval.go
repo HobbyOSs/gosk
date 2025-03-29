@@ -10,7 +10,7 @@ import (
 )
 
 type Pass1 struct {
-	LOC              int32 // LOC(location of counter)
+	LOC              int32       // LOC(location of counter)
 	BitMode          cpu.BitMode // Keep cpu.BitMode
 	EquMap           map[string]*token.ParseToken
 	SymTable         map[string]int32 // Pass1のシンボルテーブル
