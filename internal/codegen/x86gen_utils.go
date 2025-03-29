@@ -233,12 +233,18 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 	if bitMode == cpu.MODE_16BIT {
 		sibByte = 0 // No SIB in 16-bit mode
 		switch {
-		case mem.BaseReg == "BX" && mem.IndexReg == "SI": rm = 0b000
-		case mem.BaseReg == "BX" && mem.IndexReg == "DI": rm = 0b001
-		case mem.BaseReg == "BP" && mem.IndexReg == "SI": rm = 0b010
-		case mem.BaseReg == "BP" && mem.IndexReg == "DI": rm = 0b011
-		case mem.BaseReg == "" && mem.IndexReg == "SI": rm = 0b100
-		case mem.BaseReg == "" && mem.IndexReg == "DI": rm = 0b101
+		case mem.BaseReg == "BX" && mem.IndexReg == "SI":
+			rm = 0b000
+		case mem.BaseReg == "BX" && mem.IndexReg == "DI":
+			rm = 0b001
+		case mem.BaseReg == "BP" && mem.IndexReg == "SI":
+			rm = 0b010
+		case mem.BaseReg == "BP" && mem.IndexReg == "DI":
+			rm = 0b011
+		case mem.BaseReg == "" && mem.IndexReg == "SI":
+			rm = 0b100
+		case mem.BaseReg == "" && mem.IndexReg == "DI":
+			rm = 0b101
 		case mem.BaseReg == "BP" && mem.IndexReg == "":
 			rm = 0b110
 			// [BP] requires displacement, even if 0
@@ -251,10 +257,13 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 			mod = 0b00000000
 			rm = 0b110
 			hasDisp = true // Always has 16-bit displacement
-		case mem.BaseReg == "BX" && mem.IndexReg == "": rm = 0b111
+		case mem.BaseReg == "BX" && mem.IndexReg == "":
+			rm = 0b111
 		// --- Cases not directly in Table 2-1 but implied ---
-		case mem.BaseReg == "SI" && mem.IndexReg == "": rm = 0b100 // Treat [SI] as [SI+disp]
-		case mem.BaseReg == "DI" && mem.IndexReg == "": rm = 0b101 // Treat [DI] as [DI+disp]
+		case mem.BaseReg == "SI" && mem.IndexReg == "":
+			rm = 0b100 // Treat [SI] as [SI+disp]
+		case mem.BaseReg == "DI" && mem.IndexReg == "":
+			rm = 0b101 // Treat [DI] as [DI+disp]
 		default:
 			return 0, 0, nil, fmt.Errorf("unsupported 16-bit addressing mode: Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
 		}
@@ -300,14 +309,20 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 	case mem.BaseReg == "ESP" || mem.IndexReg != "": // Needs SIB byte
 		rm = 0b100
 		needsSIB = true
-	case mem.BaseReg == "EAX" && mem.IndexReg == "": rm = 0b000
-	case mem.BaseReg == "ECX" && mem.IndexReg == "": rm = 0b001
-	case mem.BaseReg == "EDX" && mem.IndexReg == "": rm = 0b010
-	case mem.BaseReg == "EBX" && mem.IndexReg == "": rm = 0b011
+	case mem.BaseReg == "EAX" && mem.IndexReg == "":
+		rm = 0b000
+	case mem.BaseReg == "ECX" && mem.IndexReg == "":
+		rm = 0b001
+	case mem.BaseReg == "EDX" && mem.IndexReg == "":
+		rm = 0b010
+	case mem.BaseReg == "EBX" && mem.IndexReg == "":
+		rm = 0b011
 	// case mem.BaseReg == "ESP": handled by SIB case
 	// case mem.BaseReg == "EBP": handled above
-	case mem.BaseReg == "ESI" && mem.IndexReg == "": rm = 0b110
-	case mem.BaseReg == "EDI" && mem.IndexReg == "": rm = 0b111
+	case mem.BaseReg == "ESI" && mem.IndexReg == "":
+		rm = 0b110
+	case mem.BaseReg == "EDI" && mem.IndexReg == "":
+		rm = 0b111
 	default:
 		return 0, 0, nil, fmt.Errorf("unsupported 32-bit addressing mode: Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
 	}
@@ -327,14 +342,19 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 		// Placeholder SIB calculation (likely incorrect for many cases)
 		var scale byte
 		switch mem.Scale {
-		case 1: scale = 0b00000000
-		case 2: scale = 0b01000000
-		case 4: scale = 0b10000000
-		case 8: scale = 0b11000000
-		default: scale = 0b00000000 // Default to scale 1 if not specified or invalid
+		case 1:
+			scale = 0b00000000
+		case 2:
+			scale = 0b01000000
+		case 4:
+			scale = 0b10000000
+		case 8:
+			scale = 0b11000000
+		default:
+			scale = 0b00000000 // Default to scale 1 if not specified or invalid
 		}
 
-		var indexNum int = 4 // Default to index=none (ESP)
+		var indexNum int = 4                             // Default to index=none (ESP)
 		if mem.IndexReg != "" && mem.IndexReg != "ESP" { // ESP cannot be index
 			indexNum, err = GetRegisterNumber(mem.IndexReg)
 			if err != nil {
@@ -355,11 +375,10 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 				hasDisp = true
 			}
 		} else if mod == 0b00000000 { // No base register and mod=00 -> [disp32] or [index*scale+disp32]
-			baseNum = 5 // Use base=none encoding
+			baseNum = 5      // Use base=none encoding
 			mod = 0b00000000 // Ensure mod is 00 for disp32
-			hasDisp = true // Requires disp32
+			hasDisp = true   // Requires disp32
 		}
-
 
 		sibByte = scale | (byte(indexNum) << 3) | byte(baseNum)
 	}
@@ -377,7 +396,6 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 	modrmByte = mod | regBits | rm
 	return modrmByte, sibByte, dispBytes, nil
 }
-
 
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する
 func GetRegisterNumber(regName string) (int, error) {

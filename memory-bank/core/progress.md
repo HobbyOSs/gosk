@@ -51,6 +51,10 @@
 - **`pkg/ng_operand` のバグ修正 (2025/03/29)**:
     - `CalcOffsetByteSize` が16bitモードでディスプレースメントなしの間接アドレッシング (`[BX]`, `[SI]`等) に対しても誤ってオフセットサイズを加算していた問題を修正。
     - これにより `internal/pass1/eval_test.go` がPASSするようになった。
+- **diff出力の改善 (2025/03/29)**:
+    - `test/diff.go` の `DumpDiff` 関数に `useANSIColor` 引数を追加し、ANSIカラーを使用しないdiff出力オプションを追加。
+    - `github.com/akedrou/textdiff` を依存関係に追加。
+    - 関連するテストファイルの `DumpDiff` 呼び出し箇所を更新。
 
 ## まだ必要な実装
 - **`pkg/ng_operand` への段階的置換**:

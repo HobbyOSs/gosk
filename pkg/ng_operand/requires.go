@@ -40,10 +40,14 @@ func (o *OperandPegImpl) Require66h() bool {
 			// 即値自体から推定されるサイズを使用
 			immSize := getImmediateSizeType(parsed.Immediate)
 			switch immSize {
-			case CodeIMM8: inherentSize = 8
-			case CodeIMM16: inherentSize = 16
-			case CodeIMM32: inherentSize = 32
-			case CodeIMM64: inherentSize = 64
+			case CodeIMM8:
+				inherentSize = 8
+			case CodeIMM16:
+				inherentSize = 16
+			case CodeIMM32:
+				inherentSize = 32
+			case CodeIMM64:
+				inherentSize = 64
 			}
 		case baseType == CodeM: // 明示的な DataType なしのメモリ
 			// メモリアドレスで使用されるレジスタに基づいて推定し、モードサイズにデフォルト設定
@@ -61,10 +65,13 @@ func (o *OperandPegImpl) Require66h() bool {
 			}
 			// それでも不明な場合は、モードに基づいてデフォルト設定
 			if inherentSize == 0 {
-				if is16bitMode { inherentSize = 16 } else { inherentSize = 32 }
+				if is16bitMode {
+					inherentSize = 16
+				} else {
+					inherentSize = 32
+				}
 			}
 		}
-
 
 		// 不一致をチェック
 		// 16ビットモードでオペランドが本来32ビットの場合、66h が必要

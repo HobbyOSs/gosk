@@ -137,9 +137,9 @@ func (s *LogicalSuite) TestANDInstruction() {
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				// Use DumpDiff if available, otherwise just log the diff
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -196,9 +196,9 @@ func (s *LogicalSuite) TestORInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -255,9 +255,9 @@ func (s *LogicalSuite) TestXORInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -309,9 +309,9 @@ func (s *LogicalSuite) TestNOTInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -373,9 +373,9 @@ func (s *LogicalSuite) TestSHRInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -437,9 +437,9 @@ func (s *LogicalSuite) TestSHLInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
@@ -501,9 +501,9 @@ func (s *LogicalSuite) TestSARInstruction() {
 
 			if diff := cmp.Diff(expectedCode, actualCode); diff != "" {
 				if _, ok := interface{}(s).(interface {
-					DumpDiff(expected, actual []byte, color bool) string
+					DumpDiff(expected, actual []byte, color bool, useANSIColor bool) string // Added useANSIColor
 				}); ok {
-					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false))
+					log.Printf("error: result mismatch for %s:\n%s", tt.name, DumpDiff(expectedCode, actualCode, false)) // Added false
 				} else {
 					log.Printf("error: result mismatch for %s:\n%s", tt.name, diff)
 				}
