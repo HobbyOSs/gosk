@@ -20,16 +20,16 @@ func GenerateX86(ocodes []ocode.Ocode, ctx *CodeGenContext) []byte {
 	ctx.VS = variantstack.NewVariantStack()
 	var machineCode []byte
 
-	log.Printf("debug: === ocode ===\n")
+	log.Printf("debug: [codegen] === ocode processing start ===\n")
 	for _, oc := range ocodes {
-		log.Printf("debug: %s\n", oc)
+		log.Printf("debug: [codegen] Processing ocode: %s\n", oc)
 		code, err := processOcode(oc, ctx, &machineCode)
 		if err != nil {
 			log.Printf("error: Failed to process ocode: %v", err)
 		}
 		machineCode = append(machineCode, code...)
 	}
-	log.Printf("debug: === ocode ===\n")
+	log.Printf("debug: [codegen] === ocode processing end ===\n")
 	ctx.MachineCode = machineCode
 	return ctx.MachineCode
 }

@@ -11,10 +11,10 @@ import (
 	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
-func setUpColog(logLevel colog.Level) {
+func setUpColog(logLevel colog.Level) { // Keep logLevel param for potential future use, but ignore it for now
 	colog.Register()
-	colog.SetDefaultLevel(colog.LInfo)
-	colog.SetMinLevel(logLevel)
+	colog.SetDefaultLevel(colog.LInfo) // Keep default level as Info
+	colog.SetMinLevel(colog.LDebug) // テスト時は常に Debug レベル
 	colog.SetFlags(log.Lshortfile)
 	colog.SetFormatter(&colog.StdFormatter{Colors: false})
 }

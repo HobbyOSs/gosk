@@ -33,7 +33,7 @@ func NewCodegenClient(ctx *codegen.CodeGenContext) (client.CodegenClient, error)
 
 // Emit メソッドの実装
 func (c *ocodeClient) Emit(line string) error {
-	log.Printf("debug: emit %s\n", line)
+	log.Printf("debug: [ocode_client] emit %s\n", line)
 	ocode, err := parseLineToOcode(line)
 	if err != nil {
 		return err
