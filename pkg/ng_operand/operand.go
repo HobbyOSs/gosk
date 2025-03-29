@@ -39,4 +39,9 @@ type Operands interface {
 	IsIndirectMemory() bool
 	// GetMemoryInfo は、最初のメモリオペランドの詳細情報を返します。見つからない場合は nil と false を返します。
 	GetMemoryInfo() (*MemoryInfo, bool)
+	// DisplacementBytes は、最初のメモリオペランドのディスプレースメント部分をバイト列として返します。
+	// ModRMがない直接アドレス指定 (moffs) の場合に利用することを想定しています。
+	// メモリオペランドがない場合や、ディスプレースメントがない場合は nil を返します。
+	// バイト列のサイズは BitMode に基づいて決定されます。
+	DisplacementBytes() []byte
 }

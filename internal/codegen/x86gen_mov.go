@@ -2,11 +2,12 @@ package codegen
 
 import (
 	// "fmt" // Remove unused fmt import
+	// Add binary package for displacement conversion
 	"log"     // Keep only one log import
 	"strconv" // Keep only one strconv import
 	"strings" // Keep only one strings import
 
-	"github.com/HobbyOSs/gosk/pkg/asmdb"
+	"github.com/HobbyOSs/gosk/pkg/asmdb"      // Add cpu package for BitMode constants
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 
@@ -80,6 +81,19 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			return nil
 		}
 		machineCode = append(machineCode, modrm...)
+	} else {
+		// ModRMがない場合、直接アドレス指定 (moffs) の可能性がある。
+		// ng_operand の DisplacementBytes() を使ってディスプレースメントを取得・追加する。
+		dispBytes := ops.DisplacementBytes()
+		if dispBytes != nil {
+			log.Printf("debug: Adding direct memory displacement (moffs) using DisplacementBytes(): %x", dispBytes)
+			machineCode = append(machineCode, dispBytes...)
+		} else {
+			// ModRMも直接メモリアドレスもない場合、エラーか、あるいは即値のみのパターンかもしれない
+			// （例：MOV AX, imm16 は ModRM なしだが、即値処理は後段で行われる）
+			// ここでは特に何もしない
+			log.Printf("debug: No ModRM and DisplacementBytes() returned nil in MOV.")
+		}
 	}
 
 	// 即値の追加(必要な場合)

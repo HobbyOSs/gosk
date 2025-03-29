@@ -1,6 +1,7 @@
 package ng_operand
 
 import (
+	"encoding/binary" // Add binary package for displacement conversion
 	"log"
 	"strings"
 
@@ -426,6 +427,41 @@ func (o *OperandPegImpl) GetMemoryInfo() (*MemoryInfo, bool) {
 		return memOperand.Memory, true
 	}
 	return nil, false
+}
+
+// DisplacementBytes は、最初のメモリオペランドのディスプレースメント部分をバイト列として返します。
+// ModRMがない直接アドレス指定 (moffs) の場合に利用することを想定しています。
+// メモリオペランドがない場合や、ディスプレースメントがない場合は nil を返します。
+// バイト列のサイズは BitMode に基づいて決定されます。
+func (o *OperandPegImpl) DisplacementBytes() []byte {
+	memInfo, found := o.GetMemoryInfo()
+	if !found || memInfo == nil {
+		// メモリオペランドがない場合は nil
+		return nil
+	}
+
+	// Displacement を取得
+	disp := memInfo.Displacement
+	var dispBytes []byte
+
+	// アドレスサイズ (BitMode) に応じてバイト列に変換 (リトルエンディアン)
+	bitMode := o.GetBitMode()
+	switch bitMode {
+	case cpu.MODE_16BIT: // 定数名を修正
+		// MOFFS16
+		dispBytes = make([]byte, 2)
+		binary.LittleEndian.PutUint16(dispBytes, uint16(disp))
+	case cpu.MODE_32BIT: // 定数名を修正
+		// MOFFS32
+		dispBytes = make([]byte, 4)
+		binary.LittleEndian.PutUint32(dispBytes, uint32(disp))
+	// case cpu.Bit64: // TODO: MOFFS64 対応
+	default:
+		log.Printf("warn: Unsupported bit mode %v for DisplacementBytes", bitMode)
+		return nil // サポート外のモードでは nil を返す
+	}
+
+	return dispBytes
 }
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。
