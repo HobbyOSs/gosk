@@ -3,7 +3,7 @@ package codegen
 import (
 	"testing"
 
-	"github.com/HobbyOSs/gosk/pkg/cpu" // Import operand package
+	"github.com/HobbyOSs/gosk/pkg/cpu"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 	"github.com/stretchr/testify/assert"
 )

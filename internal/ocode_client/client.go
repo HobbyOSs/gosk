@@ -7,7 +7,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/client"
 	"github.com/HobbyOSs/gosk/internal/codegen"
-	"github.com/HobbyOSs/gosk/pkg/cpu" // Add operand import
+	"github.com/HobbyOSs/gosk/pkg/cpu"
 	"github.com/HobbyOSs/gosk/pkg/ocode"
 )
 

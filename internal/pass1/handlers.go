@@ -8,7 +8,6 @@ import (
 	// "github.com/HobbyOSs/gosk/internal/client" // Removed unused import
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep cpu import for NewBitMode
-	// "github.com/HobbyOSs/gosk/pkg/operand" // Removed unused import
 	"github.com/morikuni/failure"
 	"github.com/samber/lo"
 )

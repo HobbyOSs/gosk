@@ -44,10 +44,10 @@ const (
 	CodePTR1616 OperandType = "ptr16:16" // 16:16 ファーポインタ
 	CodePTR1632 OperandType = "ptr16:32" // 16:32 ファーポインタ
 
-	CodeSREG OperandType = "Sreg" // セグメントレジスタ (CS, DS, ES, FS, GS, SS)
-	CodeCREG OperandType = "Creg" // コントロールレジスタ (CR0-CR8)
-	CodeDREG OperandType = "Dreg" // デバッグレジスタ (DR0-DR7)
-	CodeTREG OperandType = "Treg" // テストレジスタ (TR3-TR7)
+	CodeSREG OperandType = "sreg" // セグメントレジスタ (CS, DS, ES, FS, GS, SS) - 小文字に変更
+	CodeCREG OperandType = "creg" // コントロールレジスタ (CR0-CR8) - 小文字に変更
+	CodeDREG OperandType = "dreg" // デバッグレジスタ (DR0-DR7) - 小文字に変更
+	CodeTREG OperandType = "treg" // テストレジスタ (TR3-TR7) - 小文字に変更
 
 	CodeAL OperandType = "AL" // AL レジスタ
 	CodeCL OperandType = "CL" // CL レジスタ
@@ -158,13 +158,13 @@ func getRegisterType(reg string) OperandType {
 		"R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15": // 64ビットレジスタ
 		return CodeR64
 	case "CS", "DS", "ES", "FS", "GS", "SS":
-		return CodeSREG
+		return CodeSREG // "sreg" を返すように修正
 	case "CR0", "CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "CR7", "CR8":
-		return CodeCREG
+		return CodeCREG // "creg" を返すように修正
 	case "DR0", "DR1", "DR2", "DR3", "DR4", "DR5", "DR6", "DR7":
-		return CodeDREG
+		return CodeDREG // "dreg" を返すように修正
 	case "TR0", "TR1", "TR2", "TR3", "TR4", "TR5", "TR6", "TR7":
-		return CodeTREG
+		return CodeTREG // "treg" を返すように修正
 	// MMX, XMM, YMM, ZMM, BND, K レジスタなど...
 	default:
 		if strings.HasPrefix(regUpper, "MM") {

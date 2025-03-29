@@ -80,18 +80,6 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 			return nil
 		}
 		machineCode = append(machineCode, modrm...)
-	// } else {
-	// TODO: Handle case where ModRM is nil but displacement might be needed.
-	// This requires inspecting the parsed operands from 'ops'.
-	// The old logic using operand.ParseMemoryOperand needs replacement.
-	// This might be handled within getModRMFromOperands or requires new logic here.
-	// For now, commenting out the old logic.
-	// // ModRMがない場合は
-	// // メモリオペランドが有る場合のoffset取得して設定する必要が有る場合が有る
-	// for _, opStr := range operands {
-	// 	// Replace operand.ParseMemoryOperand logic
-	// 	// Need to get displacement from ng_operand.Operands 'ops'
-	// }
 	}
 
 	// 即値の追加(必要な場合)
