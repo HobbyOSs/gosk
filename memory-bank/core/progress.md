@@ -44,12 +44,12 @@
     - `requires.go` を作成し、`Require66h`, `Require67h` をメソッドとして移動。
     - テストファイルを `operand_type_test.go`, `detect_immediate_size_test.go`, `parse_operands_test.go` に分割。
     - `operand_type_test.go` で適切なビットモードを設定するように修正。
+- **`pkg/ng_operand` のリファクタリングとテスト修正 (2025/03/29):**
+    - `operand_impl.go`, `requires.go` の型解決・サイズ検出ロジックを修正し、関連テストをパスさせた。
+    - ヘルパー関数を `operand_util.go` に分割。
+    - `samber/lo` を導入してコードをリファクタリング。
 
 ## まだ必要な実装
-- **`pkg/ng_operand` の実装完了**:
-    - **型解決ロジックの実装完了**: `operand_impl.go` の `OperandTypes` メソッド等のサイズ解決ロジックを完成させ、`operand_type_test.go` のテストをパスさせる。
-    - **メソッド実装**: `CalcOffsetByteSize`, `DetectImmediateSize` メソッドを完全に実装し、関連テスト (`detect_immediate_size_test.go` など) をパスさせる。
-    - **テスト拡充**: `parse_operands_test.go` に多様なケースを追加する。
 - **`pkg/ng_operand` への段階的置換**:
     - `internal/pass1`, `internal/codegen`, `pkg/asmdb` など、`pkg/operand` を利用している箇所を `pkg/ng_operand` に置き換える。
     - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネームする。
@@ -58,6 +58,22 @@
 - (保留) RESBの計算処理の実装
 - (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - (保留) `internal/codegen` パッケージの不要パラメータ削除
+- **`pkg/ng_operand` の改善 (TODOs):**
+    - **パーサー (`operand_grammar.peg`, `parser.go`)**:
+        - 型推論の改善 (レジスタに基づくサイズ決定)
+        - NEAR/FAR PTR の型解決
+        - `ParseOperands` で `BitMode`, `ForceImm8`, `ForceRelAsImm` を考慮
+        - 文字列リテラル内のカンマ対応
+    - **実装 (`operand_impl.go`, `requires.go`)**:
+        - QWORD / 64ビットオペランドサポート (M64, R64 関連)
+        - `CalcOffsetByteSize`: 複数オペランド対応、ディスプレースメント値に基づく計算
+        - `DetectImmediateSize`: 複数オペランド対応
+    - **テスト (`detect_immediate_size_test.go`, `operand_type_test.go`, `parse_operands_test.go`)**:
+        - 複数オペランド時の `DetectImmediateSize` テスト修正
+        - `operand_type_test.go` の未対応テストケース (`// TODO: まだ未対応`)
+        - FAR/NEAR PTR のテストケース区別
+        - `ParseOperands` のテストケース拡充 (組み合わせ、エッジケース)
+        - `operand_type_test.go` の `// TODO: サイズプレフィックスがないのでこのパターンはないかも` の確認
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

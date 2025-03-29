@@ -1,11 +1,16 @@
 # Active Context
 
 ## 現在の作業の焦点
-- **オペランドパーサー移行 (`pkg/ng_operand`)**:
-    - `pkg/ng_operand/operand_impl.go` の `OperandTypes` メソッドにおけるサイズ解決ロジックの修正。
-    - `pkg/ng_operand/operand_type_test.go` のテスト (`TestOperandPegImpl_OperandType`) をパスさせることを目指す。
+- **`pkg/ng_operand` への段階的置換**: `internal/pass1` などから `pkg/operand` の利用箇所を `pkg/ng_operand` に置き換える。
 
 ## 直近の変更点
+- **`pkg/ng_operand` リファクタリング (2025/03/29):**
+    - `operand_impl.go` のテスト (`TestOperandPegImpl_OperandType`, `TestOperandPegImpl_DetectImmediateSize`, `TestParseOperands_FromString`) がパスするように修正。
+    - `requires.go` の `Require66h` メソッドを修正し、`TestRequire66h` がパスするように修正。
+    - プライベートヘルパー関数 (`needsResolution`, `isR32Type`, `isR16Type`, `isRegisterType`, `isR8Type`, `isR64Type`) を `operand_util.go` に分割。
+    - `samber/lo` を導入し、`operand_impl.go`, `requires.go` のループ処理をリファクタリング。
+    - 不要なコメントを削除。
+    - `go test ./pkg/ng_operand/...` がパスすることを確認。
 - **コードクリーンアップ (2025/03/29):**
     - `go fmt ./...` と `go mod tidy` を実行。
 - **テストファイル分割 (2025/03/29):**
@@ -43,13 +48,7 @@
     - participleベースのパーサーの基本的な問題を修正 (`TestBaseOperand_OperandType` が成功)。
 
 ## 次のステップ
-- **`pkg/ng_operand/operand_impl.go` の `OperandTypes` 修正**:
-    - `operand_type_test.go` の失敗ケースに基づき、`OperandTypes`, `resolveMemorySize`, `resolveDependentSizes` のサイズ解決ロジックをさらに修正する。
-    - 特に、単独即値の `imm32` 解決、`forceImm8` の優先適用、セグメントオーバーライド付きレジスタのメモリ解決を重点的に見直す。
-- **テスト実行と修正**:
-    - `operand_type_test.go` のテスト (`TestOperandPegImpl_OperandType`) を実行し、パスするまで修正を繰り返す。
-    - `detect_immediate_size_test.go` (`TestOperandPegImpl_DetectImmediateSize`) と `parse_operands_test.go` (`TestParseOperands_FromString`) も実行し、必要に応じて修正する。
-- **段階的置換**: `pkg/ng_operand` のテストが安定したら、`internal/pass1` などから `pkg/operand` の利用箇所を `pkg/ng_operand` に置き換えていく。
+- **段階的置換**: `pkg/ng_operand` のテストが安定したので、`internal/pass1` などから `pkg/operand` の利用箇所を `pkg/ng_operand` に置き換えていく。
 
 ## 関連情報
 - [オペランドパーサー移行 (participle -> pigeon)](../details/implementation_details.md#オペランドパーサー移行-participle---pigeon-20250329)
