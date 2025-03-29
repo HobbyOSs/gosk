@@ -12,6 +12,16 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Re-import ng_operand
 )
 
+// is32BitRegister checks if a register name corresponds to a 32-bit general-purpose register.
+func is32BitRegister(regName string) bool {
+	switch regName {
+	case "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI":
+		return true
+	default:
+		return false
+	}
+}
+
 // GenerateModRM はエンコーディング情報とビットモードに基づいてModR/Mバイトを生成する
 func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode cpu.BitMode) ([]byte, error) { // Keep cpu.BitMode
 	if modRM == nil || modRM.ModRM == nil {
@@ -265,6 +275,15 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 		case mem.BaseReg == "DI" && mem.IndexReg == "":
 			rm = 0b101 // Treat [DI] as [DI+disp]
 		default:
+			// Check if 32-bit registers are used in 16-bit mode (requires 67h prefix)
+			is32BitAddrMode := is32BitRegister(mem.BaseReg) || is32BitRegister(mem.IndexReg)
+			if is32BitAddrMode {
+				// If 32-bit registers are used, treat as 32-bit addressing mode for ModR/M calculation.
+				// The 67h prefix should be added by the caller based on ng_operand.Require67h().
+				// Jump to the 32-bit calculation logic.
+				goto calculate_32bit_addressing
+			}
+			// Original default case for unsupported 16-bit modes
 			return 0, 0, nil, fmt.Errorf("unsupported 16-bit addressing mode: Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
 		}
 
@@ -290,6 +309,7 @@ func calculateModRM(mem *ng_operand.MemoryInfo, bitMode cpu.BitMode, regBits byt
 		return modrmByte, sibByte, dispBytes, nil
 	}
 
+calculate_32bit_addressing: // Label for the 32-bit logic start
 	// --- 32-bit Addressing (Table 2-2) ---
 	sibByte = 0 // Default: no SIB byte
 	needsSIB := false

@@ -63,13 +63,19 @@
         - `FindEncoding`: アキュムレータ専用 Form が見つかった場合、そのエンコーディングのみを候補とするように修正。
         - `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
     - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI,1` の両方、および関連する `TestHarib00c`, `TestHarib00d`, `TestHarib00g` が PASS するようになった。
+- **ModR/M 生成ロジックの修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_utils.go`: `calculateModRM` 関数を修正し、16ビットモードで32ビットアドレッシングモード (`67h` プレフィックスが必要なケース) が指定された場合に対応。
+    - `internal/codegen/x86gen_test.go`: テスト構造を改善し `BitMode` を指定可能に。関連テストケースを追加・修正し、`TestGenerateX86` が成功することを確認。
 
 ## まだ必要な実装
+- **`test/day03_harib00i_test.go` のエラー対応 (継続):**
+    - ModR/M関連のエラーは解消されたが、以下の問題が残っている。
+        - `OUT imm8, AL` のエンコーディングが見つからない。
+        - `LGDT [ GDTR0 ]` のオペランドパースエラー。
+        - `MOV CR0, reg` / `MOV reg, CR0` のエンコーディングが見つからない。
 - **`pkg/ng_operand` への段階的置換**:
     - `internal/pass1`, `internal/codegen`, `pkg/asmdb` など、`pkg/operand` を利用している箇所を `pkg/ng_operand` に置き換える。
     - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネームする。
-- **`test/day03_harib00i_test.go` のエラー対応 (継続):**
-    - オペランドパーサー移行後に再度確認・対応。
 - (保留) RESBの計算処理の実装
 - (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - (保留) `internal/codegen` パッケージの不要パラメータ削除
