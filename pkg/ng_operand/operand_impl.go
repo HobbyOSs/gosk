@@ -206,7 +206,7 @@ func (o *OperandPegImpl) resolveMemorySize(parsed *ParsedOperandPeg, index int) 
 // resolveDependentSizes は、オペランド間の依存関係に基づいてオペランドサイズを解決します。
 // types スライスを直接変更します。
 func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
-	// パターン1: 一方のオペランドがレジスタで、もう一方がサイズ解決が必要なメモリ/即値
+	// step1: 一方のオペランドがレジスタで、もう一方がサイズ解決が必要なメモリ/即値
 	lo.ForEach(types, func(_ OperandType, i int) {
 		lo.ForEach(types, func(_ OperandType, j int) {
 			if i == j {
@@ -249,42 +249,10 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 		})
 	})
 
-	// パターン2: 単一の即値オペランドは IMM32 にデフォルト設定 (forceImm8 でない場合) // <- ロジックを元に戻す
-	if len(types) == 1 && !o.forceImm8 {
+	// step2: 単一の即値オペランドは IMM32 にデフォルト設定 (forceImm8 でない場合)
+	if !o.forceImm8 && len(types) == 1 {
 		if lo.Contains([]OperandType{CodeIMM, CodeIMM8, CodeIMM16}, types[0]) {
 			types[0] = CodeIMM32
-		}
-	}
-
-	// パターン3: ADD/SUB のような命令で、即値が常にレジスタサイズに符号拡張される場合のハック
-	// 複数のオペランドがあり、一方が小さな即値で、forceImm8 が設定されていない場合にのみ適用
-	if !o.forceImm8 && len(types) >= 2 {
-		// 3つの戻り値 (value, index, found) を正しく処理
-		/*immValue*/ _, immIndex, immFound := lo.FindIndexOf(types, func(t OperandType) bool { // immValue を _ に変更
-			return t == CodeIMM8 || t == CodeIMM16
-		})
-		if immFound {
-			// immType := immValue // 未使用のため削除
-
-			// レジスタオペランドを検索、3つの戻り値を正しく処理
-			_, regIndex, regFound := lo.FindIndexOf(types, func(t OperandType) bool {
-				// 即値オペランド自体がレジスタ型である場合 (ありそうにないが安全のため) に一致しないようにする
-				// そして、型がレジスタであるかを確認
-				return isRegisterType(t)
-			})
-
-			// 見つかったレジスタが即値オペランド自体でないことを確認
-			if regFound && regIndex != immIndex {
-				regType := types[regIndex]
-				// レジスタサイズに基づいて即値をアップグレード
-				if isR32Type(regType) {
-					types[immIndex] = CodeIMM32
-				}
-				// else if isR16Type(regType) && immType == CodeIMM8 {
-				// 	types[immIndex] = CodeIMM16 // ★ IMM8 を IMM16 にアップグレードしないようにコメントアウト
-				// }
-				// Let asmdb handle the encoding selection based on available forms (imm8 vs imm16)
-			}
 		}
 	}
 }
@@ -311,13 +279,13 @@ func (o *OperandPegImpl) CalcOffsetByteSize() int {
 	})
 
 	if found {
-		// Note: memOperand could be nil if found is true but the element itself is nil,
-		// though the filter `p != nil` should prevent this. Add a check for safety.
+		// 注意: found が true でも要素自体が nil の場合、memOperand は nil になり得る。
+		// (ただし `p != nil` フィルターでこれは防がれるはず。安全のためチェックを追加)
 		if memOperand == nil || memOperand.Memory == nil {
-			log.Printf("warn: Found memory operand flag but memOperand or memOperand.Memory is nil")
-			return 0 // Or handle error appropriately
+			log.Printf("warn: メモリオペランドフラグが見つかりましたが、memOperand または memOperand.Memory が nil です")
+			return 0 // または適切にエラーを処理
 		}
-		memInfo := memOperand.Memory // Get MemoryInfo from the found operand
+		memInfo := memOperand.Memory // 見つかったオペランドから MemoryInfo を取得
 
 		// アドレスサイズプレフィックス(67h)が必要な場合の処理
 		if o.Require67h() {
@@ -495,10 +463,10 @@ func (o *OperandPegImpl) DisplacementBytes() []byte {
 		// MOFFS32
 		dispBytes = make([]byte, 4)
 		binary.LittleEndian.PutUint32(dispBytes, uint32(disp))
-	// case cpu.Bit64: // TODO: MOFFS64 対応
+	// case cpu.Bit64: // TODO: MOFFS64 サポート
 	default:
-		log.Printf("warn: Unsupported bit mode %v for DisplacementBytes", bitMode)
-		return nil // サポート外のモードでは nil を返す
+		log.Printf("warn: DisplacementBytes でサポートされていないビットモード %v", bitMode)
+		return nil // サポートされていないモードでは nil を返す
 	}
 
 	return dispBytes
@@ -508,9 +476,9 @@ func (o *OperandPegImpl) DisplacementBytes() []byte {
 // ImmediateValueFitsIn8Bits は、即値オペランドの値が8ビットに収まるかどうかを返します。
 // 複数の即値がある場合は、最初の即値オペランドをチェックします。
 func (o *OperandPegImpl) ImmediateValueFitsIn8Bits() bool {
-	// Add nil check for parsedOperands
+	// parsedOperands の nil チェックを追加
 	if o.parsedOperands == nil {
-		log.Printf("warn: ImmediateValueFitsIn8Bits called with nil parsedOperands")
+		log.Printf("warn: ImmediateValueFitsIn8Bits が nil の parsedOperands で呼び出されました")
 		return false
 	}
 
@@ -518,13 +486,13 @@ func (o *OperandPegImpl) ImmediateValueFitsIn8Bits() bool {
 		return p != nil && (p.Type == CodeIMM || p.Type == CodeIMM8 || p.Type == CodeIMM16 || p.Type == CodeIMM32 || p.Type == CodeIMM64)
 	})
 
-	// Add nil check for immOperand even if found is true (for extra safety)
+	// found が true でも immOperand の nil チェックを追加 (追加の安全のため)
 	if found && immOperand != nil {
 		val := immOperand.Immediate
 		return val >= -128 && val <= 127
 	}
 
-	return false // 即値オペランドが見つからない場合 or immOperand was nil
+	return false // 即値オペランドが見つからない場合、または immOperand が nil の場合
 }
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。

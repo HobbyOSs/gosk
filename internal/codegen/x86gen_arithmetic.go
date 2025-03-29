@@ -29,10 +29,8 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 
 	// AsmDBからエンコーディングを取得
 	db := asmdb.NewInstructionDB()
-	log.Printf("debug: Calling FindEncoding for %s with OperandTypes: %v", instName, ops.OperandTypes()) // Log OperandTypes
 	encoding, err := db.FindEncoding(instName, ops)
 	if err != nil {
-		log.Printf("error: Failed to find encoding for %s with types %v: %v", instName, ops.OperandTypes(), err) // Add types to error log
 		return nil, fmt.Errorf("failed to find encoding for %s", instName)
 	}
 
@@ -74,7 +72,6 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 
 	// ModR/Mの追加（必要な場合）
 	if encoding.ModRM != nil {
-		log.Printf("debug: ModRM: %+v", encoding.ModRM)
 		modrm, err := getModRMFromOperands(operands, encoding, ctx.BitMode)
 		if err != nil {
 			log.Printf("error: Failed to generate ModR/M: %v", err)
@@ -97,10 +94,6 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 			return nil, fmt.Errorf("failed to get immediate value")
 		}
 	}
-
-	log.Printf("debug: Generated machine code: % x", machineCode)
-
-	// TODO: フラグ設定
 
 	return machineCode, nil
 }

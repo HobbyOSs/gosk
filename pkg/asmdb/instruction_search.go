@@ -1,14 +1,12 @@
 package asmdb
 
 import (
-	"errors" // Keep only one errors import
+	"errors"
 	"log"
 	"regexp"
-	"strings" // Add strings import
+	"strings"
 
-	// "fmt" // Remove unused fmt import
-
-	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
+	"github.com/HobbyOSs/gosk/pkg/ng_operand"
 	"github.com/samber/lo"
 )
 
@@ -18,7 +16,7 @@ func init() {
 	var err error
 	jsonData, err = decompressGzip(compressedJSON)
 	if err != nil {
-		log.Fatalf("Failed to decompress JSON: %v", err)
+		log.Fatalf("JSONの解凍に失敗しました: %v", err)
 	}
 }
 
@@ -30,81 +28,61 @@ func NewInstructionDB() *InstructionDB {
 }
 
 // FindEncoding は指定された命令とオペランドに対応するエンコーディングを検索します。
-func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operands) (*Encoding, error) { // Use ng_operand.Operands
+func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operands) (*Encoding, error) { // ng_operand.Operands を使用
 	instr, err := GetInstructionByOpcode(opcode)
 	if err != nil {
-		return nil, errors.New("instruction not found")
+		return nil, errors.New("命令が見つかりません")
 	}
 
 	filteredForms := filterForms(instr.Forms, operands)
-	log.Printf("debug: filteredForms length after filterForms: %d", len(filteredForms))
 
 	if len(filteredForms) == 0 {
-		return nil, errors.New("no matching encoding found")
+		return nil, errors.New("一致するエンコーディングが見つかりません")
 	}
 
-	// Prioritize accumulator forms if found
+	// アキュムレータ形式が見つかった場合、それを優先する
 	var allEncodings []*Encoding
 	isAccFormFound := lo.SomeBy(filteredForms, func(form InstructionForm) bool {
-		// Check if the form itself is an accumulator-specific form (e.g., operands like "ax, imm16")
-		// This check might need refinement based on how forms are defined.
-		// A simpler check might be if filterEncodings for this form returns accEncodings.
-		encs := filterEncodings(form, operands) // Call filterEncodings to check its result
-		// Check if the returned encodings are accumulator-specific (ModRM==nil, Immediate!=nil)
+		// フォーム自体がアキュムレータ固有の形式（例：オペランドが "ax, imm16"）かどうかを確認
+		// このチェックはフォームの定義方法に基づいて改良が必要かもしれない
+		// より簡単なチェックは、このフォームに対する filterEncodings が accEncodings を返すかどうか
+		encs := filterEncodings(form, operands) // filterEncodings を呼び出して結果を確認
+		// 返されたエンコーディングがアキュムレータ固有（ModRM==nil, Immediate!=nil）かどうかを確認
 		return len(encs) > 0 && encs[0].ModRM == nil && encs[0].Immediate != nil
 	})
 
 	if isAccFormFound {
-		log.Printf("debug: Accumulator form found, filtering encodings for accumulator.")
-		// Only consider encodings from accumulator forms
+		// アキュムレータ形式からのみエンコーディングを考慮する
 		allEncodings = lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
 			encs := filterEncodings(form, operands)
-			// Only return accumulator-specific encodings
+			// アキュムレータ固有のエンコーディングのみを返す
 			if len(encs) > 0 && encs[0].ModRM == nil && encs[0].Immediate != nil {
 				return encs
 			}
-			return []*Encoding{} // Return empty if not an accumulator encoding
+			return []*Encoding{} // アキュムレータエンコーディングでない場合は空を返す
 		})
 	} else {
-		log.Printf("debug: No accumulator form found, considering all encodings.")
-		// Flatten the encodings from all filtered forms if no accumulator form was prioritized
+		// アキュムレータ形式が優先されなかった場合、フィルタリングされたすべてのフォームからエンコーディングをフラット化する
 		allEncodings = lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
 			return filterEncodings(form, operands)
 		})
 	}
 
-
 	if len(allEncodings) == 0 {
-		// This might happen if accumulator forms were found but their encodings were filtered out unexpectedly,
-		// or if non-accumulator forms had no suitable encodings.
-		log.Printf("error: No suitable encodings found after potential accumulator prioritization.")
-		return nil, errors.New("no suitable encoding found after filtering")
+		// これは、アキュムレータ形式が見つかったが、そのエンコーディングが予期せずフィルタリングされた場合、
+		// または非アキュムレータ形式に適したエンコーディングがなかった場合に発生する可能性がある
+		log.Printf("error: アキュムレータの優先順位付けの後、適切なエンコーディングが見つかりませんでした。")
+		return nil, errors.New("フィルタリング後、適切なエンコーディングが見つかりませんでした")
 	}
-	// Log details of each candidate encoding
-	log.Printf("debug: Found %d candidate encodings before MinBy:", len(allEncodings)) // Restore this log line
-	for i, enc := range allEncodings {
-		if enc != nil {
-			immSize := 0
-			if enc.Immediate != nil {
-				immSize = enc.Immediate.Size
-			}
-			log.Printf("  [%d] Opcode: %s, ModRM: %v, ImmSize: %d", i, enc.Opcode.Byte, enc.ModRM != nil, immSize)
-		} else {
-			log.Printf("  [%d] nil encoding", i)
-		}
-	}
-	// log.Printf("debug: All candidate encodings before MinBy: %+v", allEncodings) // Keep original log commented out for now
 
-	// Find the smallest encoding size
-	// Note: This simple MinBy might select the wrong encoding if sizes are equal (e.g., ADD AX, imm vs ADD r/m, imm).
-	// The filterForms logic now prioritizes accumulator forms, which should mitigate this.
+	// 最小のエンコーディングサイズを見つける
 	minEncoding := lo.MinBy(allEncodings, func(a, b *Encoding) bool {
-		// Add nil checks for safety inside MinBy comparison
+		// 安全のため MinBy 比較内で nil チェックを追加
 		if a == nil || b == nil {
-			log.Printf("error: nil encoding passed to MinBy comparison (a=%v, b=%v)", a == nil, b == nil)
-			return b == nil // Prefer non-nil
+			log.Printf("error: nil エンコーディングが MinBy 比較に渡されました (a=%v, b=%v)", a == nil, b == nil)
+			return b == nil // nil でない方を優先
 		}
-		// Compare based on the encoding's defined size (pass nil options)
+		// エンコーディングの定義済みサイズに基づいて比較（nil オプションを渡す）
 		sizeA := a.GetOutputSize(nil)
 		sizeB := b.GetOutputSize(nil)
 
@@ -112,8 +90,8 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 			return sizeA < sizeB
 		}
 
-		// If sizes are equal, prioritize imm8 encoding if applicable
-		// Check if Immediate fields are not nil before accessing Size
+		// サイズが等しい場合、該当すれば imm8 エンコーディングを優先する
+		// Size にアクセスする前に Immediate フィールドが nil でないことを確認
 		immSizeA := 0
 		if a.Immediate != nil {
 			immSizeA = a.Immediate.Size
@@ -123,22 +101,22 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 			immSizeB = b.Immediate.Size
 		}
 
-		// Prefer the encoding with imm8 (size 1) if the other is larger
+		// 他方より大きい場合、imm8（サイズ1）を持つエンコーディングを優先する
 		if immSizeA == 1 && immSizeB > 1 {
-			return true // Prefer a (imm8)
+			return true // a (imm8) を優先
 		}
 		if immSizeB == 1 && immSizeA > 1 {
-			return false // Prefer b (imm8)
+			return false // b (imm8) を優先
 		}
 
-		// If both are imm8 or neither is imm8 (or sizes differ), maintain original order (or based on sizeA < sizeB already handled)
-		return false // Default case if no imm8 preference applies
+		// 両方が imm8 であるか、どちらも imm8 でない場合（またはサイズが異なる場合）、元の順序を維持する（または既に処理された sizeA < sizeB に基づく）
+		return false // imm8 優先が適用されない場合のデフォルトケース
 	})
 
-	// Add nil check for minEncoding before returning
+	// 返す前に minEncoding の nil チェックを追加
 	if minEncoding == nil {
-		log.Printf("error: lo.MinBy returned nil encoding")
-		return nil, errors.New("failed to find minimum encoding")
+		log.Printf("error: lo.MinBy が nil エンコーディングを返しました")
+		return nil, errors.New("最小エンコーディングの検索に失敗しました")
 	}
 
 	return minEncoding, nil
@@ -155,7 +133,7 @@ func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Enco
 
 	// エンコーディングをアキュムレータ用とその他に分類
 	for i := range form.Encodings {
-		e := &form.Encodings[i] // ポインタを取得
+		e := &form.Encodings[i]
 		// アキュムレータを使用し、ModRMが不要なエンコーディングを優先候補とする
 		// (例: ADD AX, imm16 (opcode 0x05) はModRM不要)
 		if isAcc && e.ModRM == nil && e.Immediate != nil {
@@ -198,16 +176,15 @@ func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Enco
 	return filteredOtherEncodings
 }
 
-func filterForms(forms []InstructionForm, operands ng_operand.Operands) []InstructionForm { // Use ng_operand.Operands
+func filterForms(forms []InstructionForm, operands ng_operand.Operands) []InstructionForm { // ng_operand.Operands を使用
 	// アキュムレータレジスタを優先的に検索
 	accForms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
-		// Ensure form.Operands is not nil before dereferencing
+		// 逆参照する前に form.Operands が nil でないことを確認
 		if form.Operands == nil {
 			return false
 		}
 		return matchOperandsWithAccumulator(*form.Operands, operands)
 	})
-	log.Printf("debug: filteredForms length after matchOperandsWithAccumulator: %d", len(accForms))
 	// アキュムレータ形式が見つかった場合は、それを優先して返す
 	if len(accForms) > 0 {
 		return accForms
@@ -215,42 +192,39 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands) []Instru
 
 	// 通常の検索
 	strictForms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
-		// Ensure form.Operands is not nil before dereferencing
+		// 逆参照する前に form.Operands が nil でないことを確認
 		if form.Operands == nil {
 			return false
 		}
 		return matchOperandsStrict(*form.Operands, operands)
 	})
-	log.Printf("debug: filteredForms length after matchOperandsStrict: %d", len(strictForms))
 	if len(strictForms) > 0 {
 		return strictForms
 	}
 
 	// 条件緩和検索（sregをr16として扱う）
 	relaxedForms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
-		// Ensure form.Operands is not nil before dereferencing
+		// 逆参照する前に form.Operands が nil でないことを確認
 		if form.Operands == nil {
 			return false
 		}
 		return matchOperandsRelaxed(*form.Operands, operands)
 	})
-	log.Printf("debug: filteredForms length after matchOperandsRelaxed: %d", len(relaxedForms)) // Use relaxedForms
-	return relaxedForms                                                                         // Return relaxedForms
+	return relaxedForms // relaxedForms を返す
 }
 
 // GetPrefixSize はプレフィックスバイトのサイズを計算します
-func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // Use ng_operand.Operands
+func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // ng_operand.Operands を使用
 	size := 0
-	// operand size prefix (0x66)のみ必要
+	// オペランドサイズプレフィックス (0x66) のみ必要
 	if operands.Require66h() {
 		size += 1
 	}
-
 	return size
 }
 
 // Restore FindMinOutputSize method definition
-func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Operands) (int, error) { // Use ng_operand.Operands
+func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Operands) (int, error) { // ng_operand.Operands を使用
 	encoding, err := db.FindEncoding(opcode, operands)
 	if err != nil {
 		return 0, err
@@ -259,14 +233,13 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Op
 	options := &OutputSizeOptions{
 		ImmSize: operands.DetectImmediateSize(),
 	}
-	size := encoding.GetOutputSize(options) // Pass options here
+	size := encoding.GetOutputSize(options) // ここで options を渡す
 
 	// プレフィックスとオフセットのサイズを加算
 	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize()
-	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize)
+	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize) // このログは保持
 	return minOutputSize, nil
 }
-
 
 // matchOperandsWithAccumulator は、queryOperands にアキュムレータが含まれており、
 // formOperands がそれにマッチするかどうかを判定します。
@@ -276,22 +249,18 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_opera
 	if !hasAccumulator(queryOperands) {
 		return false
 	}
-
 	// formOperands と queryOperands の数が一致しない場合は false
 	if len(formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
-
 	// 各オペランドを比較
 	for i, formOp := range formOperands {
 		queryType := string(queryOperands.OperandTypes()[i])
 		formType := formOp.Type
-
 		// タイプが完全に一致する場合はOK
 		if formType == queryType {
 			continue
 		}
-
 		// form がアキュムレータで、query が対応する汎用レジスタの場合もOK
 		// (例: form="ax", query="r16" はOK)
 		if (formType == "al" && queryType == "r8") ||
@@ -299,7 +268,6 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_opera
 			(formType == "eax" && queryType == "r32") {
 			continue
 		}
-
 		// アキュムレータ以外のオペランドの比較
 		if formType != queryType {
 			// 即値タイプの比較を緩和: imm, imm8, imm16, imm32, imm64 は互換性があるとみなす
@@ -316,7 +284,7 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_opera
 	return true
 }
 
-func hasAccumulator(queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
+func hasAccumulator(queryOperands ng_operand.Operands) bool { // ng_operand.Operands を使用
 	hasAccumulator := lo.SomeBy(queryOperands.InternalStrings(), func(op string) bool {
 		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, op)
 		return matched
@@ -324,13 +292,12 @@ func hasAccumulator(queryOperands ng_operand.Operands) bool { // Use ng_operand.
 	return hasAccumulator
 }
 
-func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
+func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands) bool { // ng_operand.Operands を使用
 	if formOperands == nil || len(formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
-
 	for i, operand := range formOperands {
-		queryType := string(queryOperands.OperandTypes()[i]) // Convert OperandType to string
+		queryType := string(queryOperands.OperandTypes()[i]) // OperandType を string に変換
 		if operand.Type != queryType {
 			return false
 		}
@@ -338,13 +305,12 @@ func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operan
 	return true
 }
 
-func matchOperandsRelaxed(formOperands []Operand, queryOperands ng_operand.Operands) bool { // Use ng_operand.Operands
+func matchOperandsRelaxed(formOperands []Operand, queryOperands ng_operand.Operands) bool { // ng_operand.Operands を使用
 	if formOperands == nil || len(formOperands) != len(queryOperands.OperandTypes()) {
 		return false
 	}
-
 	for i, operand := range formOperands {
-		queryType := string(queryOperands.OperandTypes()[i]) // Convert OperandType to string
+		queryType := string(queryOperands.OperandTypes()[i]) // OperandType を string に変換
 		if operand.Type != queryType {
 			// 条件が緩和された場合; sregはr16としても一致を試みる
 			if queryType == "sreg" && operand.Type == "r16" {

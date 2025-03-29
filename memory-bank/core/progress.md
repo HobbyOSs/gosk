@@ -57,12 +57,13 @@
     - 関連するテストファイルの `DumpDiff` 呼び出し箇所を更新。
 - **ADD 命令エンコーディング問題の修正 (2025/03/29)**:
     - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を削除。
+    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を有効に戻した。
+    - `pkg/ng_operand/operand_impl.go`: `resolveDependentSizes` で `imm8` を `imm16` にアップグレードするロジックを削除。
     - `pkg/asmdb/instruction_search.go`:
-        - `filterForms` でアキュムレータ形式を優先するように修正。
-        - `FindEncoding` の `lo.MinBy` でエンコーディング定義上の即値サイズを使用し、8ビットに収まる場合は `imm8` を優先するように比較ロジックを修正。Nil チェックを追加。
-    - `pkg/ng_operand`: `ImmediateValueFitsIn8Bits` メソッドを追加・実装。
-    - `pkg/asmdb/encoding.go`: `GetOutputSize` に nil チェックを追加。
-    - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI1` が両方パスするようになった。
+        - `matchOperandsWithAccumulator`: 即値タイプの比較を緩和。
+        - `FindEncoding`: アキュムレータ専用 Form を優先するロジックを修正。
+        - `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
+    - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI,1` の両方、および関連する `TestHarib00c`, `TestHarib00d`, `TestHarib00g` が PASS するようになった。
 
 ## まだ必要な実装
 - **`pkg/ng_operand` への段階的置換**:
