@@ -48,6 +48,9 @@
     - `operand_impl.go`, `requires.go` の型解決・サイズ検出ロジックを修正し、関連テストをパスさせた。
     - ヘルパー関数を `operand_util.go` に分割。
     - `samber/lo` を導入してコードをリファクタリング。
+- **`pkg/ng_operand` のバグ修正 (2025/03/29)**:
+    - `CalcOffsetByteSize` が16bitモードでディスプレースメントなしの間接アドレッシング (`[BX]`, `[SI]`等) に対しても誤ってオフセットサイズを加算していた問題を修正。
+    - これにより `internal/pass1/eval_test.go` がPASSするようになった。
 
 ## まだ必要な実装
 - **`pkg/ng_operand` への段階的置換**:

@@ -305,24 +305,64 @@ func (o *OperandPegImpl) FromString(text string) Operands {
 // TODO: 複数のオペランドを処理する。現在は最初のメモリオペランドをチェックしています。
 // TODO: ディスプレースメント値 (1, 2, 4) に基づいてサイズを計算する。
 func (o *OperandPegImpl) CalcOffsetByteSize() int {
-	// メモリオペランドが存在するかどうかを検索しますが、ここではオペランド自体ではなく、その存在のみが必要です。
-	_, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+	// メモリオペランドが存在するかどうかを検索し、見つかった場合はそのオペランドを取得します。
+	memOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
 		return p != nil && p.Memory != nil
 	})
 
 	if found {
-		// アドレスサイズプレフィックス要件に基づくプレースホルダーロジック
-		if o.Require67h() { // アドレスサイズプレフィックスが必要な場合
+		// Note: memOperand could be nil if found is true but the element itself is nil,
+		// though the filter `p != nil` should prevent this. Add a check for safety.
+		if memOperand == nil || memOperand.Memory == nil {
+			log.Printf("warn: Found memory operand flag but memOperand or memOperand.Memory is nil")
+			return 0 // Or handle error appropriately
+		}
+		memInfo := memOperand.Memory // Get MemoryInfo from the found operand
+
+		// アドレスサイズプレフィックス(67h)が必要な場合の処理
+		if o.Require67h() {
+			// TODO: Add logic to calculate displacement size based on memInfo.Displacement
+			//       even when address size prefix is present.
 			if o.bitMode == cpu.MODE_16BIT {
-				return 4 // 16ビットモードで32ビットアドレッシング -> 4バイト
+				return 4 // 16ビットモードで32ビットアドレッシング -> 基本4バイト (要Disp考慮)
 			}
-			return 2 // 32ビットモードで16ビットアドレッシング -> 2バイト
+			return 2 // 32ビットモードで16ビットアドレッシング -> 基本2バイト (要Disp考慮)
 		}
-		// プレフィックス不要、モードのデフォルトを使用
-		if o.bitMode == cpu.MODE_16BIT {
-			return 2 // デフォルトの16ビットオフセット
+
+		// プレフィックス不要の場合
+		// 1. 直接アドレス指定 [disp] (ModRM mode 00, rm 110 for 16bit or 101 for 32bit)
+		if memInfo.BaseReg == "" && memInfo.IndexReg == "" {
+			if o.bitMode == cpu.MODE_16BIT {
+				return 2 // 16bit direct address offset
+			}
+			return 4 // 32bit direct address offset
 		}
-		return 4 // デフォルトの32ビットオフセット
+
+		// 2. 間接アドレス指定でディスプレースメントがある場合 [reg+disp], [reg+reg*scale+disp]
+		if memInfo.Displacement != 0 {
+			disp := memInfo.Displacement
+			// ModRM mode 01 (disp8) or 10 (disp16/32)
+			if disp >= -128 && disp <= 127 {
+				// Check if ModRM mode 01 is applicable for the registers used
+				// (For simplicity here, assume disp8 is possible if it fits)
+				return 1 // disp8
+			}
+			if o.bitMode == cpu.MODE_16BIT {
+				return 2 // disp16
+			}
+			return 4 // disp32
+		}
+
+		// 3. 間接アドレス指定でディスプレースメントがない場合 [reg], [reg+reg*scale]
+		// ModRM mode 00 (except for [BP] in 16bit which uses mode 01 with disp8=0)
+		// or mode 11 (register direct, handled elsewhere)
+		// For mode 00, no additional offset bytes are needed.
+		// Special case: [BP] in 16-bit mode uses ModRM mode 01 with disp8=0.
+		if o.bitMode == cpu.MODE_16BIT && memInfo.BaseReg == "BP" && memInfo.IndexReg == "" && memInfo.Displacement == 0 {
+			return 1 // disp8=0 for [BP]
+		}
+		// Other cases like [BX], [SI], [BX+SI] etc. need no offset bytes with ModRM mode 00.
+		return 0
 	}
 	return 0 // メモリオペランドが見つかりません
 }
