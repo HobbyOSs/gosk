@@ -23,7 +23,6 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 		}
 	}
 
-
 	// Calculate size based on VEX
 	if e.VEX != nil { // Check if VEX is not nil
 		size := e.VEX.getSize()
@@ -41,7 +40,6 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 	} else {
 		log.Printf("warn: Encoding has zero Opcode field: %+v", e) // Log warning if Opcode is zero
 	}
-
 
 	// Calculate size based on ModRM
 	if e.ModRM != nil {
