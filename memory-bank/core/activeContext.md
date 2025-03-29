@@ -1,33 +1,42 @@
 # Active Context
 
 ## 現在の作業の焦点
-- `pkg/operand` のパーサー (`participle` ベース) の基本的な問題を修正。
-- 引き続き `test/day03_harib00i_test.go` のエラー (エンコーディングエラー、バイナリ長不一致) 対応。
+- **オペランドパーサー移行 (`pkg/ng_operand`)**:
+    - pigeon peg ベースの新しいパーサー (`pkg/ng_operand`) の実装を進める。
+    - `pkg/operand` から移植したテストコード (`operand_impl_test.go`) が通るように、`operand_impl.go` の `OperandPegImpl` 構造体とメソッド（特に `OperandTypes`）を実装・修正する。
 
 ## 直近の変更点
-- **`pkg/operand` パーサー修正 (2025/03/29):**
-    - `pkg/operand` のテスト (`TestBaseOperand_OperandType`) で失敗していたオペランド解析の問題を特定。
-    - TDD アプローチで `pkg/operand/operand_impl_test.go` にテストケースを追加。
-    - `pkg/operand/operand_impl.go` のレキサールール (`Reg`, `Seg` の順序) を修正。
-    - `pkg/operand/operand.go` のパーサー定義 (`Instruction`, `CommaOperand` 構造体) を修正。
-    - `pkg/operand/operand_impl.go` の `OperandTypes` ロジック (ラベルの扱い) を修正。
-    - `pkg/operand/operand_impl_test.go` のテストケース (`MOV r32, label`) で `ForceRelAsImm=true` を設定。
-    - 上記修正により `pkg/operand` のテスト (`TestBaseOperand_OperandType`) が成功。
-- **`CodegenClient.Emit` インターフェース変更試行 (2025/03/29):**
-    - `test/day03_harib00i_test.go` のエンコーディングエラー (`Failed to parse operand string 'ECX[ EBX + 16 ]'`) の原因調査。
-    - 原因は `pass1` が Ocode 生成時にオペランドを単一文字列として `Emit` に渡し、`codegen` がそれを再結合して `pkg/operand` パーサーに渡していたためと特定。
-    - `CodegenClient.Emit` のシグネチャを `Emit(string)` から `Emit(string, []string)` に変更し、関連ファイル (`ocode_client`, `pass1` 各所) を修正しようとした。
-    - しかし、修正が広範囲に及び複雑化したため、ユーザー指示により中断。コード変更はユーザーが手動で revert する。
+- **オペランドテストコード移植 (2025/03/29):**
+    - `pkg/operand/operand_impl_test.go` を `pkg/ng_operand/operand_impl_test.go` にコピー。
+    - `pkg/ng_operand/parser.go` に複数オペランド対応の `ParseOperands` 関数を追加（戻り値は `[]*ParsedOperandPeg`）。
+    - `pkg/ng_operand/operand_grammar.peg` を修正し、セグメントオーバーライド、SHORT/FAR PTR、64bitレジスタなどに対応。
+    - `go generate` でパーサーコードを更新。
+    - `operand_impl_test.go` のテストロジックを `ParseOperands` の戻り値に合わせて修正。
+    - テストを実行し、パースエラーは解消されたが、型解決ロジックの不完全性によりサイズ関連のテスト (`TestOperandPegImpl_OperandType`) が多数失敗することを確認。
+- **オペランドパーサー移行開始 (2025/03/29):**
+    - `participle` ベースのパーサー (`pkg/operand`) の複雑さが開発のボトルネックになっているため、`pigeon` peg パーサーへの移行を決定。
+    - オペランド専用のpeg文法 (`operand_grammar.peg`) を設計。
+    - 新しいパーサー用のパッケージ `pkg/ng_operand` を作成。
+    - `pkg/ng_operand/operand_grammar.peg` (peg定義), `pkg/ng_operand/operand_types.go` (型定義), `pkg/ng_operand/parser.go` (ラッパー関数) を作成。
+    - `go:generate` を使用して `pigeon` コマンドを実行し、パーサーコード (`operand_grammar.go`) を生成する仕組みを導入 (`pkg/ng_operand/generate.go`)。
+    - 既存の `pkg/operand` のインターフェース (`Operands`) とテストコード (`operand_test.go`) を `pkg/ng_operand` にコピーし、パッケージ名を修正。
+    - `pkg/ng_operand/operand_impl.go` を作成し、`Operands` インターフェースの基本的な実装 (`OperandPegImpl`) を開始。
+    - `OperandTypes` と `Require66h`, `Require67h` の基本的なロジックを実装し、コピーしたテスト (`TestRequire66h`, `TestRequire67h`) が通ることを確認。
+- (過去の変更点) **`pkg/operand` パーサー修正 (2025/03/29):**
+    - participleベースのパーサーの基本的な問題を修正 (`TestBaseOperand_OperandType` が成功)。
 
 ## 次のステップ
-- **コード Revert 待ち**: ユーザーによるコード変更の revert を待つ。
-- Revert 後、再度 `test/day03_harib00i_test.go` を実行し、エラー状況を確認する。
-- **根本解決の検討**: `CodegenClient.Emit` インターフェースの変更を含む、オペランド受け渡し方法のリファクタリングを検討する (文書化後、PLAN MODE で再計画)。
-- (保留) `Require67h` の TODO コメント解消
-- (保留) RESBの計算処理の実装
+- **`pkg/ng_operand/operand_impl.go` の実装**:
+    - `OperandPegImpl` 構造体の設計見直し（`[]*ParsedOperandPeg` を保持するように変更するか検討）。
+    - `OperandTypes` メソッドに、ビットモードやオペランド間の依存関係を考慮した完全な型解決ロジックを実装する（`imm`/`m` のサイズ決定）。
+    - `CalcOffsetByteSize`, `DetectImmediateSize`, `Require66h`, `Require67h` などのメソッドを実装・修正する。
+    - `operand_impl_test.go` のテストが成功するように実装を進める。
+- **段階的置換**: `pkg/ng_operand` のテストが安定したら、`internal/pass1` などから `pkg/operand` の利用箇所を `pkg/ng_operand` に置き換えていく。
 
 ## 関連情報
-- [オペランド受け渡しフローと CodegenClient.Emit インターフェースの問題点 (2025/03/29)](memory-bank/details/technical_notes.md#オペランド受け渡しフローと-codegenclientemit-インターフェースの問題点-20250329)
+- [オペランドパーサー移行 (participle -> pigeon)](../details/implementation_details.md#オペランドパーサー移行-participle---pigeon-20250329)
+- [オペランドサイズ決定の複雑さについて](../details/technical_notes.md#オペランドサイズ決定の複雑さについて-20250329)
+- (過去) [オペランド受け渡しフローと CodegenClient.Emit インターフェースの問題点 (2025/03/29)](memory-bank/details/technical_notes.md#オペランド受け渡しフローと-codegenclientemit-インターフェースの問題点-20250329) - Revert済み
 [technical_notes.md](../details/technical_notes.md)
 [implementation_details.md](../details/implementation_details.md)
 (過去の変更点: [activeContext_archive_202503.md](../archives/activeContext_archive_202503.md))

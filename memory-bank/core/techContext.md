@@ -1,9 +1,11 @@
 # Tech Context
 
 ## 使用技術
-- PEG (Parsing Expression Grammar) を用いた構文解析
 - Go言語
 - Gitによるバージョン管理
+- PEG (Parsing Expression Grammar) を用いた構文解析
+  - アセンブリ言語全体のパース: `internal/gen` (pigeon)
+  - オペランドのパース: `pkg/ng_operand` (pigeon) - 移行中 (旧: `pkg/operand` - participle)
 
 ## 開発環境
 - Linux 6.1

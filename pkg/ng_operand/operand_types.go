@@ -128,6 +128,7 @@ type ParsedOperandPeg struct {
 	Label     string       // ラベル名 (TypeがLABELの場合)
 	DataType  ast.DataType // データ型 (BYTE, WORD, DWORD) - Changed to ast.DataType
 	JumpType  string       // ジャンプタイプ (SHORT, NEAR, FAR)
+	PtrPrefix string       // PTR または FAR PTR
 	RawString string       // 元のオペランド文字列
 }
 

@@ -70,7 +70,7 @@ func TestRequire66h(t *testing.T) {
 func TestRequire67h(t *testing.T) {
 	// t.Skip("Skipping test until NewOperandPegImpl is implemented") // Unskip test
 	/* // Comment out tests variable definition */ // Uncomment tests variable definition
-	tests := []struct { // Use cpu.BitMode
+	tests := []struct {                            // Use cpu.BitMode
 		name     string
 		operand  string
 		bitMode  cpu.BitMode

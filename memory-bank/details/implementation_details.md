@@ -136,6 +136,48 @@
     -   テストのスキップは明示的な許可がある場合のみ実施
     -   テストエラーが発生した場合は、修正を行うか、スキップの許可を得る
 
+## オペランドパーサー移行 (participle -> pigeon) (2025/03/29)
+
+### 背景
+- 既存のオペランドパーサー (`pkg/operand`) は `participle` ライブラリを使用していた。
+- メモリオペランドの複雑な形式や、レジスタ名とラベル名の曖昧性などにより、パーサーの実装が複雑化し、メンテナンス性や拡張性に課題があった。
+- 特に `test/day03_harib00i_test.go` で発生していたエンコーディングエラーの原因の一つとして、オペランドパースの不正確さが疑われていた。
+
+### 移行方針
+- より厳密で表現力の高い PEG (Parsing Expression Grammar) を採用し、パーサジェネレータ `pigeon` を使用して新しいパーサーを実装する。
+- 新しいパーサーは `pkg/ng_operand` パッケージとして開発を進め、最終的に既存の `pkg/operand` を置き換える。
+- 既存の `pkg/operand` のインターフェース (`Operands`) とテストコードを流用し、互換性を保ちながら段階的に移行する。
+
+### 実装状況 (2025/03/29現在)
+1.  **peg文法定義 (`pkg/ng_operand/operand_grammar.peg`)**:
+    -   オペランド文字列 (`OperandString`) をパースするルールを定義。
+    -   `Operand` ルールで `MemoryAddress`, `Register`, `Immediate`, `Label`, `SegmentRegister` を選択。
+    -   `MemoryAddress` ルールでデータ型 (`DataType`)、ジャンプタイプ (`JumpType`)、セグメントオーバーライド (`SegmentRegisterName :`)、メモリ本体 (`MemoryBody`) をパース。
+    -   `MemoryBody` ルールでベースレジスタ、インデックスレジスタ、スケール、ディスプレースメントの組み合わせをパース。
+    -   各ルールのアクションでパース結果を `ParsedOperandPeg` および `MemoryInfo` 構造体に格納。
+2.  **型定義 (`pkg/ng_operand/operand_types.go`)**:
+    -   パース結果を格納する `ParsedOperandPeg`, `MemoryInfo` 構造体を定義。
+    -   オペランドの種類を表す `OperandType` 定義 (既存のものを流用)。
+    -   pegアクションで使用するヘルパー関数 (`getRegisterType`, `getImmediateSizeType` など) を定義。
+3.  **パーサー生成 (`pkg/ng_operand/generate.go`, `operand_grammar.go`)**:
+    -   `go:generate` ディレクティブを使用して `pigeon` コマンドを実行し、`operand_grammar.go` を自動生成。
+4.  **ラッパー関数 (`pkg/ng_operand/parser.go`)**:
+    -   `ParseOperandString(text string) (*ParsedOperandPeg, error)` を実装し、生成された `Parse` 関数を呼び出す。
+5.  **インターフェース実装 (`pkg/ng_operand/operand_impl.go`)**:
+    -   既存の `Operands` インターフェースを実装する `OperandPegImpl` 構造体を定義。
+    -   `FromString` コンストラクタと、`With*`, `Get*` などの基本的なメソッドを実装。
+    -   `OperandTypes`, `Require66h`, `Require67h` の基本的なロジックを実装。
+6.  **テスト (`pkg/ng_operand/operand_test.go`)**:
+    -   既存の `pkg/operand/operand_test.go` をコピーし、パッケージ名を変更。
+    -   `TestRequire66h`, `TestRequire67h` を有効化し、`pkg/ng_operand` の実装でテストが通ることを確認済み。
+
+### 今後の課題
+-   `OperandTypes` のサイズ解決ロジックの実装。
+-   `CalcOffsetByteSize`, `DetectImmediateSize` の実装。
+-   `Require66h`, `Require67h` の詳細化。
+-   複数オペランド (カンマ区切り) への対応 (peg文法と `InternalStrings` メソッドの修正)。
+-   既存の `pkg/operand` 利用箇所の置き換え。
+
 ### 過去の作業
 
 -   オペコード生成処理の改善 (`internal/codegen/x86gen_utils.go`)
