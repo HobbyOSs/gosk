@@ -1,0 +1,217 @@
+// operand_grammar.peg
+{
+package ng_operand // Changed package name
+
+import (
+    "strconv"
+    "strings"
+    "github.com/morikuni/failure"
+    "github.com/HobbyOSs/gosk/internal/ast" // ast パッケージをインポート
+    // cpu パッケージは不要
+)
+
+// --- Helper functions ---
+func toInt(s string) int64 {
+    // 10進数または16進数をパース
+    if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+        v, _ := strconv.ParseInt(s[2:], 16, 64)
+        return v
+    }
+    v, _ := strconv.ParseInt(s, 10, 64)
+    return v
+}
+
+func isHex(s string) bool {
+    return strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X")
+}
+
+// getRegisterType と getImmediateSizeType は operand_types.go で定義想定
+// ... 他のヘルパー関数 ...
+
+}
+
+// --- Grammar Rules ---
+
+OperandString <- _ op:Operand _ EOF {
+    // パース結果を ParsedOperandPeg に設定
+    operand := op.(*ParsedOperandPeg)
+    operand.RawString = string(c.text) // 元の文字列を保持
+    return operand, nil
+}
+
+Operand <- MemoryAddress / Register / Immediate / Label / SegmentRegister // Action removed
+
+// --- Memory Address ---
+// 例: BYTE [EBX + ESI*4 + 100], WORD [label + EAX], DWORD ES:[EDI]
+MemoryAddress <- dt:DataType? _ jt:JumpType? _ seg:(SegmentRegisterName _ ':' _)? '[' _ body:MemoryBody _ ']' { // Add spaces after DataType and JumpType
+    memInfo := body.(*MemoryInfo)
+    var dataType ast.DataType // ast.DataType を使用
+    if dt != nil {
+        dtStr := string(dt.([]byte))
+        dataType, _ = ast.NewDataType(dtStr) // ast.NewDataType を使用
+    }
+    var jumpType string
+    if jt != nil {
+        jumpType = string(jt.([]byte))
+    }
+
+    if seg != nil {
+         // seg は []any{[]byte("ES"), _, []byte(":"), _} のような形になる
+         segBytes := seg.([]any)[0].([]byte)
+         memInfo.Segment = string(segBytes) // セグメントオーバーライド
+    }
+    return &ParsedOperandPeg{
+        Type:     CodeM, // 仮: 型は後で詳細化
+        Memory:   memInfo,
+        DataType: dataType,
+        JumpType: jumpType,
+    }, nil
+}
+
+// MemoryBody のルールをより網羅的に修正
+MemoryBody <- BaseIndexScaleDisp / BaseIndexDisp / BaseScaleDisp / IndexScaleDisp / BaseDisp / IndexDisp / BaseIndex / BaseOnly / IndexOnly / DispOnly // Action removed
+
+// 各 MemoryBody ルールの詳細定義とアクション
+BaseIndexScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale op2:AddOp disp:ImmediateValue {
+    baseReg := string(base.([]byte))
+    indexReg := string(index.([]byte))
+    scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
+    dispVal := toInt(string(disp.([]byte)))
+    isHex := isHex(string(disp.([]byte)))
+    if string(op1.([]byte)) == "-" { /* index の符号は通常+ */ }
+    if string(op2.([]byte)) == "-" { dispVal = -dispVal }
+    return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: scaleVal, Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+BaseIndexDisp <- base:RegisterName op1:AddOp index:RegisterName op2:AddOp disp:ImmediateValue {
+    baseReg := string(base.([]byte))
+    indexReg := string(index.([]byte))
+    dispVal := toInt(string(disp.([]byte)))
+    isHex := isHex(string(disp.([]byte)))
+    if string(op1.([]byte)) == "-" { /* index の符号は通常+ */ }
+    if string(op2.([]byte)) == "-" { dispVal = -dispVal }
+    return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: 1, Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+BaseScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale { // Dispなしのパターン (例: [EAX+EBX*4])
+    baseReg := string(base.([]byte))
+    indexReg := string(index.([]byte))
+    scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
+    return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: scaleVal}, nil
+}
+IndexScaleDisp <- index:RegisterName scale:Scale op1:AddOp disp:ImmediateValue {
+    indexReg := string(index.([]byte))
+    scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
+    dispVal := toInt(string(disp.([]byte)))
+    isHex := isHex(string(disp.([]byte)))
+    if string(op1.([]byte)) == "-" { dispVal = -dispVal }
+    return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal, Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+BaseDisp <- base:RegisterName op1:AddOp disp:ImmediateValue {
+    baseReg := string(base.([]byte))
+    dispVal := toInt(string(disp.([]byte)))
+    isHex := isHex(string(disp.([]byte)))
+    if string(op1.([]byte)) == "-" { dispVal = -dispVal }
+    return &MemoryInfo{BaseReg: baseReg, Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+IndexDisp <- index:RegisterName op1:AddOp disp:ImmediateValue { // Baseなし、Indexあり、Dispあり
+     indexReg := string(index.([]byte))
+     dispVal := toInt(string(disp.([]byte)))
+     isHex := isHex(string(disp.([]byte)))
+     if string(op1.([]byte)) == "-" { dispVal = -dispVal }
+     return &MemoryInfo{IndexReg: indexReg, Scale: 1, Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+BaseIndex <- base:RegisterName op1:AddOp index:RegisterName {
+    baseReg := string(base.([]byte))
+    indexReg := string(index.([]byte))
+    // op1 は通常 '+'
+    return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: 1}, nil
+}
+BaseOnly <- base:RegisterName {
+    return &MemoryInfo{BaseReg: string(base.([]byte))}, nil
+}
+IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプショナル
+    indexReg := string(index.([]byte))
+    scaleVal := 1
+    if scale != nil {
+        scaleVal, _ = strconv.Atoi(string(scale.([]byte)))
+    }
+    return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal}, nil
+}
+DispOnly <- disp:ImmediateValue {
+    dispVal := toInt(string(disp.([]byte)))
+    isHex := isHex(string(disp.([]byte)))
+    return &MemoryInfo{Displacement: dispVal, IsHexDisp: isHex}, nil
+}
+
+
+Scale <- _ '*' _ s:('1' / '2' / '4' / '8') { return s, nil } // アクションの戻り値修正
+AddOp <- _ op:('+' / '-') _ { return op, nil } // アクションの戻り値修正
+ImmediateValue <- val:(HexFactor / NumberFactor) { return val, nil } // メモリ内部でのみ使用, アクションの戻り値修正
+
+// --- Register ---
+Register <- r:RegisterName {
+    regName := string(r.([]byte))
+    // レジスタの種類に応じて Type を設定 (CodeR8, CodeR16, CodeR32, CodeSREG など)
+    regType := getRegisterType(regName) // getRegisterType は operand_types.go で定義想定
+    return &ParsedOperandPeg{Type: regType, Register: regName}, nil
+}
+// RegisterName は既存の Opcode 定義から流用または新規定義
+RegisterName <- GeneralReg / SegmentRegisterName / MMXReg / XMMReg / YMMReg / ControlReg / DebugReg / TestReg { return c.text, nil } // アクションの戻り値修正
+
+GeneralReg = "EAX" / "EBX" / "ECX" / "EDX" / "ESI" / "EDI" / "ESP" / "EBP" /
+             "AX" / "BX" / "CX" / "DX" / "SI" / "DI" / "SP" / "BP" /
+             "AL" / "BL" / "CL" / "DL" / "AH" / "BH" / "CH" / "DH"
+SegmentRegisterName = "CS" / "DS" / "ES" / "FS" / "GS" / "SS" // SegmentRegister と区別
+MMXReg = "MM0" / "MM1" / "MM2" / "MM3" / "MM4" / "MM5" / "MM6" / "MM7"
+XMMReg = "XMM0" / "XMM1" / "XMM2" / "XMM3" / "XMM4" / "XMM5" / "XMM6" / "XMM7" / "XMM8" / "XMM9" / "XMM10" / "XMM11" / "XMM12" / "XMM13" / "XMM14" / "XMM15"
+YMMReg = "YMM0" / "YMM1" / "YMM2" / "YMM3" / "YMM4" / "YMM5" / "YMM6" / "YMM7" / "YMM8" / "YMM9" / "YMM10" / "YMM11" / "YMM12" / "YMM13" / "YMM14" / "YMM15"
+ControlReg = "CR0" / "CR1" / "CR2" / "CR3" / "CR4" / "CR5" / "CR6" / "CR7" / "CR8"
+DebugReg = "DR0" / "DR1" / "DR2" / "DR3" / "DR4" / "DR5" / "DR6" / "DR7"
+TestReg = "TR0" / "TR1" / "TR2" / "TR3" / "TR4" / "TR5" / "TR6" / "TR7"
+
+
+// --- Immediate ---
+Immediate <- val:(HexFactor / NumberFactor / CharFactor) {
+    immStr := string(val.([]byte)) // val は []byte
+    value := toInt(immStr)
+    hex := isHex(immStr)
+    // 即値のサイズに応じて Type を設定 (CodeIMM8, CodeIMM16, CodeIMM32)
+    immType := getImmediateSizeType(value) // getImmediateSizeType は operand_types.go で定義想定
+    return &ParsedOperandPeg{Type: immType, Immediate: value, IsHex: hex}, nil
+}
+
+HexFactor <- '0' ('x' / 'X') [0-9a-fA-F]+ { return c.text, nil } // アクションの戻り値修正
+NumberFactor <- '-'? [0-9]+ { return c.text, nil } // アクションの戻り値修正
+// CharFactor <- '\'' c:[^'] '\'' { return []byte{byte('\''), c.([]byte)[0], byte('\'')} } // シングルクォート内の1文字
+CharFactor <- '\'' charVal:[^'] '\'' {
+    // 'A' -> 65 のように文字コード (int64) を返す
+    charByte := charVal.([]byte)
+    if len(charByte) != 1 {
+        // エラー処理: シングルクォート内は1文字のみ許容
+        return nil, failure.New(failure.StringCode("ParseError"), failure.Messagef("invalid char factor: %s", string(c.text)))
+    }
+    return int64(charByte[0]), nil
+}
+
+// --- Label ---
+Label <- l:IdentFactor {
+    labelName := string(l.([]byte))
+    // ラベルのタイプ (REL8, REL16, REL32, IMM) はここでは決定せず、
+    // 後続の処理 (asmdb検索など) で決定する想定。一旦 CodeLABEL などにするか？
+    return &ParsedOperandPeg{Type: CodeLABEL, Label: labelName}, nil // CodeLABEL は仮
+}
+IdentFactor <- !ReservedWord !RegisterName [a-zA-Z$_.] [a-zA-Z$_.0-9]* { return c.text, nil } // 予約語とレジスタ名を除外, アクションの戻り値修正
+
+// --- Segment Register (単独オペランドとして) ---
+SegmentRegister <- r:SegmentRegisterName {
+    segName := string(r.([]byte))
+    return &ParsedOperandPeg{Type: CodeSREG, Segment: segName}, nil
+}
+
+// --- Data Type / Jump Type (メモリ参照の一部としてパース) ---
+DataType = "BYTE" / "WORD" / "DWORD" { return c.text, nil } // アクションの戻り値修正
+JumpType = "SHORT" / "NEAR" / "FAR" { return c.text, nil } // アクションの戻り値修正
+ReservedWord = DataType / JumpType / "PTR" ; // PTR も予約語に追加
+
+// --- Whitespace and Comments ---
+_ <- [ \t\n\r]*
+EOF <- !.
