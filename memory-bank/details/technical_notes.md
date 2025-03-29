@@ -66,3 +66,31 @@ F7	r64
 
 `jq` を用いることで、`json-x86-64/x86_64.json` のようなJSONデータを効率的に調査し、必要な情報を抽出できることがわかりました。今後、命令実装に必要な情報をJSONファイルから取得する際に、`jq` を積極的に活用します。
 
+## オペランド受け渡しフローと CodegenClient.Emit インターフェースの問題点 (2025/03/29)
+
+### 調査の経緯
+
+`test/day03_harib00i_test.go` のテスト実行時に、`MOV ECX, [EBX + 16]` のようなメモリオペランドを持つ命令で `Failed to parse operand string 'ECX[ EBX + 16 ]'` というエラーが発生し、それに伴い `Failed to find encoding` エラーも発生していました。
+
+### 原因分析
+
+1.  **`pass1` での Ocode 生成**: `internal/pass1/pass1_inst_*.go` や `internal/pass1/handlers.go` では、各命令のトークンを処理し、`CodegenClient.Emit` を呼び出して Ocode を生成していました。当初の実装では、`Emit` メソッドは単一の文字列 (`"MOV ECX,[ EBX + 16 ]"`) を受け取るシグネチャ (`Emit(string)`) でした。
+2.  **`ocode_client` での Ocode 格納**: `internal/ocode_client/client.go` の `Emit` 実装は、受け取った単一文字列をパースして `ocode.Ocode` 構造体に格納していました。この際、オペランド部分はカンマで分割され、`Operands` フィールド (当初は `[]string`) に格納されていました。しかし、`MOV ECX,[ EBX + 16 ]` のような文字列を単純にカンマで分割すると、`["ECX", "[ EBX + 16 ]"]` となり、メモリオペランドのスペースが保持されません (これは直接的なエラー原因ではありませんが、潜在的な問題です)。より重要なのは、`Emit` が単一文字列を受け取る前提だったことです。
+3.  **`codegen` での Ocode 処理**: `internal/codegen/x86gen_*.go` (例: `handleMOV`) では、`ocode.Ocode` の `Operands` フィールド (`[]string`) を受け取ります。しかし、`asmdb.FindEncoding` を呼び出すために `operand.Operands` インターフェースが必要であり、その生成 (`operand.NewOperandFromString`) のために、受け取った `[]string` を `strings.Join(operands, ",")` で**再度単一の文字列に結合**していました。
+4.  **`pkg/operand` でのパースエラー**: `operand.NewOperandFromString` に渡された結合文字列 (`"ECX,[ EBX + 16 ]"`) は、`pkg/operand` のパーサー (`participle` ベース) が期待する形式 (カンマ区切りの完全な命令文字列) と一致しません。`asmdb.FindEncoding` が内部で `OperandTypes()` を呼び出し、さらにその内部で `getInternalParsed()` がこの不正な文字列をパースしようとした結果、`Failed to parse operand string 'ECX[ EBX + 16 ]'` エラーが発生していました。
+
+### 問題点
+
+- **`CodegenClient.Emit` のインターフェース**: `Emit(string)` というシグネチャが、オペランド情報を構造化して渡す上で不適切でした。`pass1` でパースされたオペランド情報は、単一文字列にシリアライズされるべきではありませんでした。
+- **`codegen` での再結合**: `codegen` 側でオペランドスライスを再度文字列に結合していたことが、`pkg/operand` パーサーのエラーを引き起こす直接的な原因でした。
+- **モジュール間の結合度**: `pass1`, `ocode_client`, `codegen`, `pkg/operand` の間で、オペランド情報の受け渡し方法に関する暗黙的な依存関係があり、変更が困難になっていました。
+
+### 試みた修正と中断
+
+`CodegenClient.Emit` のシグネチャを `Emit(op string, operands []string)` に変更し、`pass1` から `codegen` までオペランドを `[]string` として渡すように修正を試みました。しかし、関連するファイルが多く、修正が広範囲に及び複雑化したため、ユーザー指示により中断しました。
+
+### 今後の課題
+
+- **オペランド受け渡し方法のリファクタリング**: `pass1` から `codegen` まで、オペランド情報をより構造化された形で (例: `[]operand.ParsedOperand` や専用の構造体) 受け渡すように、関連モジュール全体のリファクタリングが必要です。
+- **`CodegenClient.Emit` インターフェース再設計**: オペランド情報を適切に渡せるようなインターフェースを再設計する必要があります。
+- **`pkg/operand` と `asmdb` の連携改善**: `asmdb.FindEncoding` が `operand.Operands` インターフェース (単一文字列前提) に依存している点を解消し、より柔軟なオペランド情報 (例: `[]operand.OperandType`) を受け入れられるように改善する必要があります。

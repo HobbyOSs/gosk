@@ -13,17 +13,21 @@
     - `pkg/operand/operand_impl.go` の `OperandTypes` ロジック (ラベルの扱い) を修正。
     - `pkg/operand/operand_impl_test.go` のテストケース (`MOV r32, label`) で `ForceRelAsImm=true` を設定。
     - 上記修正により `pkg/operand` のテスト (`TestBaseOperand_OperandType`) が成功。
+- **`CodegenClient.Emit` インターフェース変更試行 (2025/03/29):**
+    - `test/day03_harib00i_test.go` のエンコーディングエラー (`Failed to parse operand string 'ECX[ EBX + 16 ]'`) の原因調査。
+    - 原因は `pass1` が Ocode 生成時にオペランドを単一文字列として `Emit` に渡し、`codegen` がそれを再結合して `pkg/operand` パーサーに渡していたためと特定。
+    - `CodegenClient.Emit` のシグネチャを `Emit(string)` から `Emit(string, []string)` に変更し、関連ファイル (`ocode_client`, `pass1` 各所) を修正しようとした。
+    - しかし、修正が広範囲に及び複雑化したため、ユーザー指示により中断。コード変更はユーザーが手動で revert する。
 
 ## 次のステップ
-- `test/day03_harib00i_test.go` を再実行し、エラー内容を確認する。
-- エラー内容に基づき、エンコーディングエラーやバイナリ長不一致の原因を調査・修正する。
-    - `asmdb` (JSON, fallback) のエンコーディング定義確認
-    - `codegen` (MOV, ADD ハンドラ) のロジック確認
-- **`Require67h` の TODO コメント解消**:
-    - `[disp32]` や `[0x12345678]` のケースを正しく判定できるように `requireAddressSizePrefix` 関数を改善する。(`CalcOffsetByteSize` の改善または個別のオペランドサイズ計算が必要)
-- **`internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)**
-- **`internal/codegen` パッケージの不要パラメータ削除**
-- RESBの計算処理の実装
+- **Memory Bank 文書化**: 今回の調査結果 (オペランド受け渡しフロー、`Emit` インターフェースの問題点) を `technical_notes.md` に文書化する。
+- **コード Revert 待ち**: ユーザーによるコード変更の revert を待つ。
+- Revert 後、再度 `test/day03_harib00i_test.go` を実行し、エラー状況を確認する。
+- **根本解決の検討**: `CodegenClient.Emit` インターフェースの変更を含む、オペランド受け渡し方法のリファクタリングを検討する (文書化後、PLAN MODE で再計画)。
+- (保留) `Require67h` の TODO コメント解消
+- (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
+- (保留) `internal/codegen` パッケージの不要パラメータ削除
+- (保留) RESBの計算処理の実装
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)
