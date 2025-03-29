@@ -52,10 +52,10 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 
 	// Calculate size based on Immediate
 	if e.Immediate != nil {
-		var immSize int = e.Immediate.Size
-		if options != nil && options.ImmSize > 0 {
-			immSize = options.ImmSize
-		}
+		// Use the size defined by the encoding itself.
+		// options.ImmSize might be used for selection logic elsewhere,
+		// but the encoding's defined size determines the actual output size here.
+		immSize := e.Immediate.Size
 		builder.WriteString(fmt.Sprintf(" immediate:%d", immSize))
 		outputSize += immSize
 	}

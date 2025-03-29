@@ -260,11 +260,11 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 	// 複数のオペランドがあり、一方が小さな即値で、forceImm8 が設定されていない場合にのみ適用
 	if !o.forceImm8 && len(types) >= 2 {
 		// 3つの戻り値 (value, index, found) を正しく処理
-		immValue, immIndex, immFound := lo.FindIndexOf(types, func(t OperandType) bool {
+		/*immValue*/ _, immIndex, immFound := lo.FindIndexOf(types, func(t OperandType) bool { // immValue を _ に変更
 			return t == CodeIMM8 || t == CodeIMM16
 		})
 		if immFound {
-			immType := immValue // 見つかった値を使用
+			// immType := immValue // 未使用のため削除
 
 			// レジスタオペランドを検索、3つの戻り値を正しく処理
 			_, regIndex, regFound := lo.FindIndexOf(types, func(t OperandType) bool {
@@ -279,11 +279,11 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 				// レジスタサイズに基づいて即値をアップグレード
 				if isR32Type(regType) {
 					types[immIndex] = CodeIMM32
-				} else if isR16Type(regType) && immType == CodeIMM8 {
-					types[immIndex] = CodeIMM16
 				}
-				// 注: reg が R16 で imm が IMM16 の場合、変更は不要。
-				// 注: R8 のケースは、該当する場合に特定の処理が必要になる可能性がある (例: ADD AL, 5 -> IMM8)
+				// else if isR16Type(regType) && immType == CodeIMM8 {
+				// 	types[immIndex] = CodeIMM16 // ★ IMM8 を IMM16 にアップグレードしないようにコメントアウト
+				// }
+				// Let asmdb handle the encoding selection based on available forms (imm8 vs imm16)
 			}
 		}
 	}
