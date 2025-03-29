@@ -20,16 +20,14 @@
     - しかし、修正が広範囲に及び複雑化したため、ユーザー指示により中断。コード変更はユーザーが手動で revert する。
 
 ## 次のステップ
-- **Memory Bank 文書化**: 今回の調査結果 (オペランド受け渡しフロー、`Emit` インターフェースの問題点) を `technical_notes.md` に文書化する。
 - **コード Revert 待ち**: ユーザーによるコード変更の revert を待つ。
 - Revert 後、再度 `test/day03_harib00i_test.go` を実行し、エラー状況を確認する。
 - **根本解決の検討**: `CodegenClient.Emit` インターフェースの変更を含む、オペランド受け渡し方法のリファクタリングを検討する (文書化後、PLAN MODE で再計画)。
 - (保留) `Require67h` の TODO コメント解消
-- (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
-- (保留) `internal/codegen` パッケージの不要パラメータ削除
 - (保留) RESBの計算処理の実装
 
 ## 関連情報
+- [オペランド受け渡しフローと CodegenClient.Emit インターフェースの問題点 (2025/03/29)](memory-bank/details/technical_notes.md#オペランド受け渡しフローと-codegenclientemit-インターフェースの問題点-20250329)
 [technical_notes.md](../details/technical_notes.md)
 [implementation_details.md](../details/implementation_details.md)
 (過去の変更点: [activeContext_archive_202503.md](../archives/activeContext_archive_202503.md))
