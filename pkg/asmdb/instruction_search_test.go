@@ -25,7 +25,7 @@ func TestFindEncoding(t *testing.T) {
 	encoding, err := db.FindEncoding("MOV", operand.NewOperandFromString("AL, [SI]")) // MOV AL, [SI]
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
-	assert.Equal(t, 2, encoding.GetOutputSize(&OutputSizeOptions{}))
+	assert.Equal(t, 2, encoding.GetOutputSize(nil)) // Pass nil for options
 
 	encoding, err = db.FindEncoding("MOV", operand.NewOperandFromString("NONEXISTENT"))
 	assert.Error(t, err)

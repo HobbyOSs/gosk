@@ -1,7 +1,9 @@
 package asmdb
 
 import (
+	"fmt"
 	"log"
+	"strings"
 )
 
 type OutputSizeOptions struct {
@@ -10,30 +12,32 @@ type OutputSizeOptions struct {
 
 func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 	outputSize := 0
-
-	// Log the start of the calculation
-	log.Printf("debug: [pass1] --- get_output_size ---")
+	var builder strings.Builder
 
 	// Calculate size based on REX
 	if e.REX != nil && e.REX.Mandatory {
-		log.Printf("debug: [pass1] bytes rex %d", e.REX.getSize())
-		outputSize += e.REX.getSize()
+		size := e.REX.getSize()
+		builder.WriteString(fmt.Sprintf(" rex:%d", size))
+		outputSize += size
 	}
 
 	// Calculate size based on VEX
 	if e.VEX != nil {
-		log.Printf("debug: [pass1] bytes vex %d", e.VEX.getSize())
-		outputSize += e.VEX.getSize()
+		size := e.VEX.getSize()
+		builder.WriteString(fmt.Sprintf(" vex:%d", size))
+		outputSize += size
 	}
 
 	// Calculate size based on Opcode
-	log.Printf("debug: [pass1] bytes opcode %d", e.Opcode.getSize())
-	outputSize += e.Opcode.getSize()
+	sizeOpcode := e.Opcode.getSize()
+	builder.WriteString(fmt.Sprintf(" opcode:%d", sizeOpcode))
+	outputSize += sizeOpcode
 
 	// Calculate size based on ModRM
 	if e.ModRM != nil {
-		log.Printf("debug: [pass1] bytes modrm %d", e.ModRM.getSize())
-		outputSize += e.ModRM.getSize()
+		size := e.ModRM.getSize()
+		builder.WriteString(fmt.Sprintf(" modrm:%d", size))
+		outputSize += size
 	}
 
 	// Calculate size based on Immediate
@@ -42,22 +46,25 @@ func (e *Encoding) GetOutputSize(options *OutputSizeOptions) int {
 		if options != nil && options.ImmSize > 0 {
 			immSize = options.ImmSize
 		}
-		log.Printf("debug: [pass1] bytes immediate %d", immSize)
+		builder.WriteString(fmt.Sprintf(" immediate:%d", immSize))
 		outputSize += immSize
 	}
 
 	// Calculate size based on DataOffset
 	if e.DataOffset != nil {
-		log.Printf("debug: [pass1] bytes data offset %d", e.DataOffset.Size)
-		outputSize += e.DataOffset.Size
+		size := e.DataOffset.Size
+		builder.WriteString(fmt.Sprintf(" data_offset:%d", size))
+		outputSize += size
 	}
 
 	// Calculate size based on CodeOffset
 	if e.CodeOffset != nil {
-		log.Printf("debug: [pass1] bytes code offset %d", e.CodeOffset.Size)
-		outputSize += e.CodeOffset.Size
+		size := e.CodeOffset.Size
+		builder.WriteString(fmt.Sprintf(" code_offset:%d", size))
+		outputSize += size
 	}
 
+	log.Printf("trace: [pass1] output_size_details:%s total:%d", builder.String(), outputSize)
 	return outputSize
 }
 
