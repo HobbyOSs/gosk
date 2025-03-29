@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Import cpu package for BitMode
 )
 
 // handleLGDT handles the LGDT instruction and generates the appropriate machine code.
@@ -30,16 +32,31 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 	// Opcode: 0F 01
 	machineCode := []byte{0x0F, 0x01}
 
-	// ModR/M: mod=00, reg=2 (010), r/m=5 (101) -> 00010101 -> 0x15
-	// This indicates disp32 addressing mode.
-	machineCode = append(machineCode, 0x15)
+	var modrmByte byte
+	var dispBytes []byte
 
-	// Displacement: 32-bit address of the label
-	dispBytes := make([]byte, 4)
-	binary.LittleEndian.PutUint32(dispBytes, uint32(addr))
+	// Determine ModR/M and displacement based on BitMode
+	switch ctx.BitMode {
+	case cpu.MODE_16BIT:
+		// ModR/M: mod=00, reg=2 (010), r/m=6 (110) -> 00010110 -> 0x16 for [disp16]
+		modrmByte = 0x16
+		// Displacement: 16-bit address of the label
+		dispBytes = make([]byte, 2)
+		binary.LittleEndian.PutUint16(dispBytes, uint16(addr))
+	case cpu.MODE_32BIT:
+		// ModR/M: mod=00, reg=2 (010), r/m=5 (101) -> 00010101 -> 0x15 for [disp32]
+		modrmByte = 0x15
+		// Displacement: 32-bit address of the label
+		dispBytes = make([]byte, 4)
+		binary.LittleEndian.PutUint32(dispBytes, uint32(addr))
+	default:
+		return nil, fmt.Errorf("unsupported bit mode for LGDT: %v", ctx.BitMode)
+	}
+
+	machineCode = append(machineCode, modrmByte)
 	machineCode = append(machineCode, dispBytes...)
 
-	log.Printf("debug: Generated LGDT machine code: % x", machineCode)
+	log.Printf("debug: Generated LGDT machine code (%s): % x", ctx.BitMode, machineCode)
 
 	return machineCode, nil
 }

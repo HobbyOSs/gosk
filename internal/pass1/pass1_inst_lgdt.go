@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
+	"github.com/HobbyOSs/gosk/pkg/cpu"        // Import cpu package
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
@@ -39,20 +40,25 @@ func processLGDT(env *Pass1, tokens []*token.ParseToken) {
 		opTypes[0] == ng_operand.CodeM8 ||
 		opTypes[0] == ng_operand.CodeM16 ||
 		opTypes[0] == ng_operand.CodeM32 ||
-		opTypes[0] == ng_operand.CodeM64)
+		opTypes[0] == ng_operand.CodeM64 ||
+		opTypes[0] == ng_operand.CodeMEM) // Include CodeMEM
 	if !isMem {
-		fmt.Printf("LGDT instruction expects a memory operand, got %v\n", opTypes)
+		fmt.Printf("LGDT instruction expects a memory operand, got %v (raw: %s)\n", opTypes, operands.InternalString())
 		return
 	}
 
-	// Restore LOC calculation
-	size, err := env.AsmDB.FindMinOutputSize("LGDT", operands)
-	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error finding min output size for LGDT %s: %v\n", strings.Join(args, ","), err)
-		return // エラーが発生したら処理を中断
+	// Calculate LGDT size based on BitMode
+	var lgdtSize int32
+	switch env.BitMode {
+	case cpu.MODE_16BIT:
+		lgdtSize = 2 + 1 + 2 // Opcode + ModRM + disp16
+	case cpu.MODE_32BIT:
+		lgdtSize = 2 + 1 + 4 // Opcode + ModRM + disp32
+	default:
+		fmt.Printf("Error: Unsupported bit mode %v for LGDT size calculation\n", env.BitMode)
+		return
 	}
-	env.LOC += int32(size)
+	env.LOC += lgdtSize
 
 	env.Client.Emit(fmt.Sprintf("LGDT %s\n", strings.Join(args, ",")))
 }

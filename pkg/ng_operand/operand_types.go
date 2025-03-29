@@ -139,6 +139,7 @@ type MemoryInfo struct {
 	Scale        int    // スケールファクタ (1, 2, 4, 8) - インデックスレジスタに適用
 	Displacement int64  // ディスプレースメント (オフセット値)
 	IsHexDisp    bool   // ディスプレースメントが16進数表記だったか
+	DispLabel    string // ディスプレースメントがラベルの場合のラベル名
 	Segment      string // セグメントオーバーライドプレフィックス (例: "ES", "CS:")
 }
 

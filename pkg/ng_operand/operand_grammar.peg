@@ -55,8 +55,27 @@ Operand <- MemoryAddress / SegmentedNonMemOperand / Register / Immediate / JumpL
 // --- Memory Address ---
 // Added ptrQualifier
 // 例: BYTE PTR [EBX + ESI*4 + 100], WORD [label + EAX], DWORD ES:[EDI], FAR PTR ES:[EBX]
-MemoryAddress <- ptrQualifier:(("FAR" _)? "PTR" _)? dt:DataType? _ jt:JumpType? _ seg:(SegmentRegisterName _ ':' _)? '[' _ body:MemoryBody _ ']' {
-    memInfo := body.(*MemoryInfo)
+MemoryAddress <- ptrQualifier:(("FAR" _)? "PTR" _)? dt:DataType? _ jt:JumpType? _ seg:(SegmentRegisterName _ ':' _)? '[' body:MemoryBody _ ']' { // Removed _ after '['
+    var memInfo *MemoryInfo
+    // Check the type of body and extract *MemoryInfo
+    switch b := body.(type) {
+    case *MemoryInfo:
+        memInfo = b
+    case []interface{}:
+        // Find *MemoryInfo within the slice (usually the middle element due to leading/trailing _)
+        for _, item := range b {
+            if mi, ok := item.(*MemoryInfo); ok {
+                memInfo = mi
+                break
+            }
+        }
+    default:
+         return nil, failure.New(failure.StringCode("ParseError"), failure.Messagef("unexpected type for MemoryBody result: %T", body))
+    }
+    if memInfo == nil {
+         return nil, failure.New(failure.StringCode("ParseError"), failure.Messagef("could not extract MemoryInfo from MemoryBody result"))
+    }
+
     var dataType ast.DataType // ast.DataType を使用
     if dt != nil {
         // dt is []byte
@@ -130,10 +149,10 @@ SegmentedNonMemOperand <- seg:SegmentRegisterName _ ':' _ op:(Register / Label /
 }
 
 // MemoryBody のルールをより網羅的に修正
-MemoryBody <- BaseIndexScaleDisp / BaseIndexDisp / BaseScaleDisp / IndexScaleDisp / BaseDisp / IndexDisp / BaseIndex / BaseOnly / IndexOnly / DispOnly // Action removed
+MemoryBody <- _ (BaseIndexScaleDisp / BaseIndexDisp / BaseScaleDisp / IndexScaleDisp / BaseDisp / IndexDisp / BaseIndex / BaseOnly / IndexOnly / DispOnly) _ // Added leading/trailing _
 
 // 各 MemoryBody ルールの詳細定義とアクション
-BaseIndexScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale op2:AddOp disp:ImmediateValue {
+BaseIndexScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale op2:AddOp disp:ImmediateValue { // Removed internal _
     baseReg := string(base.([]byte))
     indexReg := string(index.([]byte))
     scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
@@ -144,7 +163,7 @@ BaseIndexScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale
     if string(op2.([]byte)) == "-" { dispVal = -dispVal }
     return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: scaleVal, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
-BaseIndexDisp <- base:RegisterName op1:AddOp index:RegisterName op2:AddOp disp:ImmediateValue {
+BaseIndexDisp <- base:RegisterName op1:AddOp index:RegisterName op2:AddOp disp:ImmediateValue { // Removed internal _
     baseReg := string(base.([]byte))
     indexReg := string(index.([]byte))
     dispVal := toInt(string(disp.([]byte)))
@@ -154,14 +173,14 @@ BaseIndexDisp <- base:RegisterName op1:AddOp index:RegisterName op2:AddOp disp:I
     if string(op2.([]byte)) == "-" { dispVal = -dispVal }
     return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: 1, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
-BaseScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale { // Dispなしのパターン (例: [EAX+EBX*4]) - op1 is AddOp
+BaseScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale { // Dispなしのパターン (例: [EAX+EBX*4]) - op1 is AddOp // Removed internal _
     baseReg := string(base.([]byte))
     indexReg := string(index.([]byte))
     scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
     // op1 is usually '+'
     return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: scaleVal}, nil
 }
-IndexScaleDisp <- index:RegisterName scale:Scale op1:AddOp disp:ImmediateValue { // op1 is AddOp
+IndexScaleDisp <- index:RegisterName scale:Scale op1:AddOp disp:ImmediateValue { // op1 is AddOp // Removed internal _
     indexReg := string(index.([]byte))
     scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
     dispVal := toInt(string(disp.([]byte)))
@@ -170,7 +189,7 @@ IndexScaleDisp <- index:RegisterName scale:Scale op1:AddOp disp:ImmediateValue {
     if string(op1.([]byte)) == "-" { dispVal = -dispVal }
     return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
-BaseDisp <- base:RegisterName op1:AddOp disp:ImmediateValue { // op1 is AddOp
+BaseDisp <- base:RegisterName op1:AddOp disp:ImmediateValue { // op1 is AddOp // Removed internal _
     baseReg := string(base.([]byte))
     dispVal := toInt(string(disp.([]byte)))
     isHex := isHex(string(disp.([]byte)))
@@ -178,7 +197,7 @@ BaseDisp <- base:RegisterName op1:AddOp disp:ImmediateValue { // op1 is AddOp
     if string(op1.([]byte)) == "-" { dispVal = -dispVal }
     return &MemoryInfo{BaseReg: baseReg, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
-IndexDisp <- index:RegisterName op1:AddOp disp:ImmediateValue { // Baseなし、Indexあり、Dispあり - op1 is AddOp
+IndexDisp <- index:RegisterName op1:AddOp disp:ImmediateValue { // Baseなし、Indexあり、Dispあり - op1 is AddOp // Removed internal _
      indexReg := string(index.([]byte))
      dispVal := toInt(string(disp.([]byte)))
      isHex := isHex(string(disp.([]byte)))
@@ -186,17 +205,17 @@ IndexDisp <- index:RegisterName op1:AddOp disp:ImmediateValue { // Baseなし、
      if string(op1.([]byte)) == "-" { dispVal = -dispVal }
      return &MemoryInfo{IndexReg: indexReg, Scale: 1, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
-BaseIndex <- base:RegisterName op1:AddOp index:RegisterName { // op1 is AddOp
+BaseIndex <- base:RegisterName op1:AddOp index:RegisterName { // op1 is AddOp // Removed internal _
     baseReg := string(base.([]byte))
     indexReg := string(index.([]byte))
     // op1 は通常 '+'
     return &MemoryInfo{BaseReg: baseReg, IndexReg: indexReg, Scale: 1}, nil
 }
-BaseOnly <- base:RegisterName {
+BaseOnly <- base:RegisterName { // Removed internal _
     // base is []byte
     return &MemoryInfo{BaseReg: string(base.([]byte))}, nil
 }
-IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプショナル
+IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプショナル // Removed internal _
     // index is []byte
     indexReg := string(index.([]byte))
     scaleVal := 1
@@ -206,11 +225,30 @@ IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプ�
     }
     return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal}, nil
 }
-DispOnly <- disp:ImmediateValue {
-    // disp is []byte
-    dispVal := toInt(string(disp.([]byte)))
-    isHex := isHex(string(disp.([]byte)))
-    return &MemoryInfo{Displacement: dispVal, IsHexDisp: isHex}, nil
+DispOnly <- disp:(ImmediateValue / Label) { // Allow Label as displacement // Removed internal _
+    // disp can be []byte (ImmediateValue) or *ParsedOperandPeg (Label)
+    var dispVal int64
+    var isHexValue bool // Renamed local variable to avoid shadowing helper function
+    var label string
+
+    switch v := disp.(type) {
+    case []byte: // ImmediateValue
+        immStr := string(v)
+        dispVal = toInt(immStr)
+        isHexValue = isHex(immStr) // Call the helper function isHex and assign to isHexValue
+    case *ParsedOperandPeg: // Label
+        if v.Type == CodeLABEL {
+             label = v.Label
+        } else {
+             // Should not happen based on the rule, but handle defensively
+             return nil, failure.New(failure.StringCode("ParseError"), failure.Messagef("unexpected type in DispOnly: %T", v))
+        }
+    default:
+        return nil, failure.New(failure.StringCode("ParseError"), failure.Messagef("unexpected type in DispOnly: %T", disp))
+    }
+
+    // Add DispLabel back now that MemoryInfo struct is updated
+    return &MemoryInfo{Displacement: dispVal, IsHexDisp: isHexValue, DispLabel: label}, nil // Use isHexValue here
 }
 
 

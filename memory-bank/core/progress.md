@@ -66,13 +66,22 @@
 - **ModR/M 生成ロジックの修正 (2025/03/30)**:
     - `internal/codegen/x86gen_utils.go`: `calculateModRM` 関数を修正し、16ビットモードで32ビットアドレッシングモード (`67h` プレフィックスが必要なケース) が指定された場合に対応。
     - `internal/codegen/x86gen_test.go`: テスト構造を改善し `BitMode` を指定可能に。関連テストケースを追加・修正し、`TestGenerateX86` が成功することを確認。
+- **OUT命令の fallback 定義修正 (2025/03/30)**:
+    - `pkg/asmdb/instruction_table_fallback.go` の `OUT imm8, AL` 等のオペランド順序を修正。
+- **`pkg/ng_operand` パーサー修正 (2025/03/30)**:
+    - `operand_grammar.peg` を修正し、`MemoryAddress` ルールのアクションで `MemoryBody` の結果 (`[]interface{}` または `*MemoryInfo`) を正しく処理するように変更。
+    - `DispOnly` ルールがラベル (`IdentFactor`) を受け付けるように修正し、`MemoryInfo` に `DispLabel` フィールドを追加。
+    - `DispOnly` アクション内の変数名衝突 (`isHex`) を修正。
+    - これにより `LGDT [ label ]` 形式のメモリオペランドのパースエラーを解消。
+- **MOV命令の fallback 定義修正 (2025/03/30)**:
+    - `pkg/asmdb/instruction_table_fallback.go` の `MOV creg, r32` / `MOV r32, creg` のオペランドタイプを `"creg"` に修正。
+- **LGDT命令の処理修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_lgdt.go`: ビットモードに応じて ModR/M とディスプレースメントを正しく生成するように修正。
+    - `internal/pass1/pass1_inst_lgdt.go`: ビットモードに応じて命令サイズを正しく計算するように修正 (asmdb 呼び出し削除)。
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` のエラー対応 (継続):**
-    - ModR/M関連のエラーは解消されたが、以下の問題が残っている。
-        - `OUT imm8, AL` のエンコーディングが見つからない。
-        - `LGDT [ GDTR0 ]` のオペランドパースエラー。
-        - `MOV CR0, reg` / `MOV reg, CR0` のエンコーディングが見つからない。
+    - これまでの修正で主要なエラーは解消されたが、バイナリ差分と長さの不一致 (expected 304, actual 303) が残っている。ジャンプ命令のオフセット計算などに問題がある可能性。
 - **`pkg/ng_operand` への段階的置換**:
     - `internal/pass1`, `internal/codegen`, `pkg/asmdb` など、`pkg/operand` を利用している箇所を `pkg/ng_operand` に置き換える。
     - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネームする。

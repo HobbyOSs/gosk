@@ -73,39 +73,42 @@ func addOutFallbackEncodings() {
 	instructionData.Instructions["OUT"] = Instruction{
 		Summary: "Output to Port",
 		Forms: []InstructionForm{
+			// OUT imm8, AL (Intel syntax: OUT port, data)
 			{
 				Operands: &[]Operand{
-					{Type: "al", Input: Bool(true), Output: Bool(false)},
-					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Port
+					{Type: "al", Input: Bool(true), Output: Bool(false)},   // Data
 				},
 				Encodings: []Encoding{
 					{
 						Opcode:    Opcode{Byte: "E6"},
-						Immediate: &Immediate{Size: 1, Value: "#0"},
+						Immediate: &Immediate{Size: 1, Value: "#0"}, // imm8 is the first operand (#0)
 					},
 				},
 			},
+			// OUT imm8, AX
 			{
 				Operands: &[]Operand{
-					{Type: "ax", Input: Bool(true), Output: Bool(false)},
-					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Port
+					{Type: "ax", Input: Bool(true), Output: Bool(false)},   // Data
 				},
 				Encodings: []Encoding{
 					{
 						Opcode:    Opcode{Byte: "E7"},
-						Immediate: &Immediate{Size: 1, Value: "#0"},
+						Immediate: &Immediate{Size: 1, Value: "#0"}, // imm8 is the first operand (#0)
 					},
 				},
 			},
+			// OUT imm8, EAX
 			{
 				Operands: &[]Operand{
-					{Type: "eax", Input: Bool(true), Output: Bool(false)},
-					{Type: "imm8", Input: Bool(true), Output: Bool(false)},
+					{Type: "imm8", Input: Bool(true), Output: Bool(false)}, // Port
+					{Type: "eax", Input: Bool(true), Output: Bool(false)},  // Data
 				},
 				Encodings: []Encoding{
 					{
 						Opcode:    Opcode{Byte: "E7"},
-						Immediate: &Immediate{Size: 1, Value: "#0"},
+						Immediate: &Immediate{Size: 1, Value: "#0"}, // imm8 is the first operand (#0)
 					},
 				},
 			},
@@ -255,7 +258,7 @@ func addMovFallbackEncodings() {
 		InstructionForm{
 			Operands: &[]Operand{
 				{Type: "r32", Input: Bool(false), Output: Bool(true)},
-				{Type: "cr", Input: Bool(true), Output: Bool(false)}, // Assuming "cr" type for control registers
+				{Type: "creg", Input: Bool(true), Output: Bool(false)}, // Use "creg" type defined in operand_types.go
 			},
 			Encodings: []Encoding{
 				{
@@ -267,7 +270,7 @@ func addMovFallbackEncodings() {
 		// Add MOV CR0, r32 (0F 22 /r)
 		InstructionForm{
 			Operands: &[]Operand{
-				{Type: "cr", Input: Bool(false), Output: Bool(true)}, // Assuming "cr" type for control registers
+				{Type: "creg", Input: Bool(false), Output: Bool(true)}, // Use "creg" type defined in operand_types.go
 				{Type: "r32", Input: Bool(true), Output: Bool(false)},
 			},
 			Encodings: []Encoding{
@@ -352,7 +355,7 @@ func addLgdtFallbackEncodings() {
 		Forms: []InstructionForm{
 			{
 				Operands: &[]Operand{
-					{Type: "m", Input: Bool(true), Output: Bool(false)},
+					{Type: "mem", Input: Bool(true), Output: Bool(false)}, // Change type from "m" to "mem"
 				},
 				Encodings: []Encoding{
 					{
