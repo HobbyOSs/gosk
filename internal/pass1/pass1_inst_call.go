@@ -24,8 +24,8 @@ func processCALL(env *Pass1, tokens []*token.ParseToken) {
 		if _, ok := env.SymTable[label]; !ok {
 			env.SymTable[label] = 0 // Pass 1では仮アドレス
 		}
-		// CALL rel32 は 5 bytes
-		env.LOC += 5
+		// Pass1では rel16 を仮定する (CALL rel16 は 3 bytes: E8 + 2 bytes offset)
+		env.LOC += 3
 
 		// Ocodeを生成 (ジャンプ先アドレスはプレースホルダー)
 		// プレースホルダーとしてラベルを使用

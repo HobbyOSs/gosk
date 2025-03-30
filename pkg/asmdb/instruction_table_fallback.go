@@ -19,7 +19,7 @@ func addImulFallbackEncodings() {
 				Encodings: []Encoding{
 					{
 						Opcode:    Opcode{Byte: "6B"},
-						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#0"}, // Corrected: Reg should refer to the destination register (#0)
 						Immediate: &Immediate{Size: 1, Value: "#1"},
 					},
 				},
@@ -32,7 +32,7 @@ func addImulFallbackEncodings() {
 				Encodings: []Encoding{
 					{
 						Opcode:    Opcode{Byte: "6B"},
-						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#1"},
+						ModRM:     &Modrm{Mode: "11", Rm: "#0", Reg: "#0"}, // Corrected: Reg should refer to the destination register (#0)
 						Immediate: &Immediate{Size: 1, Value: "#1"},
 					},
 				},

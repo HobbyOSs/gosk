@@ -12,6 +12,7 @@ const (
 	OpRESB                      // RESB n または RESB n-$
 	OpMOV                       // MOV dst, src
 	OpADD                       // ADD
+	OpSUB                       // SUB (Added)
 	OpAND                       // AND (Added)
 	OpOR                        // OR
 	OpXOR                       // XOR

@@ -56,7 +56,7 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 	machineCode = append(machineCode, modrmByte)
 	machineCode = append(machineCode, dispBytes...)
 
-	log.Printf("debug: Generated LGDT machine code (%s): % x", ctx.BitMode, machineCode)
+	log.Printf("debug: Generated LGDT machine code: %x", machineCode)
 
 	return machineCode, nil
 }

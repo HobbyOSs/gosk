@@ -28,9 +28,18 @@ func handleCALL(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("invalid opcode kind for handleCALL: %v", params.OCode.Kind)
 	}
 
-	// CALL rel32 (オペコード: e8, オフセット: 4 bytes)
-	offset := destAddr - currentAddr - 5
-	machineCode = []byte{0xe8, byte(offset), byte(offset >> 8), byte(offset >> 16), byte(offset >> 24)}
+	// オフセットを計算 (仮に rel32 として計算)
+	offset32 := destAddr - currentAddr - 5
+
+	// オフセットが rel16 の範囲内か確認
+	if offset32 >= -32768 && offset32 <= 32767 {
+		// CALL rel16 (オペコード: e8, オフセット: 2 bytes)
+		offset16 := destAddr - currentAddr - 3 // rel16 の命令長は 3 バイト
+		machineCode = []byte{0xe8, byte(offset16), byte(offset16 >> 8)}
+	} else {
+		// CALL rel32 (オペコード: e8, オフセット: 4 bytes)
+		machineCode = []byte{0xe8, byte(offset32), byte(offset32 >> 8), byte(offset32 >> 16), byte(offset32 >> 24)}
+	}
 
 	return machineCode, nil
 }

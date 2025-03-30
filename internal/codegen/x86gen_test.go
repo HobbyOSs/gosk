@@ -192,7 +192,7 @@ func TestGenerateX86(t *testing.T) {
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpCALL, Operands: []string{"0x1234"}},
 			},
-			expected: []byte{0xe8, 0x2f, 0x12, 0x00, 0x00}, // CALL 0x1234 = e8 2f 12 00 00 (little endian)
+			expected: []byte{0xe8, 0x31, 0x12},
 		},
 		{
 			name:    "MOV ECX, [ EBX + 16 ] (16bit)", // 16bit mode with 32bit operand and address size prefixes

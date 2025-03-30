@@ -113,13 +113,13 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 
 	switch getOffsetSize(destAddr - currentAddr) {
 	case 1:
-		offset := destAddr - currentAddr - 2
+		offset := destAddr - currentAddr - 2 // rel8: Opcode (1) + Offset (1) = 2 bytes
 		machineCode = []byte{opcode, byte(offset)}
-	case 2:
-		offset := destAddr - currentAddr - 2
+	case 2: // rel16
+		offset := destAddr - currentAddr - 4 // rel16: Opcode (2) + Offset (2) = 4 bytes
 		machineCode = []byte{0x0f, opcode + 0x10, byte(offset), byte(offset >> 8)}
 	default: // rel32
-		offset := destAddr - currentAddr - 6 // Opcode (2) + Offset (4) = 6 bytes
+		offset := destAddr - currentAddr - 6 // rel32: Opcode (2) + Offset (4) = 6 bytes
 		machineCode = []byte{
 			0x0f,
 			opcode + 0x10, // Jcc rel32 opcode (e.g., 0x87 for JA)

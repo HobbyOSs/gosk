@@ -86,7 +86,6 @@ var opcodeMap = map[ocode.OcodeKind]byte{
 	ocode.OpHLT:      0xF4,
 	ocode.OpICEBP:    0xF1,
 	ocode.OpIDIV:     0xF6,
-	ocode.OpIMUL:     0xF6,
 	ocode.OpINTO:     0xCE,
 	ocode.OpINVD:     0x08,
 	ocode.OpIRET:     0xCF,
