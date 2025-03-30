@@ -16,7 +16,7 @@ func TestDay03Suite(t *testing.T) {
 
 func (s *Day03Suite) SetupSuite() {
 	setUpColog(true)
-	UseAnsiColorForDiff = true // Set the package-level variable
+	UseAnsiColorForDiff = false // Set the package-level variable
 }
 
 func (s *Day03Suite) TearDownSuite() {}
