@@ -41,44 +41,20 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 		return nil, errors.New("一致するエンコーディングが見つかりません")
 	}
 
-	// アキュムレータ形式が見つかった場合、それを優先する
-	var allEncodings []*Encoding
-	isAccFormFound := lo.SomeBy(filteredForms, func(form InstructionForm) bool {
-		// フォーム自体がアキュムレータ固有の形式（例：オペランドが "ax, imm16"）かどうかを確認
-		// このチェックはフォームの定義方法に基づいて改良が必要かもしれない
-		// より簡単なチェックは、このフォームに対する filterEncodings が accEncodings を返すかどうか
-		encs := filterEncodings(form, operands) // filterEncodings を呼び出して結果を確認
-		// 返されたエンコーディングがアキュムレータ固有（ModRM==nil, Immediate!=nil）かどうかを確認
-		return len(encs) > 0 && encs[0].ModRM == nil && encs[0].Immediate != nil
+	// フィルタリングされたフォームからすべての可能なエンコーディングを取得
+	// filterEncodings はアキュムレータ形式とその他の形式を区別せずに返すようになった
+	allEncodings := lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
+		return filterEncodings(form, operands)
 	})
 
-	if isAccFormFound {
-		// アキュムレータ形式からのみエンコーディングを考慮する
-		allEncodings = lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
-			encs := filterEncodings(form, operands)
-			// アキュムレータ固有のエンコーディングのみを返す
-			if len(encs) > 0 && encs[0].ModRM == nil && encs[0].Immediate != nil {
-				return encs
-			}
-			return []*Encoding{} // アキュムレータエンコーディングでない場合は空を返す
-		})
-	} else {
-		// アキュムレータ形式が優先されなかった場合、フィルタリングされたすべてのフォームからエンコーディングをフラット化する
-		allEncodings = lo.FlatMap(filteredForms, func(form InstructionForm, _ int) []*Encoding {
-			return filterEncodings(form, operands)
-		})
-	}
-
 	if len(allEncodings) == 0 {
-		// これは、アキュムレータ形式が見つかったが、そのエンコーディングが予期せずフィルタリングされた場合、
-		// または非アキュムレータ形式に適したエンコーディングがなかった場合に発生する可能性がある
-		log.Printf("error: アキュムレータの優先順位付けの後、適切なエンコーディングが見つかりませんでした。")
+		log.Printf("error: フィルタリング後、適切なエンコーディングが見つかりませんでした。opcode=%s, operands=%s", opcode, operands.InternalString())
 		return nil, errors.New("フィルタリング後、適切なエンコーディングが見つかりませんでした")
 	}
 
-	// 最小のエンコーディングサイズを見つける
+	// 最小のエンコーディングサイズを見つける (優先順位付けロジックを再修正)
 	minEncoding := lo.MinBy(allEncodings, func(a, b *Encoding) bool {
-		// 安全のため nil チェック
+		// 1. Nil checks
 		if a == nil {
 			return b != nil
 		}
@@ -86,65 +62,59 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 			return false
 		}
 
-		fitsInImm8 := operands.ImmediateValueFitsIn8Bits()
+		// 2. Validity check (imm8 vs signed 8-bit value)
+		signExtendable := isSignExtendable(opcode)
+		fitsInSignedImm8 := operands.ImmediateValueFitsInSigned8Bits()
 		isAImm8 := a.Immediate != nil && a.Immediate.Size == 1
 		isBImm8 := b.Immediate != nil && b.Immediate.Size == 1
+		isValidA := !(isAImm8 && !fitsInSignedImm8) // Invalid if imm8 form but value doesn't fit signed 8-bit
+		isValidB := !(isBImm8 && !fitsInSignedImm8) // Invalid if imm8 form but value doesn't fit signed 8-bit
 
-		// エンコーディングの有効性を判断
-		isValidA := !(isAImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
-		isValidB := !(isBImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
-
-		// 有効性で比較
 		if isValidA && !isValidB {
 			return true
-		}
+		} // A valid, B invalid -> A wins
 		if !isValidA && isValidB {
 			return false
-		}
+		} // B valid, A invalid -> B wins
 		if !isValidA && !isValidB {
 			return false
-		} // 両方無効ならどちらでも良い (エラー処理は後段で行う)
+		} // Both invalid -> B wins (arbitrary)
 
-		// 両方有効な場合、サイズで比較
-		// TODO: GetOutputSize が実際の即値サイズを考慮するように修正が必要かもしれない
+		// --- Both A and B are valid ---
+
+		// 3. Size comparison
 		sizeA := a.GetOutputSize(nil)
 		sizeB := b.GetOutputSize(nil)
-
 		if sizeA != sizeB {
-			result := sizeA < sizeB
-			return result
+			return sizeA < sizeB // Smaller size wins
 		}
 
-		// --- 符号拡張を考慮した優先順位付け (サイズが同じ場合) ---
-		signExtendable := isSignExtendable(opcode)
+		// --- Sizes are equal ---
 
-		// 1. 符号拡張可能命令 (ADD, SUB, CMP など)
-		if signExtendable {
-			// 即値が imm8 に収まる場合: imm8 形式 (Opcode 83系) を最優先
-			if fitsInImm8 {
-				if isAImm8 && !isBImm8 {
-					return true
-				}
-				if !isAImm8 && isBImm8 {
-					return false
-				}
-			}
-			// 即値が imm8 に収まらない場合、または両方 imm8/非imm8 の場合:
-			// サイズが同じならどちらでも良い (ここでは B を選択)
-			return false
-		}
-
-		// 2. 符号拡張不可命令 (IMUL など)
-		// サイズが同じ場合、imm8 形式を優先 (両方有効な場合のみ)
-		if isAImm8 && !isBImm8 {
+		// 4. Accumulator preference (if sizes are equal)
+		isAccA := a.ModRM == nil && a.Immediate != nil
+		isAccB := b.ModRM == nil && b.Immediate != nil
+		if isAccA && !isAccB {
 			return true
-		}
-		if !isAImm8 && isBImm8 {
+		} // A is Acc, B is not -> A wins
+		if !isAccA && isAccB {
 			return false
+		} // B is Acc, A is not -> B wins
+
+		// --- Sizes are equal, and either both are Acc or neither are Acc ---
+
+		// 5. Imm8 preference (only if sign-extendable and fits signed 8-bit)
+		if signExtendable && fitsInSignedImm8 {
+			if isAImm8 && !isBImm8 {
+				return true
+			} // A is imm8, B is not -> A wins
+			if !isAImm8 && isBImm8 {
+				return false
+			} // B is imm8, A is not -> B wins
 		}
 
-		// サイズも同じで、imm8優先も適用されない場合は false (B を選択)
-		return false
+		// 6. Default (sizes equal, acc status same, imm8 pref doesn't apply)
+		return false // Arbitrarily choose B
 	})
 
 	// 返す前に minEncoding の nil チェックを追加
@@ -185,16 +155,19 @@ func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Enco
 		filteredOtherEncodings = otherEncodings
 	} else {
 		// アキュムレータを使用する場合、その他エンコーディングにModRMフィルタリングを適用
-		hasDirectMem := operands.IsDirectMemory()
+		// hasDirectMem := operands.IsDirectMemory() // Unused variable
 		hasIndirectMem := operands.IsIndirectMemory()
 
 		for _, e := range otherEncodings {
 			// 直接アドレッシングではModRMが不要なので、ModRMを持つエンコーディングは除外
-			if hasDirectMem && e.ModRM != nil {
-				continue
-			}
+			// -> このロジックは誤り。C6/C7命令は直接アドレスでもModRMを使う。
+			// if hasDirectMem && e.ModRM != nil {
+			// 	continue
+			// }
 			// 間接アドレッシングではModRMが必要なので、ModRMを持たないエンコーディングは除外
-			if hasIndirectMem && e.ModRM == nil {
+			// (アキュムレータ専用形式は除く)
+			isAccSpecific := isAcc && e.ModRM == nil && e.Immediate != nil
+			if hasIndirectMem && e.ModRM == nil && !isAccSpecific {
 				continue
 			}
 			filteredOtherEncodings = append(filteredOtherEncodings, e)

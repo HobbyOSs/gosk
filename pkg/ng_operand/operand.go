@@ -43,8 +43,10 @@ type Operands interface {
 	// メモリオペランドがない場合や、ディスプレースメントがない場合は nil を返します。
 	// バイト列のサイズは BitMode に基づいて決定されます。
 	DisplacementBytes() []byte
-	// ImmediateValueFitsIn8Bits は、即値オペランドの値が8ビットに収まるかどうかを返します。
+	// ImmediateValueFitsIn8Bits は、即値オペランドの値が符号なし8ビット (0-255) に収まるかどうかを返します。
 	ImmediateValueFitsIn8Bits() bool
+	// ImmediateValueFitsInSigned8Bits は、即値オペランドの値が符号付き8ビット (-128 から 127) に収まるかどうかを返します。
+	ImmediateValueFitsInSigned8Bits() bool
 	// IsControlRegisterOperation は、オペランドに制御レジスタが含まれるかどうかを返します。
 	IsControlRegisterOperation() bool
 }

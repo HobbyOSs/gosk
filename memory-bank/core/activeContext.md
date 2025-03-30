@@ -24,9 +24,17 @@
         - `internal/codegen/x86gen_mov.go`: `handleMOV` で `IsControlRegisterOperation` を使用し、制御レジスタMOVの場合は `0x66` プレフィックスを追加しないように修正。
         - `internal/codegen/x86gen_test.go`: 関連テストケースの期待値を修正。
     - **結果:** `TestGenerateX86` の `MOV EAX, CR0 (16bit)` と `MOV CR0, EAX (16bit)` が PASS するようになった。
+- **`asmdb.FindEncoding` のエンコーディング選択ロジック修正 (imm8/imm32/accumulator)**:
+    - **問題:** `OR EAX, 1` (16bit) で `imm8` 形式 (`83`) ではなく `imm32` 形式 (`0D`) が選択されたり、`SUB ECX, 128` (16bit) で `imm32` 形式 (`81`) ではなく `imm8` 形式 (`83`) が選択されるなど、アキュムレータ形式と `imm8`/`imm32` 形式の選択が不安定だった。
+    - **修正:**
+        - `pkg/ng_operand` に `ImmediateValueFitsInSigned8Bits` メソッドを追加。
+        - `pkg/asmdb/instruction_search.go` の `filterEncodings` を修正し、アキュムレータ形式の優先処理を `FindEncoding` に委譲。
+        - `FindEncoding` 内の `lo.MinBy` の比較ロジックを修正し、有効性（imm8形式は符号付き8bitに収まるか）、サイズ、アキュムレータ専用形式、imm8形式の優先順位を考慮するようにした。
+    - **結果:** `TestGenerateX86` スイート全体が PASS するようになった。
+- **テストケース名修正**: `internal/codegen/x86gen_test.go` のテストケース名からカッコとカンマを削除。
 
 ## 現在の焦点
-- **`IMUL r/m, imm` の ModR/M 生成問題**: `TestGenerateX86/IMUL_ECX_4608_(16bit)` が失敗する原因。`getModRMFromOperands` が `IMUL r/m, imm` 形式 (Opcode 69/6B) を正しく処理できない。
+- **`IMUL r/m, imm` の ModR/M 生成問題**: `TestGenerateX86/IMUL_ECX_4608_16bit` が失敗する原因。`getModRMFromOperands` が `IMUL r/m, imm` 形式 (Opcode 69/6B) を正しく処理できない。
 - **`TestDay03Suite/TestHarib00i` のテスト失敗調査 (継続):**
     - 上記 `IMUL` の問題が原因の一部である可能性。
     - 他の原因（`JMP DWORD ptr`, ラベル/定数/データ定義）も引き続き調査が必要。

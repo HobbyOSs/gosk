@@ -472,6 +472,28 @@ func (o *OperandPegImpl) ImmediateValueFitsIn8Bits() bool {
 	return false // 即値オペランドが見つからない場合、または immOperand が nil の場合
 }
 
+// ImmediateValueFitsInSigned8Bits は、即値オペランドの値が符号付き8ビット (-128 から 127) に収まるかどうかを返します。
+func (o *OperandPegImpl) ImmediateValueFitsInSigned8Bits() bool {
+	// parsedOperands の nil チェックを追加
+	if o.parsedOperands == nil {
+		log.Printf("warn: ImmediateValueFitsInSigned8Bits が nil の parsedOperands で呼び出されました")
+		return false
+	}
+
+	immOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		return p != nil && (p.Type == CodeIMM || p.Type == CodeIMM8 || p.Type == CodeIMM16 || p.Type == CodeIMM32 || p.Type == CodeIMM64)
+	})
+
+	// found が true でも immOperand の nil チェックを追加
+	if found && immOperand != nil {
+		val := immOperand.Immediate
+		// 符号付き8ビットの範囲をチェック
+		return val >= -128 && val <= 127
+	}
+
+	return false // 即値オペランドが見つからない場合、または immOperand が nil の場合
+}
+
 // IsControlRegisterOperation は、オペランドに制御レジスタが含まれるかどうかを返します。
 func (o *OperandPegImpl) IsControlRegisterOperation() bool {
 	return lo.SomeBy(o.parsedOperands, func(p *ParsedOperandPeg) bool {

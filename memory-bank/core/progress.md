@@ -15,11 +15,12 @@
 - diff出力の改善 (`github.com/akedrou/textdiff` 導入)
 - ADD, OUT, MOV, LGDT 命令のエンコーディング/fallback定義修正
 - JMP/CALL の pass1 LOC 計算と codegen エンコーディング修正
+- `asmdb.FindEncoding` のエンコーディング選択ロジック改善 (imm8/imm32/アキュムレータ形式の優先順位付け)
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` のエラー対応 (継続):**
     - バイナリ差分と長さの不一致 (expected 304, actual 300)。
-    - **`IMUL`/`SUB` のエンコーディング選択:** `asmdb.FindEncoding` が即値サイズに基づいて `imm8` (Opcode `6B`/`83`) と `imm32` (Opcode `69`/`81`) を正しく選択できていない。(`lo.MinBy` の比較ロジック修正中)
+    - **`IMUL` のエンコーディング/ModR/M生成:** `IMUL r/m, imm` 形式の処理に問題がある可能性。
     - **`JMP DWORD ptr` のエンコーディング:** `JMP ptr16:32` (Opcode `66 EA cd`) の実装が必要。
     - **ラベル/定数/データ定義:** `bootpack` ラベル等のアドレス解決、定数計算 (`DSKCAC0+512` 等)、`ALIGNB`/`RESB`/`DW`/`DD` の処理にずれがある可能性。
     - (関連) LOC計算のずれ調査。
