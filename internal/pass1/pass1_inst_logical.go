@@ -43,7 +43,7 @@ func processLogicalInst(env *Pass1, operands []ast.Exp, instName string) {
 	env.LOC += int32(size)
 
 	// Emit the command
-	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }
 
 // --- Update callers to use the new signature ---
@@ -92,7 +92,7 @@ func processNOT(env *Pass1, operands []ast.Exp) {
 	env.LOC += int32(size)
 
 	// Emit the command
-	env.Client.Emit(fmt.Sprintf("NOT %s ; (size: %d)", ngOperands.Serialize(), size))
+	env.Client.Emit(fmt.Sprintf("NOT %s", ngOperands.Serialize()))
 }
 
 // SHR命令

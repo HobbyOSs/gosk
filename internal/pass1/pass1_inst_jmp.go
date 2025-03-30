@@ -69,7 +69,7 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 		env.LOC += size
 
 		// Emit Ocode (placeholder format)
-		env.Client.Emit(fmt.Sprintf("%s_FAR %d:%d ; (size: %d)", instName, segment, offset, size))
+		env.Client.Emit(fmt.Sprintf("%s_FAR %d:%d", instName, segment, offset))
 
 	case *ast.ImmExp: // Handle labels (IdentFactor)
 		if factor, ok := op.Factor.(*ast.IdentFactor); ok {

@@ -63,5 +63,5 @@ func processLGDT(env *Pass1, operands []ast.Exp) {
 	env.LOC += lgdtSize
 
 	// Emit the command
-	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), lgdtSize))
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }

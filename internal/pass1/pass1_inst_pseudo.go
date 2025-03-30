@@ -216,5 +216,5 @@ func processRESB(env *Pass1, operands []ast.Exp) {
 	env.LOC += int32(size)
 	// Emit the RESB command with the calculated size.
 	// The original source might have been 'X-$', but we emit the final size.
-	env.Client.Emit(fmt.Sprintf("RESB %d", size))
+	env.Client.Emit(fmt.Sprintf("RESB %d", size)) // No comment needed here
 }

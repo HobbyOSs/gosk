@@ -44,8 +44,8 @@ func processArithmeticInst(env *Pass1, operands []ast.Exp, instName string) {
 	}
 	env.LOC += int32(size)
 
-	// Emit the command
-	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
+	// Emit the command (without comment)
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }
 
 // --- Update callers to use the new signature ---
@@ -134,8 +134,8 @@ func processIMUL(env *Pass1, operands []ast.Exp) {
 	// LOC を加算
 	env.LOC += int32(size)
 
-	// Emit the command
-	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
+	// Emit the command (without comment)
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }
 
 // 符号なし除算命令

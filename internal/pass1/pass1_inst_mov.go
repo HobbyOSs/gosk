@@ -43,5 +43,5 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 
 	// Emit the command
 	// Use the original strings or the serialized version from ngOperands
-	env.Client.Emit(fmt.Sprintf("MOV %s ; (size: %d)", ngOperands.Serialize(), size))
+	env.Client.Emit(fmt.Sprintf("MOV %s", ngOperands.Serialize()))
 }

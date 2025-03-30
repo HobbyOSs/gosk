@@ -45,7 +45,7 @@ func processCALL(env *Pass1, operands []ast.Exp) {
 			env.LOC += int32(size)
 
 			// Ocodeを生成 (ジャンプ先アドレスはプレースホルダー)
-			env.Client.Emit(fmt.Sprintf("%s {{.%s}} ; (size: %d)", instName, label, size))
+			env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
 		} else {
 			log.Printf("Error: Invalid factor type %T within ImmExp for %s operand.", op.Factor, instName)
 		}
@@ -78,7 +78,7 @@ func processCALL(env *Pass1, operands []ast.Exp) {
 		env.SymTable[fakeLabel] = int32(targetAddr) // Store target address
 
 		// Ocodeを生成 (ジャンプ先アドレスはダミー)
-		env.Client.Emit(fmt.Sprintf("%s {{.%s}} ; (size: %d)", instName, fakeLabel, size))
+		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, fakeLabel))
 	// TODO: Handle other operand types like MemoryAddrExp (e.g., CALL DWORD PTR [EAX]) if necessary
 	default:
 		log.Printf("Error: Invalid operand type %T for %s instruction.", operand, instName)
