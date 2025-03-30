@@ -328,15 +328,30 @@ func (imm *ImmExp) Eval(env Env) (Exp, bool) {
 		numExp := NewNumberExp(ImmExp{BaseExp: imm.BaseExp, Factor: newFactor}, val)
 		return numExp, true
 	case *IdentFactor:
-		macroExp, ok := env.LookupMacro(f.Value)
+		identValue := f.Value
+		// Check for '$' first
+		if identValue == "$" {
+			// Use the GetLOC method from the Env interface
+			dollarVal := int64(env.GetLOC()) // Use LOC (int32) as the value of $
+			newFactor := NewNumberFactor(BaseFactor{}, int(dollarVal))
+			numExp := NewNumberExp(ImmExp{BaseExp: imm.BaseExp, Factor: newFactor}, dollarVal)
+			return numExp, true
+			// No need for type assertion or else block here,
+			// as GetLOC is now part of the Env interface.
+		}
+		// If not '$', check for macro
+		macroExp, ok := env.LookupMacro(identValue)
 		if ok {
 			// Recursively evaluate the macro definition
-			return macroExp.Eval(env)
+			// Ensure the macro itself is evaluated
+			evalMacroExp, reduced := macroExp.Eval(env)
+			return evalMacroExp, reduced // Return the evaluated macro expression
 		}
-		// If not a macro, it's an unresolved identifier (like a label)
-		return imm, false
+		// If not a macro or '$', it's an unresolved identifier (like a label)
+		return imm, false // Return the ImmExp containing the IdentFactor
 	case *StringFactor:
-		// Cannot evaluate string factors in arithmetic expressions
+		// String factors themselves don't evaluate arithmetically,
+		// but they are valid factors within an ImmExp. Return as is.
 		return imm, false
 	default:
 		// Unknown factor type

@@ -1,8 +1,6 @@
 package pass1
 
 import (
-	"log" // Import log package
-
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/samber/lo"
 )
@@ -63,20 +61,12 @@ func init() {
 		"SYSENTER", "SYSEXIT", "SYSRET", "TAKEN", "UD2", "VMCALL", "VMLAUNCH", "VMRESUME",
 		"VMXOFF", "WAIT", "WBINVD", "WRMSR", "XGETBV", "XRSTOR", "XSETBV",
 	}
-	// Assign placeholder for no-parameter instructions (processNoParam needs refactoring)
+	// Assign processNoParam for no-parameter instructions
 	for _, op := range noParamOps {
-		localOp := op
-		opcodeEvalFns[localOp] = func(env *Pass1, operands []ast.Exp) {
-			// TODO: Refactor processNoParam and call it here.
-			log.Printf("TODO: Refactor processNoParam for %s and call it.", localOp)
-			// Placeholder logic:
-			// size := calculateNoParamInstructionSize(env, localOp) // Placeholder
-			// env.Client.Emit(localOp) // Placeholder
-			// env.LOC += size
-		}
+		opcodeEvalFns[op] = processNoParam // Assign the actual handler
 	}
-	/* Remove the old SliceToMap block for noParamFns
-	noParamFns := lo.SliceToMap( // Remove this variable declaration
+	/* Remove the old SliceToMap block and placeholder logic
+	noParamFns := lo.SliceToMap(
 		noParamOps,
 		// processNoParam のシグネチャが変わるため、一旦コメントアウト。後で修正する。
 		// func(op string) (string, opcodeEvalFn) {
@@ -147,15 +137,3 @@ func init() {
 	opcodeEvalFns["CALL"] = processCALL // Refactored,
 	opcodeEvalFns["LGDT"] = processLGDT // Refactored,
 }
-
-// --- TraverseAST function moved to traverse.go ---
-
-// --- DefineMacro and LookupMacro moved to traverse.go (as methods on Pass1) ---
-// Note: They are now methods on Pass1 in traverse.go to implement ast.Env
-
-// TODO: Refactor all processXXX functions (opcodeEvalFn implementations)
-// They need to be adapted to the new TraverseAST model:
-// - They should not use the stack (env.Ctx).
-// - They should accept evaluated operands (likely []ast.Exp).
-// - They need to handle size calculation based on evaluated operands.
-// - They need to interact with the CodegenClient using evaluated data.

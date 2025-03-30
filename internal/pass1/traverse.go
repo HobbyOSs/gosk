@@ -193,3 +193,9 @@ func (p *Pass1) LookupMacro(name string) (ast.Exp, bool) {
 	// No fallback to old EquMap needed here for Eval logic
 	return exp, ok
 }
+
+// GetLOC implements the ast.Env interface for Pass1.
+// It returns the current location counter.
+func (p *Pass1) GetLOC() int32 {
+	return p.LOC
+}

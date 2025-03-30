@@ -4,6 +4,8 @@ package ast
 // It provides methods to lookup macros or other definitions.
 type Env interface {
 	LookupMacro(name string) (Exp, bool)
+	// GetLOC returns the current location counter value needed for '$' evaluation.
+	GetLOC() int32
 	// Add other methods needed for evaluation if necessary
 }
 

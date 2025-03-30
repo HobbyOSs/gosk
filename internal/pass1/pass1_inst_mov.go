@@ -28,14 +28,15 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 		return // エラーが発生したら処理を中断
 	}
 
-	// Set BitMode
-	ngOperands = ngOperands.WithBitMode(env.BitMode)
-	// ngOperands = ngOperands.WithForceRelAsImm(true) // Re-evaluate if needed for MOV
+	// Set BitMode and ForceRelAsImm
+	ngOperands = ngOperands.WithBitMode(env.BitMode).
+		WithForceRelAsImm(true) // Force relative symbols (like labels) to be treated as immediates for size calculation
 
 	// Calculate instruction size
 	size, err := env.AsmDB.FindMinOutputSize("MOV", ngOperands)
 	if err != nil {
-		log.Printf("Error finding min output size for MOV %s: %v", operandString, err)
+		// Log operands separately for clarity
+		log.Printf("Error finding min output size for MOV (op1: '%s', op2: '%s'): %v", op1Str, op2Str, err)
 		// Fallback or default size? For now, just log and don't update LOC.
 		return
 	}

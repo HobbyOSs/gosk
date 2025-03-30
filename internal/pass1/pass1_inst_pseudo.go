@@ -79,6 +79,45 @@ func processDB(env *Pass1, operands []ast.Exp) {
 				// Decide how to handle this: skip, add placeholder, or halt?
 				// For now, let's skip adding to ocodes and loc.
 			}
+		// --- Fallback for potentially unevaluated complex expressions ---
+		case *ast.AddExp:
+			// Check if it's a simple AddExp wrapping a MultExp wrapping an ImmExp with StringFactor
+			if len(op.Operators) == 0 && op.HeadExp != nil {
+				multExp := op.HeadExp // op.HeadExp is already *ast.MultExp, no assertion needed
+				if len(multExp.Operators) == 0 && multExp.HeadExp != nil {
+					// multExp.HeadExp is ast.Exp, so type assertion is needed here
+					if immExp, ok := multExp.HeadExp.(*ast.ImmExp); ok {
+						if factor, ok := immExp.Factor.(*ast.StringFactor); ok {
+							log.Printf("Warning: DB received AddExp, but found StringFactor '%s' inside. Processing as string.", factor.Value)
+							strVal := factor.Value
+							loc += int32(len(strVal))
+							for _, char := range []byte(strVal) {
+								ocodes = append(ocodes, int32(char))
+							}
+							continue // Skip default error log
+						}
+					}
+				}
+			}
+			// If not the specific structure above, fall through to the default error
+			log.Printf("Error: Unsupported operand type %T (AddExp structure not recognized for DB).", operand)
+		case *ast.MultExp:
+			// Check if it's a simple MultExp wrapping an ImmExp with StringFactor
+			if len(op.Operators) == 0 && op.HeadExp != nil {
+				if immExp, ok := op.HeadExp.(*ast.ImmExp); ok {
+					if factor, ok := immExp.Factor.(*ast.StringFactor); ok {
+						log.Printf("Warning: DB received MultExp, but found StringFactor '%s' inside. Processing as string.", factor.Value)
+						strVal := factor.Value
+						loc += int32(len(strVal))
+						for _, char := range []byte(strVal) {
+							ocodes = append(ocodes, int32(char))
+						}
+						continue // Skip default error log
+					}
+				}
+			}
+			// If not the specific structure above, fall through to the default error
+			log.Printf("Error: Unsupported operand type %T (MultExp structure not recognized for DB).", operand)
 		default:
 			// This case should ideally not happen if TraverseAST evaluates correctly
 			log.Printf("Error: Unsupported operand type %T in DB directive.", operand)
