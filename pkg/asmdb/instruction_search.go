@@ -77,40 +77,70 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 
 	// 最小のエンコーディングサイズを見つける
 	minEncoding := lo.MinBy(allEncodings, func(a, b *Encoding) bool {
-		// 安全のため MinBy 比較内で nil チェックを追加
-		if a == nil || b == nil {
-			log.Printf("error: nil エンコーディングが MinBy 比較に渡されました (a=%v, b=%v)", a == nil, b == nil)
-			return b == nil // nil でない方を優先
+		// --- Debug Start ---
+		log.Printf("debug: MinBy comparing A: %+v vs B: %+v", a, b)
+		// --- Debug End ---
+
+		// 安全のため nil チェック
+		if a == nil {
+			return b != nil
 		}
-		// エンコーディングの定義済みサイズに基づいて比較（nil オプションを渡す）
+		if b == nil {
+			return false
+		}
+
+		fitsInImm8 := operands.ImmediateValueFitsIn8Bits()
+		isAImm8 := a.Immediate != nil && a.Immediate.Size == 1
+		isBImm8 := b.Immediate != nil && b.Immediate.Size == 1
+
+		// エンコーディングの有効性を判断
+		isValidA := !(isAImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
+		isValidB := !(isBImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
+
+		// --- Debug Start ---
+		log.Printf("debug: MinBy details: fitsInImm8=%v, isAImm8=%v, isBImm8=%v, isValidA=%v, isValidB=%v",
+			fitsInImm8, isAImm8, isBImm8, isValidA, isValidB)
+		// --- Debug End ---
+
+		// 有効性で比較
+		if isValidA && !isValidB {
+			log.Printf("debug: MinBy result: A valid, B invalid -> choose A (true)") // Debug
+			return true
+		}
+		if !isValidA && isValidB {
+			log.Printf("debug: MinBy result: A invalid, B valid -> choose B (false)") // Debug
+			return false
+		}
+		if !isValidA && !isValidB {
+			log.Printf("debug: MinBy result: Both invalid -> choose B (false)") // Debug
+			return false
+		} // 両方無効ならどちらでも良い (エラー処理は後段で行う)
+
+		// 両方有効な場合、サイズで比較
+		// TODO: GetOutputSize が実際の即値サイズを考慮するように修正が必要かもしれない
 		sizeA := a.GetOutputSize(nil)
 		sizeB := b.GetOutputSize(nil)
+		log.Printf("debug: MinBy size comparison: sizeA=%d, sizeB=%d", sizeA, sizeB) // Debug
 
 		if sizeA != sizeB {
-			return sizeA < sizeB
+			result := sizeA < sizeB
+			log.Printf("debug: MinBy result: Different sizes -> choose smaller (A<B: %v)", result) // Debug
+			return result
 		}
 
-		// サイズが等しい場合、該当すれば imm8 エンコーディングを優先する
-		// Size にアクセスする前に Immediate フィールドが nil でないことを確認
-		immSizeA := 0
-		if a.Immediate != nil {
-			immSizeA = a.Immediate.Size
-		}
-		immSizeB := 0
-		if b.Immediate != nil {
-			immSizeB = b.Immediate.Size
-		}
+		// サイズが同じ場合、imm8 形式を優先 (ただし両方有効な場合のみ)
+		if isAImm8 && !isBImm8 {
+			log.Printf("debug: MinBy result: Same size, A is imm8 -> choose A (true)") // Debug
+			return true
+		} // a (imm8) を優先
+		if !isAImm8 && isBImm8 {
+			log.Printf("debug: MinBy result: Same size, B is imm8 -> choose B (false)") // Debug
+			return false
+		} // b (imm8) を優先
 
-		// 他方より大きい場合、imm8（サイズ1）を持つエンコーディングを優先する
-		if immSizeA == 1 && immSizeB > 1 {
-			return true // a (imm8) を優先
-		}
-		if immSizeB == 1 && immSizeA > 1 {
-			return false // b (imm8) を優先
-		}
-
-		// 両方が imm8 であるか、どちらも imm8 でない場合（またはサイズが異なる場合）、元の順序を維持する（または既に処理された sizeA < sizeB に基づく）
-		return false // imm8 優先が適用されない場合のデフォルトケース
+		// サイズも同じで、imm8優先も適用されない場合は false
+		log.Printf("debug: MinBy result: Same size, no imm8 preference -> choose B (false)") // Debug
+		return false
 	})
 
 	// 返す前に minEncoding の nil チェックを追加
@@ -210,7 +240,8 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands) []Instru
 		}
 		return matchOperandsRelaxed(*form.Operands, operands)
 	})
-	return relaxedForms // relaxedForms を返す
+	log.Printf("debug: filterForms returning %d relaxed forms", len(relaxedForms)) // Debug
+	return relaxedForms                                                            // relaxedForms を返す
 }
 
 // GetPrefixSize はプレフィックスバイトのサイズを計算します
@@ -293,15 +324,21 @@ func hasAccumulator(queryOperands ng_operand.Operands) bool { // ng_operand.Oper
 }
 
 func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands) bool { // ng_operand.Operands を使用
-	if formOperands == nil || len(formOperands) != len(queryOperands.OperandTypes()) {
+	queryTypes := queryOperands.OperandTypes() // Get types once
+	if formOperands == nil || len(formOperands) != len(queryTypes) {
+		log.Printf("debug: matchOperandsStrict: Length mismatch (form: %d, query: %d)", len(formOperands), len(queryTypes)) // Debug
 		return false
 	}
-	for i, operand := range formOperands {
-		queryType := string(queryOperands.OperandTypes()[i]) // OperandType を string に変換
-		if operand.Type != queryType {
+	for i, formOp := range formOperands {
+		queryType := string(queryTypes[i]) // OperandType を string に変換
+		formType := formOp.Type
+		log.Printf("debug: matchOperandsStrict: Comparing form[%d] type '%s' with query type '%s'", i, formType, queryType) // Debug
+		if formType != queryType {
+			log.Printf("debug: matchOperandsStrict: Mismatch at index %d", i) // Debug
 			return false
 		}
 	}
+	log.Printf("debug: matchOperandsStrict: Match successful") // Debug
 	return true
 }
 

@@ -48,6 +48,11 @@ func isR16Type(opType OperandType) bool {
 	}
 }
 
+// isCREGType は指定された型が制御レジスタ型かどうかを判定します。
+func isCREGType(opType OperandType) bool {
+	return opType == CodeCREG
+}
+
 // isRegisterType は指定された型がレジスタ型かどうかを判定します。
 func isRegisterType(opType OperandType) bool {
 	switch opType {

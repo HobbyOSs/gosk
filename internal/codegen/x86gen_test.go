@@ -212,6 +212,54 @@ func TestGenerateX86(t *testing.T) {
 			// Correct prefix order: 67h (address) + 66h (operand)
 			expected: []byte{0x67, 0x66, 0x8b, 0x06},
 		},
+		{
+			name:    "MOV EAX, CR0 (16bit)",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"EAX", "CR0"}},
+			},
+			expected: []byte{0x66, 0x0f, 0x20, 0xc0}, // 66h prefix + 0F 20 /r
+		},
+		{
+			name:    "MOV CR0, EAX (16bit)",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"CR0", "EAX"}},
+			},
+			expected: []byte{0x66, 0x0f, 0x22, 0xc0}, // 66h prefix + 0F 22 /r
+		},
+		{
+			name:    "AND EAX, 0x7fffffff (16bit)",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpAND, Operands: []string{"EAX", "0x7fffffff"}},
+			},
+			expected: []byte{0x66, 0x25, 0xff, 0xff, 0xff, 0x7f}, // 66h prefix + AND EAX, imm32
+		},
+		{
+			name:    "OR EAX, 0x00000001 (16bit)",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOR, Operands: []string{"EAX", "0x00000001"}},
+			},
+			expected: []byte{0x66, 0x0d, 0x01, 0x00, 0x00, 0x00}, // 66h prefix + OR EAX, imm32
+		},
+		{
+			name:    "IMUL ECX, 4608 (16bit)", // imm32 form expected
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpIMUL, Operands: []string{"ECX", "4608"}}, // 4608 = 0x1200
+			},
+			expected: []byte{0x66, 0x69, 0xc9, 0x00, 0x12, 0x00, 0x00}, // 66h + IMUL r32, imm32 (69 /r id)
+		},
+		{
+			name:    "SUB ECX, 128 (16bit)", // imm32 form expected (even though value fits in imm8)
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpSUB, Operands: []string{"ECX", "128"}}, // 128 = 0x80
+			},
+			expected: []byte{0x66, 0x81, 0xe9, 0x80, 0x00, 0x00, 0x00}, // 66h + SUB r/m32, imm32 (81 /5 id)
+		},
 	}
 
 	for _, tt := range tests {

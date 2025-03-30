@@ -1,109 +1,40 @@
 # Progress
 
-## 実装済み機能 (要約)
+## 実装済み機能 (要約 - 2025/03)
 - x86アセンブラ解析基盤 (pass1, pass2)
 - Ocode・PEGパーサ等の基礎部分
-- 主要命令実装 (システム命令, 算術命令, CMP, JE, MOV, ADD, JMP)
+- 主要命令実装 (システム命令, 算術命令, CMP, JE, MOV, ADD, JMP, OUT, CALL, 論理, シフト, IN, RET, IMUL, SUB)
 - CodegenClient 関連機能
 - EQU命令の展開
-- `getModRMFromOperands`の返り値の型変更 (`uint32` -> `[]byte`)
-- InstructionForm の Encoding を ModRM の要否で振り分け
-- OUT命令の実装
-- CALL命令の実装
-- 論理命令の実装 (AND, OR, XOR, NOT)
-- 論理シフト/算術シフト命令の実装 (SHR, SHL, SAR) (一部テストはコメントアウト)
-- IN命令の実装 (pass1, codegen, fallback table)
-- RET命令の実装 (pass1, codegen, test)
-- ModR/M 生成ロジックの一部修正 (制御レジスタ対応、16bit/32bit 分岐改善)
-- `internal/codegen/x86gen_utils.go` のリファクタリング (`modeStr`共通化、`ParseMemoryOperand`利用、コメント翻訳等)
-- **ModR/M 生成エラー (`unsupported 16bit mem operand`) の部分修正 (`pkg/operand/modrm_address.go`)**
-- **`BitMode` 伝達ロジックの修正 (`client`, `ocode_client`, `pass1`)**
-- **`codegen` の MOV, ADD ハンドラに `.WithBitMode()` 追加**
-- **JMP rel32 / Jcc rel32 の実装**: `internal/codegen/x86gen_jmp.go` に `rel32` オフセット計算とエンコーディングを追加。
-- **`pkg/operand/requires.go` の修正 (2025/03/28)**:
-    - `Require66h` (オペランドサイズプレフィックス): 16bitモードでの32bit即値判定を `ParsedOperands()` ベースに修正。
-    - `Require67h` (アドレスサイズプレフィックス): 実効アドレスサイズに基づいて判定するようにロジックを修正。
-- **`pkg/operand/requires.go` のリファクタリング (2025/03/28)**:
-    - `Require66h`, `Require67h` 関数を小さく分割し、可読性と保守性を向上。
-    - `is32bitRegInIndirectMem` 関数で正規表現を使用するように修正。
-- **`internal/codegen/x86gen_test.go` の修正 (2025/03/28)**:
-    - `TestGenerateX86/MOV_SI_a_label` テストケースを `TestGenerateX86/MOV SI, 0x0000` に修正。
-- **`pkg/operand` パーサー修正 (2025/03/29):**
-    - `participle` ベースのパーサーにおけるレキサールール、パーサー定義、型決定ロジックの基本的な問題を修正。 (`TestBaseOperand_OperandType` が成功)
-- **`pkg/ng_operand` パッケージの基本構造作成 (2025/03/29):**
-    - pigeon peg ベースの新しいオペランドパーサー用パッケージを作成。
-    - peg文法 (`operand_grammar.peg`), 型定義 (`operand_types.go`), パーサー生成 (`generate.go`, `operand_grammar.go`), ラッパー関数 (`parser.go`) を実装。
-    - 既存の `pkg/operand` からインターフェース (`operand.go`) とテスト (`operand_test.go`) をコピーし、基本的なテスト (`TestRequire66h`, `TestRequire67h`) が通るように `operand_impl.go` を部分的に実装。
-- **`pkg/ng_operand` テストコード移植 (2025/03/29):**
-    - `pkg/operand/operand_impl_test.go` を `pkg/ng_operand/operand_impl_test.go` に移植。
-    - PEG 文法 (`operand_grammar.peg`) を修正し、パースエラーを解消。
-    - テストコード内の型解決ロジックを暫定的に実装（一部テストは失敗中）。
-- **`pkg/ng_operand` リファクタリング (2025/03/29)**:
-    - `OperandPegImpl` 構造体が `[]*ParsedOperandPeg` を保持するように変更。
-    - `OperandTypes` メソッドのサイズ解決ロジックを修正（進行中）。
-    - `requires.go` を作成し、`Require66h`, `Require67h` をメソッドとして移動。
-    - テストファイルを `operand_type_test.go`, `detect_immediate_size_test.go`, `parse_operands_test.go` に分割。
-    - `operand_type_test.go` で適切なビットモードを設定するように修正。
-- **`pkg/ng_operand` のリファクタリングとテスト修正 (2025/03/29):**
-    - `operand_impl.go`, `requires.go` の型解決・サイズ検出ロジックを修正し、関連テストをパスさせた。
-    - ヘルパー関数を `operand_util.go` に分割。
-    - `samber/lo` を導入してコードをリファクタリング。
-- **`pkg/ng_operand` のバグ修正 (2025/03/29)**:
-    - `CalcOffsetByteSize` が16bitモードでディスプレースメントなしの間接アドレッシング (`[BX]`, `[SI]`等) に対しても誤ってオフセットサイズを加算していた問題を修正。
-    - これにより `internal/pass1/eval_test.go` がPASSするようになった。
-- **diff出力の改善 (2025/03/29)**:
-    - `test/diff.go` の `DumpDiff` 関数に `useANSIColor` 引数を追加し、ANSIカラーを使用しないdiff出力オプションを追加。
-    - `github.com/akedrou/textdiff` を依存関係に追加。
-    - 関連するテストファイルの `DumpDiff` 呼び出し箇所を更新。
-- **ADD 命令エンコーディング問題の修正 (2025/03/29)**:
-    - `internal/codegen/x86gen_arithmetic.go`: `.WithForceImm8(true)` を有効に戻した。（結果的にこれが両立する鍵だった）
-    - `pkg/ng_operand/operand_impl.go`: `resolveDependentSizes` で `imm8` を `imm16` にアップグレードするロジックを削除。
-    - `pkg/asmdb/instruction_search.go`:
-        - `matchOperandsWithAccumulator`: 即値タイプの比較を緩和 (`imm8` と `imm16` を区別しない)。
-        - `FindEncoding`: アキュムレータ専用 Form が見つかった場合、そのエンコーディングのみを候補とするように修正。
-        - `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
-    - これにより `TestGenerateX86/ADD_AX,_0x0020` と `TestGenerateX86/ADD_SI,1` の両方、および関連する `TestHarib00c`, `TestHarib00d`, `TestHarib00g` が PASS するようになった。
-- **ModR/M 生成ロジックの修正 (2025/03/30)**:
-    - `internal/codegen/x86gen_utils.go`: `calculateModRM` 関数を修正し、16ビットモードで32ビットアドレッシングモード (`67h` プレフィックスが必要なケース) が指定された場合に対応。
-    - `internal/codegen/x86gen_test.go`: テスト構造を改善し `BitMode` を指定可能に。関連テストケースを追加・修正し、`TestGenerateX86` が成功することを確認。
-- **OUT命令の fallback 定義修正 (2025/03/30)**:
-    - `pkg/asmdb/instruction_table_fallback.go` の `OUT imm8, AL` 等のオペランド順序を修正。
-- **`pkg/ng_operand` パーサー修正 (2025/03/30)**:
-    - `operand_grammar.peg` を修正し、`MemoryAddress` ルールのアクションで `MemoryBody` の結果 (`[]interface{}` または `*MemoryInfo`) を正しく処理するように変更。
-    - `DispOnly` ルールがラベル (`IdentFactor`) を受け付けるように修正し、`MemoryInfo` に `DispLabel` フィールドを追加。
-    - `DispOnly` アクション内の変数名衝突 (`isHex`) を修正。
-    - これにより `LGDT [ label ]` 形式のメモリオペランドのパースエラーを解消。
-- **MOV命令の fallback 定義修正 (2025/03/30)**:
-    - `pkg/asmdb/instruction_table_fallback.go` の `MOV creg, r32` / `MOV r32, creg` のオペランドタイプを `"creg"` に修正。
-- **LGDT命令の処理修正 (2025/03/30)**:
-    - `internal/codegen/x86gen_lgdt.go`: ビットモードに応じて ModR/M とディスプレースメントを正しく生成するように修正。
-    - `internal/pass1/pass1_inst_lgdt.go`: ビットモードに応じて命令サイズを正しく計算するように修正 (asmdb 呼び出し削除)。
+- ModR/M 生成ロジックの改善 (制御レジスタ, 16/32bit 分岐, 32bit アドレッシング)
+- `internal/codegen/x86gen_utils.go` のリファクタリング
+- `BitMode` 伝達ロジックの修正
+- JMP/CALL rel32 の実装
+- `pkg/operand` パーサーの基本的な問題修正と `requires.go` の改善
+- `pkg/ng_operand` パッケージの基本構造作成、テスト移植、リファクタリング、バグ修正
+- diff出力の改善 (`github.com/akedrou/textdiff` 導入)
+- ADD, OUT, MOV, LGDT 命令のエンコーディング/fallback定義修正
+- JMP/CALL の pass1 LOC 計算と codegen エンコーディング修正
 
 ## まだ必要な実装
 - **`test/day03_harib00i_test.go` のエラー対応 (継続):**
-    - これまでの修正で主要なエラーは解消されたが、バイナリ差分と長さの不一致 (expected 304, actual 303) が残っている。ジャンプ命令のオフセット計算などに問題がある可能性。
+    - バイナリ差分と長さの不一致 (expected 304, actual 300)。
+    - **`IMUL`/`SUB` のエンコーディング選択:** `asmdb.FindEncoding` が即値サイズに基づいて `imm8` (Opcode `6B`/`83`) と `imm32` (Opcode `69`/`81`) を正しく選択できていない。(`lo.MinBy` の比較ロジック修正中)
+    - **`JMP DWORD ptr` のエンコーディング:** `JMP ptr16:32` (Opcode `66 EA cd`) の実装が必要。
+    - **ラベル/定数/データ定義:** `bootpack` ラベル等のアドレス解決、定数計算 (`DSKCAC0+512` 等)、`ALIGNB`/`RESB`/`DW`/`DD` の処理にずれがある可能性。
+    - (関連) LOC計算のずれ調査。
+- **エンコーディング検索アーキテクチャの見直し:**
+    - 符号拡張 (`imm8` vs `imm16/32`) の扱いを改善するため、検索方法の見直しを検討 (`relaxImmSearch` アプローチ)。
 - **`pkg/ng_operand` への段階的置換**:
-    - `internal/pass1`, `internal/codegen`, `pkg/asmdb` など、`pkg/operand` を利用している箇所を `pkg/ng_operand` に置き換える。
-    - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネームする。
+    - `internal/pass1`, `internal/codegen`, `pkg/asmdb` 等の利用箇所を置き換え。
+    - 最終的に `pkg/operand` を削除し、`pkg/ng_operand` を `pkg/operand` にリネーム。
+- **`pkg/ng_operand` の改善 (TODOs):**
+    - パーサー: 型推論改善, NEAR/FAR PTR, `ParseOperands` での各種フラグ考慮, 文字列リテラル内カンマ対応。
+    - 実装: QWORD サポート, `CalcOffsetByteSize` / `DetectImmediateSize` の複数オペランド対応。
+    - テスト: 複数オペランド, 未対応ケース, FAR/NEAR PTR, `ParseOperands` 拡充。
 - (保留) RESBの計算処理の実装
 - (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - (保留) `internal/codegen` パッケージの不要パラメータ削除
-- **`pkg/ng_operand` の改善 (TODOs):**
-    - **パーサー (`operand_grammar.peg`, `parser.go`)**:
-        - 型推論の改善 (レジスタに基づくサイズ決定)
-        - NEAR/FAR PTR の型解決
-        - `ParseOperands` で `BitMode`, `ForceImm8`, `ForceRelAsImm` を考慮
-        - 文字列リテラル内のカンマ対応
-    - **実装 (`operand_impl.go`, `requires.go`)**:
-        - QWORD / 64ビットオペランドサポート (M64, R64 関連)
-        - `CalcOffsetByteSize`: 複数オペランド対応、ディスプレースメント値に基づく計算
-        - `DetectImmediateSize`: 複数オペランド対応
-    - **テスト (`detect_immediate_size_test.go`, `operand_type_test.go`, `parse_operands_test.go`)**:
-        - 複数オペランド時の `DetectImmediateSize` テスト修正
-        - `operand_type_test.go` の未対応テストケース (`// TODO: まだ未対応`)
-        - FAR/NEAR PTR のテストケース区別
-        - `ParseOperands` のテストケース拡充 (組み合わせ、エッジケース)
-        - `operand_type_test.go` の `// TODO: サイズプレフィックスがないのでこのパターンはないかも` の確認
 
 ## 関連情報
 [technical_notes.md](../details/technical_notes.md)

@@ -105,3 +105,33 @@ ADD 命令において、以下の2つのケースで不正なエンコーディ
     -   `FindEncoding`: アキュムレータ専用 Form が見つかった場合、そのエンコーディングのみを候補とするように修正。
     -   `FindEncoding` 内 `lo.MinBy`: サイズが同じ場合に `imm8` を優先するロジックを明確化。
 -   (デバッグ用に追加したログは削除)
+
+---
+## 完了した作業 (詳細) - 2025/03/30 アーカイブ
+- **ModR/M 生成ロジックの修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_utils.go`: `calculateModRM` 関数を修正し、16ビットモードで32ビットアドレッシングモード (`67h` プレフィックスが必要なケース) が指定された場合に対応。
+    - `internal/codegen/x86gen_test.go`: テスト構造を改善し `BitMode` を指定可能に。関連テストケースを追加・修正し、`TestGenerateX86` が成功することを確認。
+- **OUT命令の fallback 定義修正 (2025/03/30)**:
+    - `pkg/asmdb/instruction_table_fallback.go` の `OUT imm8, AL` 等のオペランド順序を修正。
+- **`pkg/ng_operand` パーサー修正 (2025/03/30)**:
+    - `operand_grammar.peg` を修正し、`MemoryAddress` ルールのアクションで `MemoryBody` の結果 (`[]interface{}` または `*MemoryInfo`) を正しく処理するように変更。
+    - `DispOnly` ルールがラベル (`IdentFactor`) を受け付けるように修正し、`MemoryInfo` に `DispLabel` フィールドを追加。
+    - `DispOnly` アクション内の変数名衝突 (`isHex`) を修正。
+    - これにより `LGDT [ label ]` 形式のメモリオペランドのパースエラーを解消。
+- **MOV命令の fallback 定義修正 (2025/03/30)**:
+    - `pkg/asmdb/instruction_table_fallback.go` の `MOV creg, r32` / `MOV r32, creg` のオペランドタイプを `"creg"` に修正。
+- **LGDT命令の処理修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_lgdt.go`: ビットモードに応じて ModR/M とディスプレースメントを正しく生成するように修正。
+    - `internal/pass1/pass1_inst_lgdt.go`: ビットモードに応じて命令サイズを正しく計算するように修正 (asmdb 呼び出し削除)。
+- **`pass1` JMP/CALL LOC 計算修正 (2025/03/30)**:
+    - `internal/pass1/pass1_inst_call.go`: ラベル参照時に `CALL rel16` (3バイト) を仮定するように修正。
+    - `internal/pass1/pass1_inst_jmp.go`: ラベル参照時に `JMP rel16` (3バイト) または `Jcc rel16` (4バイト) を仮定するように修正。
+- **`codegen` JMP/CALL エンコーディング修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_call.go`: オフセットに応じて `CALL rel16`/`rel32` を生成するように修正。
+    - `internal/codegen/x86gen_jmp.go`: `Jcc rel16` のオフセット計算を修正。
+- **`codegen` IMUL 命令処理修正 (2025/03/30)**:
+    - `internal/codegen/x86gen_arithmetic.go`: `handleIMUL`, `handleSUB` を追加。
+    - `internal/codegen/x86gen.go`: `OpIMUL`, `OpSUB` を `switch` 文に追加。
+    - `internal/codegen/x86gen_no_param.go`: `opcodeMap` から `OpIMUL` を削除。
+    - `pkg/ocode/ocode.go`: `OpSUB` 定数を追加し、`go generate` を実行。
+    - `pkg/asmdb/instruction_table_fallback.go`: `IMUL r/m, imm` (オペコード `6B`) の `ModRM` 定義を修正。

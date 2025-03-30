@@ -34,6 +34,8 @@ func (o *OperandPegImpl) Require66h() bool {
 			inherentSize = 16
 		case isR32Type(baseType) || (baseType == CodeM && parsed.DataType == ast.Dword):
 			inherentSize = 32
+		case isCREGType(baseType): // Check if it's a control register
+			inherentSize = 32 // Control registers (like CR0) are 32-bit in IA-32e
 		case isR64Type(baseType): // TODO: QWORD がサポートされたら M64 チェックを追加
 			inherentSize = 64
 		case baseType == CodeIMM || baseType == CodeIMM8 || baseType == CodeIMM16 || baseType == CodeIMM32 || baseType == CodeIMM64:

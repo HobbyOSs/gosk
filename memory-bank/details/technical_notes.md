@@ -209,3 +209,34 @@ Pass 1 での命令サイズ事前計算において、より現実に近いサ�
 現在の実装では `GetOutputSize` の `options` 引数は使用されていません。Pass 1 でのサイズ計算 (`FindMinOutputSize`) も `FindEncoding` の結果（最終的に選択されるエンコーディング）に基づいて行われるため、`options.ImmSize` を `GetOutputSize` に渡す必要性は低いと考えられます。
 
 将来的に、`GetOutputSize` のシグネチャから `options *OutputSizeOptions` 引数を削除し、関連する呼び出し箇所 (`FindMinOutputSize` など) も修正することを検討します。これにより、コードが簡略化され、意図がより明確になることが期待されます。
+
+---
+
+## エンコーディング検索アーキテクチャの見直し案 (2025/03/30)
+
+### 概要
+現在の `asmdb.FindEncoding` は、オペランドタイプ (`imm8`, `imm16`, `imm32` など) に基づいて厳密にエンコーディング形式をフィルタリングしています。しかし、符号拡張を伴う命令 (例: `ADD r/m32, imm8`) の場合、即値が `imm8` の範囲内であっても `ng_operand` が `imm32` と解決することがあり、厳密なフィルタリングでは `imm8` 形式 (Opcode `83`) が候補から除外されてしまう問題があります。`forceImm8` フラグはこの問題への対症療法でしたが、他の命令 (`IMUL` など) で副作用がありました。
+
+### 設計提案 (`matchAnyImm` アプローチ)
+1.  **`forceImm8` フラグの廃止:** `ng_operand` と `codegen` から `forceImm8` フラグと関連ロジックを削除します。
+2.  **`FindEncoding` のフィルタリング緩和:**
+    *   `filterForms` (または `matchOperandsStrict`) でのオペランドタイプ比較において、`imm*` (imm, imm8, imm16, imm32, imm64) 同士は常にマッチするとみなします (より広い候補を集める)。(新しいフラグ `matchAnyImm` (仮称) を導入？)
+    *   例えば、`queryType` が `imm32` で `formType` が `imm8` でもマッチ成功とします。
+3.  **`FindEncoding` の絞り込み強化 (`lo.MinBy`):**
+    *   `lo.MinBy` の比較ロジックで、実際の即値 (`operands.ImmediateValueFitsIn8Bits()`) と命令の特性 (符号拡張の有無) を考慮して最適なエンコーディングを選択します。
+    *   **符号拡張あり命令 (ADD, SUB, CMP など Opcode 83系):**
+        *   即値が `imm8` に収まる場合: `imm8` 形式 (Opcode `83`) を最優先。
+        *   即値が `imm8` に収まらない場合: `imm16/32` 形式 (Opcode `81`) を選択。
+    *   **符号拡張なし命令 (IMUL など Opcode 6B/69系):**
+        *   即値が `imm8` に収まる場合: `imm8` 形式 (Opcode `6B`) を優先。
+        *   即値が `imm8` に収まらない場合: `imm16/32` 形式 (Opcode `69`) を選択。
+    *   命令が符号拡張をサポートするかどうかを `asmdb` の定義に追加するか、命令名に基づいて判断するロジックが必要です。
+
+### メリット
+- 符号拡張の有無に応じて、`imm8` と `imm16/32` の形式を適切に使い分けられる。
+- `forceImm8` のような場当たり的なフラグが不要になる。
+- エンコーディング選択ロジックが `FindEncoding` 内に集約される。
+
+### 課題
+- `lo.MinBy` の比較ロジックが複雑化する。
+- 命令が符号拡張 (`imm8`) をサポートするかどうかの情報を `asmdb` または `FindEncoding` が知る必要がある。
