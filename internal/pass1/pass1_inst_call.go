@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	"github.com/HobbyOSs/gosk/internal/ast"   // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Import ng_operand
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
 
 // processCALL handles the CALL instruction.

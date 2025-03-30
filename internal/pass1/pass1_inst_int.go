@@ -5,7 +5,6 @@ import (
 	"log" // Add log import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
 
 // processINT handles the INT instruction.

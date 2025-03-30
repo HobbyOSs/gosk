@@ -401,8 +401,6 @@ func parseChar(s string) (int64, bool) {
 	return int64(charStr[0]), true
 }
 
-// --- Concrete Factor types need Eval too, if they can be reduced --- // TODO: Remove this comment line
-
 // NumberExp represents a fully evaluated numeric constant expression.
 type NumberExp struct {
 	ImmExp       // Embed ImmExp to satisfy Exp interface

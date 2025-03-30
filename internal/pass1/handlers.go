@@ -17,18 +17,17 @@ var (
 )
 
 func init() {
-	// Assign placeholder functions with the new signature to fix compiler errors.
-	// Actual logic implementation will follow.
+	// Assign the refactored handlers to the map.
 
 	// 疑似命令
-	assignPlaceholderHandler("ALIGNB")
-	assignPlaceholderHandler("DB")
-	assignPlaceholderHandler("DD")
-	assignPlaceholderHandler("DW")
-	assignPlaceholderHandler("ORG")
-	assignPlaceholderHandler("RESB")
+	opcodeEvalFns["ALIGNB"] = processALIGNB // Refactored
+	opcodeEvalFns["DB"] = processDB         // Refactored
+	opcodeEvalFns["DD"] = processDD         // Refactored
+	opcodeEvalFns["DW"] = processDW         // Refactored
+	opcodeEvalFns["ORG"] = processORG       // Refactored
+	opcodeEvalFns["RESB"] = processRESB     // Refactored
 
-	// Jump命令 (processCalcJcc needs refactoring)
+	// Jump命令
 	jmpOps := []string{
 		"JA", "JAE", "JB", "JBE", "JC", "JE", "JG", "JGE", "JL", "JLE", "JMP", "JNA", "JNAE",
 		"JNB", "JNBE", "JNC", "JNE", "JNG", "JNGE", "JNL", "JNLE", "JNO", "JNP", "JNS", "JNZ",
@@ -37,15 +36,10 @@ func init() {
 	jmpFns := lo.SliceToMap(
 		jmpOps,
 		func(op string) (string, opcodeEvalFn) {
-			// Placeholder for Jcc instructions
-			return op, func(env *Pass1, operands []ast.Exp) {
-				log.Printf("TODO: Implement Jcc handler for %s with new signature.", op) // Use Printf
-				// Original processCalcJcc logic needs adaptation.
-				// It involves evaluating the target operand (operands[0])
-				// and calculating the relative offset based on env.LOC.
-				// size := calculateJccInstructionSize(env, op, operands[0]) // Placeholder
-				// env.Client.EmitJcc(op, target) // Placeholder
-				// env.LOC += size
+			// Assign the refactored processCalcJcc
+			localOp := op // Capture loop variable
+			return localOp, func(env *Pass1, operands []ast.Exp) {
+				processCalcJcc(env, operands, localOp) // Call refactored handler
 			}
 		},
 	)
@@ -69,15 +63,32 @@ func init() {
 		"SYSENTER", "SYSEXIT", "SYSRET", "TAKEN", "UD2", "VMCALL", "VMLAUNCH", "VMRESUME",
 		"VMXOFF", "WAIT", "WBINVD", "WRMSR", "XGETBV", "XRSTOR", "XSETBV",
 	}
-	// Assign placeholders for no-parameter instructions
+	// Assign placeholder for no-parameter instructions (processNoParam needs refactoring)
 	for _, op := range noParamOps {
-		// Capture op in the closure
 		localOp := op
 		opcodeEvalFns[localOp] = func(env *Pass1, operands []ast.Exp) {
-			// Placeholder implementation for processNoParam
-			log.Printf("TODO: Implement processNoParam for %s with new signature.", localOp) // Use Printf
-			// Original processNoParam logic needs to be adapted here.
-			// It likely involves calling env.Client.EmitXXX() without operands
+			// TODO: Refactor processNoParam and call it here.
+			log.Printf("TODO: Refactor processNoParam for %s and call it.", localOp)
+			// Placeholder logic:
+			// size := calculateNoParamInstructionSize(env, localOp) // Placeholder
+			// env.Client.Emit(localOp) // Placeholder
+			// env.LOC += size
+		}
+	}
+	/* Remove the old SliceToMap block for noParamFns
+	noParamFns := lo.SliceToMap( // Remove this variable declaration
+		noParamOps,
+		// processNoParam のシグネチャが変わるため、一旦コメントアウト。後で修正する。
+		// func(op string) (string, opcodeEvalFn) {
+		// 	return op, processNoParam
+		// },
+		func(op string) (string, opcodeEvalFn) {
+			// TODO: Implement proper processNoParam with new signature
+			return op, func(env *Pass1, operands []ast.Exp) {
+				// Placeholder implementation for processNoParam
+				log.Printf("TODO: Implement processNoParam for %s with new signature.", op) // Use Printf
+				// Original processNoParam logic needs to be adapted here.
+				// It likely involves calling env.Client.EmitXXX() without operands
 			// and calculating the instruction size.
 			// For now, just log and maybe update LOC with a placeholder size.
 			// size := calculateNoParamInstructionSize(env, localOp) // Placeholder function
@@ -108,47 +119,34 @@ func init() {
 	)
 	*/ // End of removed SliceToMap block
 
-	// Assign placeholders for remaining instructions
-	assignPlaceholderHandler("RET")
-	assignPlaceholderHandler("MOV")
-	assignPlaceholderHandler("INT")
-	assignPlaceholderHandler("ADD")
-	assignPlaceholderHandler("ADC")
-	assignPlaceholderHandler("SUB")
-	assignPlaceholderHandler("SBB")
-	assignPlaceholderHandler("CMP")
-	assignPlaceholderHandler("INC")
-	assignPlaceholderHandler("DEC")
-	assignPlaceholderHandler("NEG")
-	assignPlaceholderHandler("MUL")
-	assignPlaceholderHandler("IMUL")
-	assignPlaceholderHandler("DIV")
-	assignPlaceholderHandler("IDIV")
-	assignPlaceholderHandler("AND")
-	assignPlaceholderHandler("OR")
-	assignPlaceholderHandler("XOR")
-	assignPlaceholderHandler("NOT")
-	assignPlaceholderHandler("SHR")
-	assignPlaceholderHandler("SHL")
-	assignPlaceholderHandler("SAR")
-	assignPlaceholderHandler("IN")
-	assignPlaceholderHandler("OUT")
-	assignPlaceholderHandler("CALL")
-	assignPlaceholderHandler("LGDT")
+	// Assign refactored handlers for remaining instructions
+	opcodeEvalFns["RET"] = processRET   // Refactored,
+	opcodeEvalFns["MOV"] = processMOV   // Refactored,
+	opcodeEvalFns["INT"] = processINT   // Refactored,
+	opcodeEvalFns["ADD"] = processADD   // Refactored (uses helper),
+	opcodeEvalFns["ADC"] = processADC   // Refactored (uses helper),
+	opcodeEvalFns["SUB"] = processSUB   // Refactored (uses helper),
+	opcodeEvalFns["SBB"] = processSBB   // Refactored (uses helper),
+	opcodeEvalFns["CMP"] = processCMP   // Refactored (uses helper),
+	opcodeEvalFns["INC"] = processINC   // Refactored (uses helper),
+	opcodeEvalFns["DEC"] = processDEC   // Refactored (uses helper),
+	opcodeEvalFns["NEG"] = processNEG   // Refactored (uses helper),
+	opcodeEvalFns["MUL"] = processMUL   // Refactored (uses helper),
+	opcodeEvalFns["IMUL"] = processIMUL // Refactored,
+	opcodeEvalFns["DIV"] = processDIV   // Refactored (uses helper),
+	opcodeEvalFns["IDIV"] = processIDIV // Refactored (uses helper),
+	opcodeEvalFns["AND"] = processAND   // Refactored (uses helper),
+	opcodeEvalFns["OR"] = processOR     // Refactored (uses helper),
+	opcodeEvalFns["XOR"] = processXOR   // Refactored (uses helper),
+	opcodeEvalFns["NOT"] = processNOT   // Refactored,
+	opcodeEvalFns["SHR"] = processSHR   // Refactored (uses helper),
+	opcodeEvalFns["SHL"] = processSHL   // Refactored (uses helper),
+	opcodeEvalFns["SAR"] = processSAR   // Refactored (uses helper),
+	opcodeEvalFns["IN"] = processIN     // Refactored,
+	opcodeEvalFns["OUT"] = processOUT   // Refactored,
+	opcodeEvalFns["CALL"] = processCALL // Refactored,
+	opcodeEvalFns["LGDT"] = processLGDT // Refactored,
 }
-
-// assignPlaceholderHandler assigns a placeholder function with the new signature.
-func assignPlaceholderHandler(mnemonic string) {
-	opcodeEvalFns[mnemonic] = func(env *Pass1, operands []ast.Exp) {
-		log.Printf("TODO: Implement handler for %s with new signature.", mnemonic) // Use Printf
-		// Placeholder: Calculate size based on operands and update LOC
-		// size := calculateInstructionSize(env, mnemonic, operands) // Placeholder
-		// env.Client.EmitXXX(...) // Placeholder
-		// env.LOC += size
-	}
-}
-
-// --- Stack operations removed ---
 
 // --- TraverseAST function moved to traverse.go ---
 

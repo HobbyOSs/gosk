@@ -5,8 +5,7 @@ import (
 	"log" // Keep only one log import
 	"strings"
 
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
-	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	"github.com/HobbyOSs/gosk/internal/ast"   // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
@@ -19,7 +18,6 @@ func processLogicalInst(env *Pass1, operands []ast.Exp, instName string) {
 	})
 	operandString := strings.Join(operandStrings, ",")
 
-	// isAccumulator logic removed
 	// isAccumulator := false
 	// if len(args) > 0 {
 	// 	matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])

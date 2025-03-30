@@ -24,7 +24,6 @@ func (s *Pass1TraverseSuite) SetupSuite() { // Use renamed struct
 	setUpColog(colog.LDebug)
 }
 
-// Removed duplicate helper functions buildStack and buildImmExpFromValue
 // They should exist in test_helper.go
 
 func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
@@ -128,14 +127,14 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			name: "label + constant",
 			text: "MYLABEL + 512",
 			want: buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000 + 512)), // MYLABEL = 0x8000
+				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000+512)), // MYLABEL = 0x8000
 			}),
 		},
 		{
 			name: "label - constant",
 			text: "MYLABEL - 10",
 			want: buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000 - 10)), // MYLABEL = 0x8000
+				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000-10)), // MYLABEL = 0x8000
 			}),
 		},
 	}
@@ -144,7 +143,7 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 		s.T().Run(tt.name, func(t *testing.T) {
 			// For complex math, ensure parsing actually yields AddExp
 			if tt.name == "complex math 1" {
- 				parsedNode, _ := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
+				parsedNode, _ := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
 				if _, ok := parsedNode.(*ast.AddExp); !ok {
 					t.Skip("Skipping complex math test as it doesn't parse directly to AddExp")
 				}
@@ -157,7 +156,6 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 				}
 			}
 
-
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -165,20 +163,19 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			node, ok := got.(*ast.AddExp)
 			// Skip tests where the root node is not AddExp after parsing
 			if !ok {
- 				t.Skipf("Skipping test %s because root node is %T, not *ast.AddExp", tt.name, got)
+				t.Skipf("Skipping test %s because root node is %T, not *ast.AddExp", tt.name, got)
 			}
-
 
 			p := &Pass1{
-				EquMap:   make(map[string]*token.ParseToken), // Initialize EquMap
-				SymTable: make(map[string]int32),         // Add SymTable initialization
+				SymTable: make(map[string]int32),   // Add SymTable initialization
 				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
 			}
-			// 事前にテスト用のラベルを EquMap に設定 (これは古いEQU実装用なので、新しいMacroMapを使うように後で修正が必要)
-			p.EquMap["MYLABEL"] = token.NewParseToken(token.TTHex, buildImmExpFromValue("0x8000"))
+			// 事前にテスト用のマクロを MacroMap に設定 (新しい方式)
+			// Assuming MYLABEL is now defined as a macro (EQU)
+			p.MacroMap["MYLABEL"] = ast.NewNumberExp(ast.ImmExp{}, 0x8000) // Define MYLABEL = 0x8000
 
 			// TraverseAST は評価結果のノードを返すように変更されたため、スタックは使用しない
-			evaluatedNode := TraverseAST(node, p) // TODO: Pass1 を Env として渡す
+			evaluatedNode := TraverseAST(node, p) // Pass1 を Env として渡す
 			// assert.True(t, reduced, "Evaluation should result in reduction for these test cases") // reduced は返さない
 
 			// --- 比較ロジック修正 (スタックではなく、返されたノードを比較) ---
@@ -193,39 +190,39 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 
 			// --- 比較ロジック修正 (Hex対応) --- の部分は削除またはコメントアウト
 			/*
-			var expectedValue int // Declare expectedValue outside
-			// Get expected value
-			if expected.TokenType == token.TTNumber {
-				expectedValue = expected.ToInt()
-			} else if expected.TokenType == token.TTHex {
-				expectedValue = expected.HexAsInt()
-			} else if expected.TokenType == token.TTIdentifier {
-				// Expected is Identifier, compare as string
-				assert.Equal(t, expected.AsString(), actual.AsString(),
-					fmt.Sprintf("expected string: %s, actual string: %s", expected.AsString(), actual.AsString()))
-				// Skip numeric comparison for identifiers
-				// assert.Equal(t, 0, p.Ctx.Count(), "Stack should be empty after popping the result") // Ctxを使わない
-				return // End test for identifier comparison
-			} else {
-				// t.Fatalf("Unexpected expected token type: %s", expected.TokenType) // expectedを使わない
-			}
+				var expectedValue int // Declare expectedValue outside
+				// Get expected value
+				if expected.TokenType == token.TTNumber {
+					expectedValue = expected.ToInt()
+				} else if expected.TokenType == token.TTHex {
+					expectedValue = expected.HexAsInt()
+				} else if expected.TokenType == token.TTIdentifier {
+					// Expected is Identifier, compare as string
+					assert.Equal(t, expected.AsString(), actual.AsString(),
+						fmt.Sprintf("expected string: %s, actual string: %s", expected.AsString(), actual.AsString()))
+					// Skip numeric comparison for identifiers
+					// assert.Equal(t, 0, p.Ctx.Count(), "Stack should be empty after popping the result") // Ctxを使わない
+					return // End test for identifier comparison
+				} else {
+					// t.Fatalf("Unexpected expected token type: %s", expected.TokenType) // expectedを使わない
+				}
 
-			// Get actual value (only if expected was Number or Hex)
-			var actualValue int // Declare actualValue outside the blocks
-			if actual.TokenType == token.TTNumber {
-				actualValue = actual.ToInt() // Assign value
-			} else if actual.TokenType == token.TTHex {
-				actualValue = actual.HexAsInt() // Assign value, don't redeclare with :=
-			} else {
-				// If actual is not Number or Hex, but expected was, fail
-				t.Fatalf("Expected Number/Hex but got %s (%s)", actual.TokenType, actual.AsString())
-			}
+				// Get actual value (only if expected was Number or Hex)
+				var actualValue int // Declare actualValue outside the blocks
+				if actual.TokenType == token.TTNumber {
+					actualValue = actual.ToInt() // Assign value
+				} else if actual.TokenType == token.TTHex {
+					actualValue = actual.HexAsInt() // Assign value, don't redeclare with :=
+				} else {
+					// If actual is not Number or Hex, but expected was, fail
+					t.Fatalf("Expected Number/Hex but got %s (%s)", actual.TokenType, actual.AsString())
+				}
 
-			// Compare the integer values (コメントアウト)
-			// assert.Equal(t, expectedValue, actualValue,
-			// 	fmt.Sprintf("expected value: %d (0x%x), actual value: %d (0x%x)", expectedValue, expectedValue, actualValue, actualValue))
+				// Compare the integer values (コメントアウト)
+				// assert.Equal(t, expectedValue, actualValue,
+				// 	fmt.Sprintf("expected value: %d (0x%x), actual value: %d (0x%x)", expectedValue, expectedValue, actualValue, actualValue))
 
-			// --- 修正ここまで --- (コメントアウト)
+				// --- 修正ここまで --- (コメントアウト)
 			*/
 
 			// スタックが空になったか確認 (コメントアウト)
@@ -238,7 +235,6 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			// 	assert.Equal(t, expected, actual,
 			// 		fmt.Sprintf("expected: %+v, actual: %+v\n", expected, actual))
 			// }
-			// Erroneous lines removed here
 		})
 	}
 }
@@ -300,8 +296,7 @@ func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
 			}
 
 			p := &Pass1{
-				EquMap:   make(map[string]*token.ParseToken), // Add EquMap initialization
-				SymTable: make(map[string]int32),         // Add SymTable initialization
+				SymTable: make(map[string]int32),   // Add SymTable initialization
 				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
 			}
 			// TraverseAST は評価結果のノードを返すように変更されたため、スタックは使用しない
@@ -314,12 +309,12 @@ func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
 			// 新しい期待値 (evaluatedNode) を定義し直す必要がある。
 			// ここではビルドを通すため、比較ロジックをコメントアウトまたは削除する。
 			/*
-			for i := p.Ctx.Count(); i >= 0; i-- { // Ctxを使わない
-				_, expected := tt.want.Pop()
-				_, actual := p.Ctx.Pop() // Ctxを使わない
-				assert.Equal(t, expected, actual,
-					fmt.Sprintf("expected: %+v, actual: %+v\n", expected, actual))
-			}
+				for i := p.Ctx.Count(); i >= 0; i-- { // Ctxを使わない
+					_, expected := tt.want.Pop()
+					_, actual := p.Ctx.Pop() // Ctxを使わない
+					assert.Equal(t, expected, actual,
+						fmt.Sprintf("expected: %+v, actual: %+v\n", expected, actual))
+				}
 			*/
 		})
 	}

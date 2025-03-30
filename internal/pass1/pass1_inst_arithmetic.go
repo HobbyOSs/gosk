@@ -5,7 +5,6 @@ import (
 	"log" // Add log import
 	"strings"
 
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
@@ -20,7 +19,6 @@ func processArithmeticInst(env *Pass1, operands []ast.Exp, instName string) {
 	})
 	operandString := strings.Join(operandStrings, ",")
 
-	// isAccumulator logic removed as it might not be directly applicable or needed
 	// with the new operand parsing approach. Size calculation should handle this.
 	// isAccumulator := false
 	// if len(args) > 0 {
@@ -37,7 +35,6 @@ func processArithmeticInst(env *Pass1, operands []ast.Exp, instName string) {
 
 	// Set BitMode
 	ngOperands = ngOperands.WithBitMode(env.BitMode)
-	// WithForceImm8 call removed
 
 	// Calculate instruction size
 	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)

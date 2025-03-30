@@ -1,17 +1,12 @@
 package pass1
 
 import (
-	// "errors" // Remove unused import
 	"fmt"
 	"log" // Add log import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand"
-	// "github.com/samber/lo" // Remove unused lo import
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
-
-// astExpToNgOperand function removed as per user feedback.
 
 // processMOV handles the MOV instruction using string representation of operands.
 func processMOV(env *Pass1, operands []ast.Exp) {

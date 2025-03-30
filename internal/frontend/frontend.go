@@ -12,7 +12,6 @@ import (
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
-	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
 )
@@ -41,7 +40,6 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	pass1 := &pass1.Pass1{
 		LOC:              0,
 		BitMode:          cpu.MODE_16BIT, // Keep cpu.MODE_16BIT
-		EquMap:           make(map[string]*token.ParseToken, 0),
 		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
@@ -53,7 +51,6 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 
 	pass2 := &pass2.Pass2{
 		BitMode:          pass1.BitMode,
-		EquMap:           pass1.EquMap,
 		SymTable:         pass1.SymTable,
 		GlobalSymbolList: pass1.GlobalSymbolList,
 		ExternSymbolList: pass1.ExternSymbolList,

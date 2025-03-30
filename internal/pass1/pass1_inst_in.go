@@ -6,8 +6,7 @@ import (
 
 	"log" // Add log import
 
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
-	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	"github.com/HobbyOSs/gosk/internal/ast"   // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )

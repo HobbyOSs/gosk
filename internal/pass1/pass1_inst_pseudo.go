@@ -3,12 +3,8 @@ package pass1
 import (
 	"fmt"
 	"log"
-	// "strconv" // Removed unused import
-	// "strings" // Removed unused import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
-	// "github.com/HobbyOSs/gosk/internal/token" // Removed unused import
-	// "github.com/morikuni/failure" // Removed unused import
 )
 
 // processALIGNB handles the ALIGNB pseudo-instruction.
@@ -63,7 +59,7 @@ func processDB(env *Pass1, operands []ast.Exp) {
 					ocodes = append(ocodes, int32(char))
 				}
 			case *ast.IdentFactor:
-				ident := factor.Value // Assuming IdentFactor has a Value field
+				ident := factor.Value                        // Assuming IdentFactor has a Value field
 				if labelLOC, ok := env.SymTable[ident]; ok { // Check if it's a known label
 					loc += 1                               // DB stores 1 byte for label address (lower byte)
 					ocodes = append(ocodes, labelLOC&0xFF) // Append lower byte of label address
@@ -101,7 +97,7 @@ func processDW(env *Pass1, operands []ast.Exp) {
 	for _, operand := range operands {
 		switch op := operand.(type) {
 		case *ast.NumberExp:
-			val := op.Value // Value is int64
+			val := op.Value                  // Value is int64
 			if val < -32768 || val > 65535 { // Check signed/unsigned 16-bit range
 				log.Printf("Warning: Value %d out of range for DW, truncating.", val)
 			}

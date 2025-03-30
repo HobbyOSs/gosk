@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/ast"
-	"github.com/HobbyOSs/gosk/internal/token" // Import token for DefineMacro compatibility
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 )
 
@@ -83,39 +82,40 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 
 		if !canProcess {
 			// Cannot process this instruction if operands are invalid
-			return n
+			return n // Return original node if operands are invalid
 		}
 
-		// TODO: Refactor opcodeEvalFns to accept evaluated operands (ast.Exp)
-		log.Printf("TODO: Refactor opcodeEvalFn for %s to accept evaluated operands.", opcode)
+		// Find and call the appropriate handler function
+		if handler, ok := opcodeEvalFns[opcode]; ok {
+			handler(env, evalOperands) // Call handler with evaluated operands
+		} else {
+			log.Printf("error: No handler found for opcode %s", opcode)
+			// Decide how to handle unknown opcodes (e.g., skip, error, default size?)
+			// For now, just log. LOC won't be updated.
+		}
 
-		// Placeholder: Emit opcode and log operands (actual processing needs refactor)
-		env.Client.Emit(opcode) // Example emit
-		log.Printf("debug: [pass1] Processed %s with operands (needs refactor): %v", opcode, evalOperands)
-		// Calculate size (needs refactor based on evaluated operands)
-		// size := calculateInstructionSize(env, opcode, evalOperands) // Placeholder
-		// env.LOC += size
-		log.Printf("debug: [pass1] LOC updated (placeholder) for %s", opcode)
-
-		return nil // Or return a processed node if needed later
+		// LOC and Emit are handled within the specific handler function now.
+		return nil // Mnemonic statement processed, return nil
 
 	case *ast.OpcodeStmt: // Instruction without operands
 		log.Println("trace: opcode stmt handler!!!")
 		opcode := n.Opcode.Value
-		// TODO: Refactor processNoParam or similar to work without stack
-		log.Printf("TODO: Refactor opcodeEvalFn for %s (no operands).", opcode)
-		// Placeholder: Emit and calculate size
-		env.Client.Emit(opcode)
-		// size := calculateInstructionSize(env, opcode, nil) // Placeholder
-		// env.LOC += size
-		log.Printf("debug: [pass1] LOC updated (placeholder) for %s", opcode)
-		return nil
+
+		// Find and call the appropriate handler function (passing empty operands)
+		if handler, ok := opcodeEvalFns[opcode]; ok {
+			handler(env, []ast.Exp{}) // Call handler with empty operands
+		} else {
+			log.Printf("error: No handler found for opcode %s", opcode)
+		}
+
+		// LOC and Emit are handled within the specific handler function now.
+		return nil // Opcode statement processed, return nil
 
 	// --- Expression Evaluation ---
 	case *ast.AddExp, *ast.MultExp, *ast.ImmExp, *ast.SegmentExp, *ast.MemoryAddrExp:
 		if exp, ok := n.(ast.Exp); ok {
 			evalExp, _ := exp.Eval(evalEnv) // Use evalEnv which is ast.Env type
-			return evalExp // Return the evaluated expression node
+			return evalExp                  // Return the evaluated expression node
 		}
 		log.Printf("error: Node %T claims to be Exp but type assertion failed.", n)
 		return n // Return original node on error
@@ -181,13 +181,6 @@ func (p *Pass1) DefineMacro(name string, exp ast.Exp) {
 	p.MacroMap[name] = exp
 	log.Printf("debug: Defined macro '%s' = %s (stored as ast.Exp)", name, exp.TokenLiteral())
 
-	// Keep the old EquMap update for now, until opcodeEvalFns are refactored
-	if p.EquMap == nil {
-		p.EquMap = make(map[string]*token.ParseToken)
-	}
-	// Store a dummy token in the old map for compatibility (needs removal later)
-	// Using TTIdentifier as placeholder type, Data holds the ast.Exp
-	p.EquMap[name] = token.NewParseToken(token.TTIdentifier, exp)
 }
 
 // LookupMacro implements the ast.Env interface for Pass1 by defining it as a method.

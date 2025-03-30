@@ -7,7 +7,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen"
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
-	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep ast for program argument
 	"github.com/comail/colog"
@@ -149,8 +148,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			pass1 := &Pass1{
 				LOC:      0,
 				BitMode:  tt.bitMode,
-				EquMap:   make(map[string]*token.ParseToken), // Add EquMap initialization
-				SymTable: make(map[string]int32),         // Add SymTable initialization
+				SymTable: make(map[string]int32), // Add SymTable initialization
 				Client:   client,
 				AsmDB:    asmdb.NewInstructionDB(),
 				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization

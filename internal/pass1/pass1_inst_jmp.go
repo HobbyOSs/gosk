@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/HobbyOSs/gosk/internal/ast" // astパッケージをインポート
+	"github.com/HobbyOSs/gosk/internal/ast"   // astパッケージをインポート
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Import ng_operand
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Remove duplicate and unused cpu import
 )
 
 // evalSimpleExp evaluates an expression node and returns the result as int32.

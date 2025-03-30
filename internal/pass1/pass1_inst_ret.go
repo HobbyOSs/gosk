@@ -1,11 +1,9 @@
 package pass1
 
 import (
-	// "fmt" // Remove unused import
 	"log" // Add log import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
 
 // processRET handles the RET instruction.

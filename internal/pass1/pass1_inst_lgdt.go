@@ -3,13 +3,10 @@ package pass1
 import (
 	"fmt" // Keep only one fmt import
 	"log" // Add log import
-	// "strings" // Remove unused import
 
-	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
-	// "github.com/samber/lo" // Remove unused import
 )
 
 // processLGDT handles the LGDT instruction.
