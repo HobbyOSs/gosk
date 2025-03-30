@@ -11,18 +11,28 @@
     - `ImmExp`, `NumberExp`, `AddExp`, `MultExp` に `Eval` を実装 (定数畳み込み、マクロ展開)。
     - `TraverseAST` を `node -> node` 形式に変更し、スタックを廃止 (`internal/pass1/traverse.go` に移動)。
     - `Pass1` 構造体に `MacroMap` を追加。
+- **命令ハンドラ (`opcodeEvalFn`) のリファクタリング:**
+    - `internal/pass1/handlers.go` 内の `processXXX` 関数のシグネチャを `[]ast.Exp` を受け取るように変更。
+    - 各ハンドラ内で、評価済みオペランド (`ast.Exp`) を解釈し、機械語サイズ計算 (`LOC` 更新) と Ocode 生成 (`Client.Emit`) を行うように修正 (文字列ベースの `ng_operand` 経由)。
+    - `TraverseAST` がリファクタリングされたハンドラを呼び出すように修正。
+- **`EquMap` の削除:**
+    - `Pass1` 構造体から古い `EquMap` フィールドと関連コードを削除。
+- **`Client.Emit` の修正:**
+    - 各ハンドラ内の `Emit` 呼び出しからデバッグ用のコメント (` ; (size: ...)` など) を削除。
 
 ## まだ必要な実装
-- **命令ハンドラ (`opcodeEvalFn`) のリファクタリング:**
-    - `internal/pass1/handlers.go` 内の `processXXX` 関数を、古いスタックベース (`[]*token.ParseToken`) から新しい評価済みオペランド (`[]ast.Exp`) を受け取るように修正する。
-    - 上記に伴い、各ハンドラ内の機械語サイズ計算ロジックも修正する。
+- **テストの修正と実行:**
+    - `internal/pass1/traverse_test.go` (`TestAddExp`, `TestMultExp`) の比較ロジックを、スタックベース (`want`) から評価済み `ast.Exp` ノード (`evaluatedNode`) を比較するように修正する。
+    - `internal/pass1/eval_test.go` (`TestEvalProgramLOC`) の `INT 0x10` ケースが失敗する原因 (`*ast.SegmentExp` 問題) を調査・修正する。
+        - パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。
+    - すべての `internal/pass1` テストが成功することを確認する。
 - **`test/day03_harib00i_test.go` の相対ジャンプオフセットずれ調査:**
     - `CALL`, `JMP`, `Jcc` 命令の相対オフセットが期待値とずれている。
     - オフセット計算ロジック (`ターゲットアドレス - (現在の命令のアドレス + 命令のサイズ)`) の見直しが必要 (命令ハンドラリファクタリング後に再検証)。 (ユーザー側でアセンブラダンプマスタを使用して調査予定)
-- **テストの修正と実行:**
-    - 命令ハンドラのリファクタリング後、既存テストを新しい評価構造に合わせて修正し、実行する。
-- **`EquMap` の削除:**
-    - 命令ハンドラのリファクタリング完了後、`Pass1` 構造体の古い `EquMap` と関連コードを削除する。
+- **`processNoParam` のリファクタリング:**
+    - `internal/pass1/pass1_inst_no_param.go` の `processNoParam` を新しいシグネチャに合わせて修正し、`handlers.go` のプレースホルダーを置き換える。
+- **`emitCommand` の見直し:**
+    - `internal/pass1/pass1_inst_pseudo.go` 内の `emitCommand` が `DB`, `DW`, `DD` で `[]int32` を正しく処理できるか確認・修正する。
 - **`pkg/ng_operand` の改善 (TODOs):** (一部対応済み、残りは以下)
     - パーサー: NEAR/FAR PTR, `ParseOperands` での各種フラグ考慮, 文字列リテラル内カンマ対応。
     - 実装: QWORD サポート, `CalcOffsetByteSize` / `DetectImmediateSize` の複数オペランド対応。
