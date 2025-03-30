@@ -165,6 +165,24 @@ func TestParse(t *testing.T) {
 				Right: nil,
 			},
 		},
+		{
+			name:       "jmp dword far",
+			entryPoint: "Exp",
+			text:       "DWORD 2*8:0x0000001b",
+			want: &ast.SegmentExp{
+				DataType: ast.Dword,
+				Left: &ast.AddExp{
+					HeadExp: &ast.MultExp{
+						HeadExp:   buildImmExpFromValue(2),
+						Operators: []string{"*"},
+						TailExps:  []*ast.ImmExp{buildImmExpFromValue(8)},
+					},
+					Operators: []string{},
+					TailExps:  []*ast.MultExp{},
+				},
+				Right: buildAddExpFromValue("0x0000001b"),
+			},
+		},
 
 		// stmt
 		{"equ macro", "DeclareStmt", "CYLS EQU 10",

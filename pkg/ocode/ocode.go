@@ -113,6 +113,7 @@ const (
 	OpCALL                      // CALL
 	OpLGDT                      // LGDT
 	OpJMP                       // JMP
+	OpJMP_FAR                   // JMP FAR (セグメント:オフセット)
 	OpJA                        // JA
 	OpJAE                       // JAE
 	OpJB                        // JB

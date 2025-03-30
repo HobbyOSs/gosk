@@ -268,7 +268,22 @@ func TraverseAST(node ast.Node, env *Pass1) { // Restored ast.Node
 		if n.Right != nil {
 			TraverseAST(n.Right, env)
 		}
-		popAndPush(env)
+		// popAndPush(env) を修正し、MemoryAddrExpと同様の処理にする -> さらに修正
+		if n.Right != nil {
+			// Rightがある場合のみSegmentExpとして処理
+			rightToken := pop(env) // Rightの結果をPop
+			leftToken := pop(env)  // Leftの結果をPop (本来は評価結果だが、現状は元のNodeかも)
+			// TODO: leftToken, rightToken を使って SegmentExp を表現するトークンを生成・Push
+			// 現状の実装では leftToken, rightToken の中身が期待通りか不明なため、
+			// 一旦、元のSegmentExpノードをそのままPushする (暫定 TokenType は TTIdentifier)
+			log.Printf("DEBUG: SegmentExp Right is not nil. Left Token: %v, Right Token: %v", leftToken, rightToken) // デバッグログ追加
+			v := token.NewParseToken(token.TTIdentifier, n)
+			push(env, v)
+		} else {
+			// Rightがない場合は、Leftの評価結果がスタックに残っているので何もしない
+			// (popAndPushもpop/pushもしない)
+			log.Printf("trace: segment exp handler (Right is nil), leaving Left result on stack.")
+		}
 
 	case *ast.AddExp: // Restored ast.AddExp
 		log.Println("trace: add exp handler!!!")

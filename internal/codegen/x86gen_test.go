@@ -10,10 +10,11 @@ import (
 
 func TestGenerateX86(t *testing.T) {
 	tests := []struct {
-		name     string
-		ocodes   []ocode.Ocode
-		bitMode  cpu.BitMode // Add BitMode field
-		expected []byte
+		name           string
+		ocodes         []ocode.Ocode
+		bitMode        cpu.BitMode // Add BitMode field
+		dollarPosition uint64      // Change type to uint64
+		expected       []byte
 	}{
 		{
 			name:    "DB",
@@ -295,15 +296,41 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0xb0, 0xff}, // MOV AL, imm8 (no prefix needed)
 		},
 		*/
+		{
+			name:    "JMP_FAR_16_27", // JMP DWORD 2*8:0x0000001b ; 66ea1b0000001000
+			bitMode: cpu.MODE_16BIT,  // Expect 66h prefix in 16-bit mode
+			ocodes: []ocode.Ocode{
+				// pass1から渡されるOcode形式に合わせる (Kind: OpJMP_FAR, Operands: ["16:27"])
+				{Kind: ocode.OpJMP_FAR, Operands: []string{"16:27"}},
+			},
+			expected: []byte{0x66, 0xea, 0x1b, 0x00, 0x00, 0x00, 0x10, 0x00}, // 66 EA 1B000000 1000
+		},
+		{
+			name:           "JMP_ORG_7C00_to_C200", // Test case for the specific issue
+			bitMode:        cpu.MODE_16BIT,
+			dollarPosition: 0x7c00, // Set the starting address (ORG) - uint64 literal
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpJMP, Operands: []string{"0xc200"}},
+			},
+			// Expected: JMP rel16 (E9 cw). Offset = 0xc200 - (0x7c00 + 3) = 0x45FD
+			// Machine code: E9 FD 45
+			expected: []byte{0xe9, 0xfd, 0x45}, // Corrected expected value
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Initialize DollarPosition from test case if provided, otherwise default to 0
+			startAddr := tt.dollarPosition // startAddr is now uint64
+			if startAddr == 0 {
+				// Keep default 0 if not specified in test case
+			}
+
 			ctx := &CodeGenContext{
 				MachineCode:    make([]byte, 0),
 				VS:             nil,
 				BitMode:        tt.bitMode, // Use BitMode from test case
-				DollarPosition: 0,
+				DollarPosition: startAddr,  // Use startAddr from test case or default
 				SymTable:       map[string]int32{},
 			}
 			result := GenerateX86(tt.ocodes, ctx)

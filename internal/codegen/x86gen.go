@@ -64,7 +64,7 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleMOV(params.Operands, ctx), nil
 	case ocode.OpINT:
 		return handleINT(oc), nil
-	case ocode.OpJMP, ocode.OpJE, ocode.OpJA, ocode.OpJAE, ocode.OpJB, ocode.OpJBE, ocode.OpJC, ocode.OpJG, ocode.OpJGE, ocode.OpJL, ocode.OpJLE,
+	case ocode.OpJMP, ocode.OpJMP_FAR, ocode.OpJE, ocode.OpJA, ocode.OpJAE, ocode.OpJB, ocode.OpJBE, ocode.OpJC, ocode.OpJG, ocode.OpJGE, ocode.OpJL, ocode.OpJLE,
 		ocode.OpJNA, ocode.OpJNAE, ocode.OpJNB, ocode.OpJNBE, ocode.OpJNC, ocode.OpJNE, ocode.OpJNG, ocode.OpJNGE, ocode.OpJNL,
 		ocode.OpJNLE, ocode.OpJNO, ocode.OpJNP, ocode.OpJNS, ocode.OpJNZ, ocode.OpJO, ocode.OpJP, ocode.OpJPE, ocode.OpJPO,
 		ocode.OpJS, ocode.OpJZ:
