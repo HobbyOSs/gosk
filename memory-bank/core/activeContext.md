@@ -1,6 +1,16 @@
-# 現在の状況 (Active Context) - 2025/03/30 (更新)
+# 現在の状況 (Active Context)
+
+## 進行中の作業
+
+- tokenベースからASTベースの評価構造へ設計変更
+    - AST構造を純粋に保持したまま評価可能な形へ変換する
+    - tokenベースの手法は単項式的ノードの解析には有利だったが、多項式的構造の解析には不向き
+    - TraverseAST は副作用を持たず node -> node の構造変換とする
+    - Eval() メソッドを各 Expression ノードに実装し、再帰的評価を行う
+    - これを実行するのは `[ LABEL + 30 ]` （LABELは還元できないために多項式的な構造となる）のようなマクロ入りオペランドのパースに苦戦したため、根本的に設計を見直していくこととした
 
 ## 問題点
+
 - `internal/pass1` のテスト (`TestEvalProgramLOC`) で `INT 0x10` のケースが失敗する。
     - 原因: `0x10` が `*ast.NumberExp` ではなく `*ast.SegmentExp` として解釈されている疑い。パーサー (`grammar.peg`) または評価ロジック (`TraverseAST`) の確認が必要。
 - `test/day03_harib00i_test.go` が依然として失敗する。（根本原因は未解決）
@@ -34,15 +44,7 @@
         *   パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。
     *   すべての `internal/pass1` テストが成功することを確認する。
     *   `test/day03_harib00i_test.go` の失敗原因を調査し、修正する (相対ジャンプオフセット、EQU展開、メモリアドレス解決など)。
-2.  **`processNoParam` のリファクタリング:**
-    *   `internal/pass1/pass1_inst_no_param.go` の `processNoParam` を新しいシグネチャに合わせて修正し、`handlers.go` のプレースホルダーを置き換える。
-3.  **`emitCommand` の見直し:**
-    *   `internal/pass1/pass1_inst_pseudo.go` 内の `emitCommand` が `DB`, `DW`, `DD` で `[]int32` を正しく処理できるか確認・修正する。
-4.  **`astExpToNgOperand` の実装 (保留):**
-    *   `internal/pass1/pass1_inst_mov.go` などで削除されたヘルパー関数の代替として、より堅牢な `ast.Exp` から `ng_operand.Operand` への変換ロジックが必要になる可能性がある。現状は文字列ベースで対応しているが、将来的に検討する。
-5.  **`pkg/ng_operand` の改善 (TODOs):** (変更なし)
-    *   (内容は前回と同じため省略)
-6.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
-7.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
+2.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
+3.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 
 (過去の完了作業: [activeContext_archive_202503.md](../archives/activeContext_archive_202503.md))
