@@ -472,5 +472,12 @@ func (o *OperandPegImpl) ImmediateValueFitsIn8Bits() bool {
 	return false // 即値オペランドが見つからない場合、または immOperand が nil の場合
 }
 
+// IsControlRegisterOperation は、オペランドに制御レジスタが含まれるかどうかを返します。
+func (o *OperandPegImpl) IsControlRegisterOperation() bool {
+	return lo.SomeBy(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		return p != nil && isCREGType(p.Type)
+	})
+}
+
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。
 // isR8Type と isR64Type も operand_util.go に追加しました。

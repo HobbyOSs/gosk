@@ -218,7 +218,7 @@ func TestGenerateX86(t *testing.T) {
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpMOV, Operands: []string{"EAX", "CR0"}},
 			},
-			expected: []byte{0x66, 0x0f, 0x20, 0xc0}, // 66h prefix + 0F 20 /r
+			expected: []byte{0x0f, 0x20, 0xc0}, // No 66h prefix for MOV r32, CRn
 		},
 		{
 			name:    "MOV CR0, EAX (16bit)",
@@ -226,7 +226,7 @@ func TestGenerateX86(t *testing.T) {
 			ocodes: []ocode.Ocode{
 				{Kind: ocode.OpMOV, Operands: []string{"CR0", "EAX"}},
 			},
-			expected: []byte{0x66, 0x0f, 0x22, 0xc0}, // 66h prefix + 0F 22 /r
+			expected: []byte{0x0f, 0x22, 0xc0}, // No 66h prefix for MOV CRn, r32
 		},
 		{
 			name:    "AND EAX, 0x7fffffff (16bit)",
@@ -261,6 +261,14 @@ func TestGenerateX86(t *testing.T) {
 				{Kind: ocode.OpSUB, Operands: []string{"ECX", "128"}}, // 128 = 0x80
 			},
 			expected: []byte{0x66, 0x81, 0xe9, 0x80, 0x00, 0x00, 0x00}, // 66h + SUB r/m32, imm32 (81 /5 id)
+		},
+		{
+			name:    "MOV EAX, CR0 (16bit)",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"EAX", "CR0"}},
+			},
+			expected: []byte{0x0f, 0x20, 0xc0}, // No 66h prefix in 32bit mode
 		},
 	}
 

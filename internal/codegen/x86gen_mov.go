@@ -42,7 +42,12 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	if ops.Require67h() {
 		machineCode = append(machineCode, 0x67)
 	}
-	if ops.Require66h() {
+
+	// Add operand size prefix (0x66) if needed, but skip for MOV to/from Control Registers.
+	// Intel Manual (Vol 2A, MOV instruction):
+	// "When the instruction involves a control register (CRn) or debug register (DRn),
+	// the operand size is always 32 bits, regardless of the operand-size attribute."
+	if ops.Require66h() && !ops.IsControlRegisterOperation() {
 		machineCode = append(machineCode, 0x66)
 	}
 

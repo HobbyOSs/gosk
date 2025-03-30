@@ -45,4 +45,6 @@ type Operands interface {
 	DisplacementBytes() []byte
 	// ImmediateValueFitsIn8Bits は、即値オペランドの値が8ビットに収まるかどうかを返します。
 	ImmediateValueFitsIn8Bits() bool
+	// IsControlRegisterOperation は、オペランドに制御レジスタが含まれるかどうかを返します。
+	IsControlRegisterOperation() bool
 }

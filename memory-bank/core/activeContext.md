@@ -15,6 +15,15 @@
     - **原因:** `FindMinOutputSize` が内部で `FindEncoding(..., matchAnyImm = false)` を呼び出しており、`imm8` 形式のエンコーディングを見つけられなかったため。
     - **修正:** `FindMinOutputSize` (`pkg/asmdb/instruction_search.go`) が codegen と同様に `FindEncoding(..., matchAnyImm = true)` を呼び出すように修正。`FindEncoding` が選択した最適なエンコーディングのサイズ (`GetOutputSize(nil)`) を使うことで、pass1 と codegen のサイズ解釈を一致させた。
     - **結果:** `TestHarib00a` から `TestHarib00h` までが PASS するようになった。
+- **`MOV CRn` のプレフィックス問題修正**:
+    - **問題:** 16bitモードで `MOV r32, CRn` や `MOV CRn, r32` をエンコードする際に、不要な `0x66` オペランドサイズプレフィックスが付与されていた。
+    - **原因:** プレフィックス付与ロジックが、制御レジスタMOV命令が常に32bitで動作するというIntelマニュアルの規定を考慮していなかった。
+    - **修正:**
+        - `pkg/ng_operand/operand.go`: `Operands` インターフェースに `IsControlRegisterOperation() bool` を追加。
+        - `pkg/ng_operand/operand_impl.go`: `OperandPegImpl` に `IsControlRegisterOperation` を実装 (内部で `isCREGType` を使用)。
+        - `internal/codegen/x86gen_mov.go`: `handleMOV` で `IsControlRegisterOperation` を使用し、制御レジスタMOVの場合は `0x66` プレフィックスを追加しないように修正。
+        - `internal/codegen/x86gen_test.go`: 関連テストケースの期待値を修正。
+    - **結果:** `TestGenerateX86` の `MOV EAX, CR0 (16bit)` と `MOV CR0, EAX (16bit)` が PASS するようになった。
 
 ## 現在の焦点
 - **`IMUL r/m, imm` の ModR/M 生成問題**: `TestGenerateX86/IMUL_ECX_4608_(16bit)` が失敗する原因。`getModRMFromOperands` が `IMUL r/m, imm` 形式 (Opcode 69/6B) を正しく処理できない。
