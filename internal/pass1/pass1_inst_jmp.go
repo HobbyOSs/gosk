@@ -5,129 +5,145 @@ import (
 	"log"
 
 	"github.com/HobbyOSs/gosk/internal/ast" // astパッケージをインポート
-	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/cpu" // cpuパッケージをインポート
+	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Import ng_operand
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
+	// "github.com/HobbyOSs/gosk/pkg/cpu" // Remove duplicate and unused cpu import
 )
 
-// evalSimpleExp は式ノードを評価し、結果をint32で返すヘルパー関数 (TraverseASTを呼び出す形式に修正)
-func evalSimpleExp(exp ast.Node, env *Pass1) (int32, error) {
-	// 式ノードをTraverseASTで評価し、結果をスタックに積む
-	TraverseAST(exp, env)
-	// スタックから評価結果を取得
-	resultToken := pop(env)
+// evalSimpleExp evaluates an expression node and returns the result as int32.
+// It now accepts ast.Exp instead of ast.Node.
+func evalSimpleExp(exp ast.Exp, env *Pass1) (int32, error) {
+	// Evaluate the expression node using TraverseAST
+	evalNode := TraverseAST(exp, env) // TraverseAST now returns ast.Exp
 
-	// 結果トークンが数値として解釈できるか確認し、int32で返す
-	// TODO: ラベル参照などの解決が必要な場合に対応
-	if resultToken.IsNumber() || resultToken.TokenType == token.TTHex {
-		return resultToken.ToInt32(), nil
-	} else if resultToken.TokenType == token.TTIdentifier {
-		// TODO: ラベルやEQUの解決
-		log.Printf("WARN: Identifier '%s' evaluation in evalSimpleExp is not implemented yet.", resultToken.AsString())
-		return 0, fmt.Errorf("identifier evaluation not implemented: %s", resultToken.AsString())
+	// Check if the result is a number (NumberExp)
+	if numExp, ok := evalNode.(*ast.NumberExp); ok {
+		return int32(numExp.Value), nil
 	}
 
-	return 0, fmt.Errorf("cannot evaluate expression result to int32: %v (Type: %s)", resultToken.Data, resultToken.TokenType)
+	// 評価結果が未解決の識別子 (ImmExp with IdentFactor) かどうかを確認
+	if immExp, ok := evalNode.(*ast.ImmExp); ok {
+		if identFactor, ok := immExp.Factor.(*ast.IdentFactor); ok {
+			// TODO: ラベルやEQUの解決 (Pass2で行うか、ここでシンボルテーブルを参照するか)
+			// 現時点では未解決としてエラーを返すか、0を返す
+			log.Printf("WARN: Identifier '%s' evaluation in evalSimpleExp is not fully implemented yet (returning 0).", identFactor.Value)
+			// return 0, fmt.Errorf("identifier evaluation not implemented: %s", identFactor.Value)
+			return 0, nil // 仮に0を返す
+		}
+	}
+
+	// その他の評価不能なケース
+	return 0, fmt.Errorf("cannot evaluate expression result to int32: %v (Type: %T)", evalNode.TokenLiteral(), evalNode)
 }
 
-func processCalcJcc(env *Pass1, tokens []*token.ParseToken, instName string) {
-
-	if len(tokens) != 1 {
-		log.Fatalf("%s instruction requires exactly one operand, got %d", instName, len(tokens))
+// processCalcJcc handles JMP and conditional jump instructions.
+func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
+	if len(operands) != 1 {
+		log.Printf("Error: %s instruction requires exactly one operand, got %d", instName, len(operands))
 		return
 	}
 
-	arg := tokens[0]
+	operand := operands[0]
 
-	// SegmentExpの場合の処理を追加
-	// TokenTypeもチェックするように修正
-	if arg.TokenType == token.TTIdentifier { // TokenTypeがIdentifierであることを確認 (TraverseASTの暫定対応)
-		if segExp, ok := arg.Data.(*ast.SegmentExp); ok {
-			// SegmentExpの処理
-			log.Printf("[pass1] Processing SegmentExp for %s: %s", instName, segExp.TokenLiteral())
+	switch op := operand.(type) {
+	case *ast.SegmentExp: // Handle FAR jumps (e.g., JMP FAR label, JMP seg:off)
+		log.Printf("[pass1] Processing SegmentExp for %s: %s", instName, op.TokenLiteral())
 
-			// Left (セグメント) と Right (オフセット) を評価
-			segment, err := evalSimpleExp(segExp.Left, env)
-			if err != nil {
-				log.Fatalf("Failed to evaluate segment expression for %s: %v", instName, err)
-			}
-
-			if segExp.Right == nil {
-				// JMP DWORD label のようなケース (Rightがnil) は現状未対応
-				log.Fatalf("SegmentExp without Right part is not supported for JMP FAR: %s", segExp.TokenLiteral())
-			}
-			offset, err := evalSimpleExp(segExp.Right, env)
-			if err != nil {
-				log.Fatalf("Failed to evaluate offset expression for %s: %v", instName, err)
-			}
-
-			// 機械語サイズを計算
-			// JMP ptr16:32 は通常 7 バイト (EA + 4バイトオフセット + 2バイトセレクタ)
-			// 16ビットモードではオペランドサイズプレフィックス(66h)が付くため 8 バイト
-			size := int32(7)
-			if env.BitMode == cpu.MODE_16BIT {
-				size = 8
-			}
-			env.LOC += size
-
-			// Ocodeを生成 (セグメントとオフセットをコロン区切りで1つのオペランドとして指定)
-			env.Client.Emit(fmt.Sprintf("%s_FAR %d:%d", instName, segment, offset)) // 例: JMP_FAR 16:27
-			return                                                                  // SegmentExpの処理はここで終了
-		} // 追加した if segExp, ok := ... の閉じ括弧
-	}
-
-	// 既存のラベル・数値処理
-	switch arg.TokenType {
-	case token.TTIdentifier:
-		// ラベル参照の場合 (SegmentExpではないIdentFactorなど)
-		label := arg.AsString()
-
-		// ラベルをSymTableに登録 (仮アドレスを割り当てる)
-		if _, ok := env.SymTable[label]; !ok {
-			env.SymTable[label] = 0 // Pass 1では仮アドレス
+		// Evaluate segment and offset
+		segment, errSeg := evalSimpleExp(op.Left, env) // Pass ast.Exp
+		if errSeg != nil {
+			log.Printf("Error evaluating segment expression for %s: %v", instName, errSeg)
+			return
 		}
-		// Forward reference（前方参照）の問題により、Pass1フェーズではオフセットを正確に計算できない
-		// そのため、現状はrel8（2バイト）を仮定し、必要に応じてPass2フェーズで調整する
-		//
-		// 例：
-		//   JMP label   ; ラベルが前方にある場合、この時点でラベルの位置が不明
-		//   ...
-		//   label:      ; ラベルの実際の位置はPass2まで確定しない
-
-		// 機械語サイズを計算 (JMP/Jcc rel8 は 2 bytes)
-		env.LOC += 2 // TODO: Jcc命令の種類やオフセットサイズによってサイズが変わる可能性
-
-		// Ocodeを生成 (ジャンプ先アドレスはプレースホルダー)
-		// プレースホルダーとしてラベルを使用
-		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
-	case token.TTNumber, token.TTHex:
-		// 数値参照の場合
-		// 機械語サイズを計算
-		offsetVal := arg.ToInt32()
-		relativeOffset := offsetVal - int32(env.DollarPosition) // 相対オフセット計算
-		// JMP/Jcc命令のオペコードサイズは1バイトまたは2バイト (0F xx)
-		// rel8: opcode(1) + offset(1) = 2 bytes
-		// rel16/32: opcode(1 or 2) + offset(2 or 4)
-		offsetSize := getOffsetSize(relativeOffset)
-		opcodeSize := int32(1)                   // JMP rel8/rel16/rel32 は E9/EB (1 byte)
-		if offsetSize > 1 && instName != "JMP" { // Jcc rel16/32 は 0F 8x (2 bytes)
-			opcodeSize = 2
+		if op.Right == nil {
+			log.Printf("Error: SegmentExp without Right part is not supported for %s FAR.", instName)
+			return
 		}
-		env.LOC += opcodeSize + offsetSize
+		offset, errOff := evalSimpleExp(op.Right, env) // Pass ast.Exp
+		if errOff != nil {
+			log.Printf("Error evaluating offset expression for %s: %v", instName, errOff)
+			return
+		}
 
-		// ダミーのラベルを作る
+		// Calculate size (JMP ptr16:16/32)
+		size := int32(7) // EA + ptr16:32 (4 byte offset + 2 byte selector)
+		// if env.BitMode == cpu.MODE_16BIT { size = ? } // Adjust for 16-bit ptr16:16 if needed
+		env.LOC += size
+
+		// Emit Ocode (placeholder format)
+		env.Client.Emit(fmt.Sprintf("%s_FAR %d:%d ; (size: %d)", instName, segment, offset, size))
+
+	case *ast.ImmExp: // Handle labels (IdentFactor)
+		if factor, ok := op.Factor.(*ast.IdentFactor); ok {
+			label := factor.Value
+			// Register label in SymTable (placeholder address)
+			if _, exists := env.SymTable[label]; !exists {
+				env.SymTable[label] = 0 // Placeholder for Pass 1
+			}
+			// Calculate size using FindMinOutputSize
+			operandString := op.TokenLiteral()
+			ngOperands, err := ng_operand.FromString(operandString)
+			if err != nil {
+				log.Printf("Error creating operand from string '%s' in %s: %v", operandString, instName, err)
+				return
+			}
+			ngOperands = ngOperands.WithBitMode(env.BitMode)
+			// Jcc might need relative address handling forced differently than CALL?
+			// ngOperands = ngOperands.WithForceRelAsImm(false) // Example if needed
+
+			size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
+			if err != nil {
+				log.Printf("Error finding size for %s %s: %v. Assuming default size 2.", instName, operandString, err)
+				size = 2 // Default size (rel8) on error
+			}
+			env.LOC += int32(size)
+
+			// Emit Ocode with label placeholder (no comment)
+			env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
+		} else {
+			log.Printf("Error: Invalid factor type %T within ImmExp for %s operand.", op.Factor, instName)
+		}
+
+	case *ast.NumberExp: // Handle immediate address (relative jump target)
+		targetAddr := op.Value // int64
+		// Calculate relative offset (this is tricky in Pass 1 as LOC changes)
+		// Assume the offset calculation happens relative to the *end* of the current instruction.
+		// We need the size first. Assume rel8/rel16/rel32 based on offset range.
+		// This calculation is inherently problematic in a single pass without fixups.
+		// Let's estimate size based on typical jump instructions.
+		// JMP rel8 (EB cb) = 2 bytes
+		// JMP rel16/32 (E9 cw/cd) = 3/5 bytes
+		// Jcc rel8 (7x cb) = 2 bytes
+		// Jcc rel16/32 (0F 8x cw/cd) = 4/6 bytes
+
+		// Calculate size using FindMinOutputSize
+		operandString := op.TokenLiteral()
+		ngOperands, err := ng_operand.FromString(operandString)
+		if err != nil {
+			log.Printf("Error creating operand from string '%s' in %s: %v", operandString, instName, err)
+			return
+		}
+		ngOperands = ngOperands.WithBitMode(env.BitMode)
+
+		size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
+		if err != nil {
+			log.Printf("Error finding size for %s %s: %v. Assuming default size 2.", instName, operandString, err)
+			size = 2 // Default size (rel8) on error
+		}
+		env.LOC += int32(size)
+
+		// Create dummy label for immediate jump
 		fakeLabel := fmt.Sprintf("imm_jmp_%d", env.NextImmJumpID)
 		env.NextImmJumpID++
-		env.SymTable[fakeLabel] = offsetVal // ジャンプ先の絶対アドレスを登録
+		env.SymTable[fakeLabel] = int32(targetAddr) // Store absolute target address
 
-		// Ocodeを生成 (ジャンプ先アドレスはダミー)
-		// 追加: 即値のログ出力
-		log.Printf("[pass1] %s immediate value: %d (0x%x)", instName, offsetVal, offsetVal)
-
-		// Ocodeを生成 (ジャンプ先アドレスはダミー)
+		// Emit Ocode with dummy label placeholder (no comment)
+		log.Printf("[pass1] %s immediate value: %d (0x%x)", instName, targetAddr, targetAddr)
 		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, fakeLabel))
+
+	// TODO: Handle other operand types like MemoryAddrExp (e.g., JMP DWORD PTR [EAX]) if necessary
 	default:
-		// SegmentExpがTTIdentifierとして渡ってきたが、上記のSegmentExp処理でハンドルされなかった場合など
-		log.Fatalf("invalid JMP operand type or unhandled case: %T, value: %v", arg.Data, arg)
+		log.Printf("Error: Invalid operand type %T for %s instruction.", operand, instName)
 	}
 }
 

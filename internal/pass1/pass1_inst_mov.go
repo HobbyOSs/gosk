@@ -1,40 +1,52 @@
 package pass1
 
 import (
-	"fmt" // Keep only one fmt import
-	"strings"
+	// "errors" // Remove unused import
+	"fmt"
+	"log" // Add log import
 
-	"github.com/HobbyOSs/gosk/internal/token"
-	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
-	"github.com/samber/lo"
+	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	"github.com/HobbyOSs/gosk/pkg/ng_operand"
+	// "github.com/samber/lo" // Remove unused lo import
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
 
-func processMOV(env *Pass1, tokens []*token.ParseToken) {
-	args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-		return token.AsString()
-	})
+// astExpToNgOperand function removed as per user feedback.
 
-	// Use ng_operand.FromString factory function
-	operands, err := ng_operand.FromString(strings.Join(args, ","))
+// processMOV handles the MOV instruction using string representation of operands.
+func processMOV(env *Pass1, operands []ast.Exp) {
+	if len(operands) != 2 {
+		log.Printf("Error: MOV instruction requires exactly two operands.")
+		return
+	}
+
+	// Get string representation of operands
+	// Assuming TokenLiteral() provides the correct representation for ng_operand.FromString
+	op1Str := operands[0].TokenLiteral()
+	op2Str := operands[1].TokenLiteral()
+	operandString := op1Str + "," + op2Str
+
+	// Create ng_operand.Operands from the combined string
+	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error creating operands from string in MOV: %v\n", err)
+		log.Printf("Error creating operands from string '%s' in MOV: %v", operandString, err)
 		return // エラーが発生したら処理を中断
 	}
 
-	// Set BitMode and ForceRelAsImm
-	operands = operands.WithBitMode(env.BitMode).
-		WithForceRelAsImm(true) // Keep this flag for MOV
+	// Set BitMode
+	ngOperands = ngOperands.WithBitMode(env.BitMode)
+	// ngOperands = ngOperands.WithForceRelAsImm(true) // Re-evaluate if needed for MOV
 
-	// Restore LOC calculation
-	size, err := env.AsmDB.FindMinOutputSize("MOV", operands)
+	// Calculate instruction size
+	size, err := env.AsmDB.FindMinOutputSize("MOV", ngOperands)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error finding min output size for MOV %s: %v\n", strings.Join(args, ","), err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error finding min output size for MOV %s: %v", operandString, err)
+		// Fallback or default size? For now, just log and don't update LOC.
+		return
 	}
 	env.LOC += int32(size)
 
-	deb := fmt.Sprintf("MOV %s\n", strings.Join(args, ","))
-	env.Client.Emit(deb)
+	// Emit the command
+	// Use the original strings or the serialized version from ngOperands
+	env.Client.Emit(fmt.Sprintf("MOV %s ; (size: %d)", ngOperands.Serialize(), size))
 }

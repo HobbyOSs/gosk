@@ -13,7 +13,6 @@ import (
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 type Pass1EvalSuite struct {
@@ -148,11 +147,13 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			}
 
 			pass1 := &Pass1{
-				LOC:     0,
-				BitMode: tt.bitMode,
-				Ctx:     stack.NewStack[*token.ParseToken](100),
-				Client:  client,
-				AsmDB:   asmdb.NewInstructionDB(),
+				LOC:      0,
+				BitMode:  tt.bitMode,
+				EquMap:   make(map[string]*token.ParseToken), // Add EquMap initialization
+				SymTable: make(map[string]int32),         // Add SymTable initialization
+				Client:   client,
+				AsmDB:    asmdb.NewInstructionDB(),
+				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
 			}
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
 			if !assert.NoError(t, err) {

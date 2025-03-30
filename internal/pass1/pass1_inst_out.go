@@ -4,37 +4,42 @@ import (
 	"fmt" // Keep only one fmt import
 	"strings"
 
-	"github.com/HobbyOSs/gosk/internal/token"
+	"log" // Add log import
+
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
+	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
-func processOUT(env *Pass1, tokens []*token.ParseToken) {
-	args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-		return token.AsString()
+// processOUT handles the OUT instruction.
+func processOUT(env *Pass1, operands []ast.Exp) {
+	instName := "OUT"
+	// Get string representation of operands
+	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
+		return exp.TokenLiteral()
 	})
+	operandString := strings.Join(operandStrings, ",")
 
-	// Use ng_operand.FromString factory function
-	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	// Create ng_operand.Operands from the combined string
+	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error creating operands from string in OUT: %v\n", err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
+		return
 	}
 
 	// Set BitMode and ForceRelAsImm
-	operands = operands.WithBitMode(env.BitMode).
-		WithForceRelAsImm(true) // Keep this flag for OUT
+	ngOperands = ngOperands.WithBitMode(env.BitMode)
+	// ngOperands = ngOperands.WithForceRelAsImm(true) // Keep this flag for OUT? Re-evaluate if needed.
 
-	// Restore LOC calculation
-	size, err := env.AsmDB.FindMinOutputSize("OUT", operands)
+	// Calculate instruction size
+	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error finding min output size for OUT %s: %v\n", strings.Join(args, ","), err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
+		return
 	}
 	env.LOC += int32(size)
 
-	deb := fmt.Sprintf("OUT %s\n", strings.Join(args, ","))
-	env.Client.Emit(deb)
+	// Emit the command
+	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
 }

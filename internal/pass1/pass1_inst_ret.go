@@ -1,13 +1,21 @@
 package pass1
 
 import (
-	"github.com/HobbyOSs/gosk/internal/token"
+	// "fmt" // Remove unused import
+	"log" // Add log import
+
+	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
 )
 
-// processRET はRET命令のPass1処理を行います。
-// RET命令（オペランドなし）は1バイトの機械語を生成します。
-func processRET(env *Pass1, tokens []*token.ParseToken) {
-	// Emitは呼び出し元（handlers.goのTraverseAST内のOpcodeStmtケース）で実行されるため、
-	// ここではLOCのインクリメントのみを行う
+// processRET handles the RET instruction.
+// RET instruction (no operands) generates 1 byte of machine code (0xC3).
+func processRET(env *Pass1, operands []ast.Exp) {
+	if len(operands) != 0 {
+		log.Printf("Warning: RET instruction should not have operands, but got %d.", len(operands))
+	}
+	// RET instruction size is 1 byte.
 	env.LOC += 1
+	// Emit the RET command.
+	env.Client.Emit("RET")
 }

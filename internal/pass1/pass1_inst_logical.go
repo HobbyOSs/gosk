@@ -5,105 +5,109 @@ import (
 	"log" // Keep only one log import
 	"strings"
 
-	"github.com/HobbyOSs/gosk/internal/token"
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
+	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
-// processLogicalInst は論理命令の共通処理を行うヘルパー関数です
-func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string) {
-	args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-		return token.AsString()
+// processLogicalInst handles common logic for logical instructions.
+func processLogicalInst(env *Pass1, operands []ast.Exp, instName string) {
+	// Get string representation of operands
+	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
+		return exp.TokenLiteral() // Assuming TokenLiteral is suitable
 	})
+	operandString := strings.Join(operandStrings, ",")
 
-	// isAccumulator 関連コード削除
+	// isAccumulator logic removed
 	// isAccumulator := false
 	// if len(args) > 0 {
 	// 	matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
 	// 	isAccumulator = matched
 	// }
 
-	// Use ng_operand.FromString factory function
-	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	// Create ng_operand.Operands from the combined string
+	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error creating operands from string in %s: %v\n", instName, err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
+		return
 	}
 
-	// Set BitMode (WithForceImm8 削除)
-	operands = operands.WithBitMode(env.BitMode)
-	// if !isAccumulator {
-	// }
+	// Set BitMode
+	ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-	// Restore LOC calculation
-	size, err := env.AsmDB.FindMinOutputSize(instName, operands)
+	// Calculate instruction size
+	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error finding min output size for %s %s: %v\n", instName, strings.Join(args, ","), err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
+		return
 	}
 	env.LOC += int32(size)
 
-	env.Client.Emit(fmt.Sprintf("%s %s\n", instName, strings.Join(args, ",")))
+	// Emit the command
+	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
 }
 
+// --- Update callers to use the new signature ---
+
 // AND命令
-func processAND(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "AND")
+func processAND(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "AND")
 }
 
 // OR命令
-func processOR(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "OR")
+func processOR(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "OR")
 }
 
 // XOR命令
-func processXOR(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "XOR")
+func processXOR(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "XOR")
 }
 
 // NOT命令
-func processNOT(env *Pass1, tokens []*token.ParseToken) {
-	if len(tokens) != 1 {
-		log.Fatalf("error: NOT instruction requires 1 operand, but got %d", len(tokens))
-	}
-	arg := tokens[0].AsString()
-
-	// Use ng_operand.FromString factory function
-	operands, err := ng_operand.FromString(arg)
-	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error creating operands from string in NOT: %v\n", err)
-		return // エラーが発生したら処理を中断
+func processNOT(env *Pass1, operands []ast.Exp) {
+	if len(operands) != 1 {
+		log.Printf("Error: NOT instruction requires exactly one operand.")
+		return
 	}
 
-	// Set BitMode (WithForceImm8 削除)
-	operands = operands.WithBitMode(env.BitMode) // 算術命令に合わせて一旦 true に設定 -> このコメントも不要か？
+	// Get string representation of the operand
+	operandString := operands[0].TokenLiteral()
 
-	// Restore LOC calculation
-	size, err := env.AsmDB.FindMinOutputSize("NOT", operands)
+	// Create ng_operand.Operands from the string
+	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error finding min output size for NOT %s: %v\n", arg, err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error creating operand from string '%s' in NOT: %v", operandString, err)
+		return
+	}
+
+	// Set BitMode
+	ngOperands = ngOperands.WithBitMode(env.BitMode)
+
+	// Calculate instruction size
+	size, err := env.AsmDB.FindMinOutputSize("NOT", ngOperands)
+	if err != nil {
+		log.Printf("Error finding min output size for NOT %s: %v", operandString, err)
+		return
 	}
 	env.LOC += int32(size)
 
-	env.Client.Emit(fmt.Sprintf("NOT %s\n", arg))
+	// Emit the command
+	env.Client.Emit(fmt.Sprintf("NOT %s ; (size: %d)", ngOperands.Serialize(), size))
 }
 
 // SHR命令
-func processSHR(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "SHR")
+func processSHR(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "SHR")
 }
 
 // SHL命令
-func processSHL(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "SHL")
+func processSHL(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "SHL")
 }
 
 // SAR命令
-func processSAR(env *Pass1, tokens []*token.ParseToken) {
-	processLogicalInst(env, tokens, "SAR")
+func processSAR(env *Pass1, operands []ast.Exp) {
+	processLogicalInst(env, operands, "SAR")
 }

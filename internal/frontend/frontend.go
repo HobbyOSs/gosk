@@ -15,7 +15,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
-	"github.com/zeroflucs-given/generics/collections/stack"
 )
 
 // pass1, pass2を操作するモジュール
@@ -46,9 +45,9 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
-		Ctx:              stack.NewStack[*token.ParseToken](100),
 		Client:           client,
 		AsmDB:            asmdb.NewInstructionDB(),
+		MacroMap:         make(map[string]ast.Exp), // Add MacroMap initialization based on activeContext.md
 	}
 	pass1.Eval(prog)
 
@@ -58,7 +57,6 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		SymTable:         pass1.SymTable,
 		GlobalSymbolList: pass1.GlobalSymbolList,
 		ExternSymbolList: pass1.ExternSymbolList,
-		Ctx:              stack.NewStack[*token.ParseToken](100),
 		Client:           pass1.Client,
 		DollarPos:        pass1.DollarPosition,
 	}

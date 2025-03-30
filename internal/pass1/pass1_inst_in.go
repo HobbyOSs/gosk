@@ -4,42 +4,42 @@ import (
 	"fmt" // Keep only one fmt import
 	"strings"
 
-	"github.com/HobbyOSs/gosk/internal/token"
+	"log" // Add log import
+
+	// "github.com/HobbyOSs/gosk/internal/token" // Remove unused token import
+	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 	"github.com/samber/lo"
 )
 
-// processIN processes the IN instruction in pass1.
-// It calculates the instruction size using asmdb and updates the LOC.
-func processIN(env *Pass1, tokens []*token.ParseToken) {
-	args := lo.Map(tokens, func(token *token.ParseToken, _ int) string {
-		return token.AsString()
+// processIN handles the IN instruction.
+func processIN(env *Pass1, operands []ast.Exp) {
+	instName := "IN"
+	// Get string representation of operands
+	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
+		return exp.TokenLiteral()
 	})
+	operandString := strings.Join(operandStrings, ",")
 
-	// Use ng_operand.FromString factory function
-	operands, err := ng_operand.FromString(strings.Join(args, ","))
+	// Create ng_operand.Operands from the combined string
+	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
-		// TODO: より適切なエラーハンドリングを行う
-		fmt.Printf("Error creating operands from string in IN: %v\n", err)
-		return // エラーが発生したら処理を中断
+		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
+		return
 	}
 
 	// Set BitMode
-	operands = operands.WithBitMode(env.BitMode) // Assuming BitMode is relevant
+	ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-	// Restore LOC calculation
-	// FindMinOutputSize will use the fallback table if the instruction is not in the JSON DB
-	size, err := env.AsmDB.FindMinOutputSize("IN", operands)
+	// Calculate instruction size
+	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
-		// Handle error appropriately - maybe log or add to an error list in env
-		// For now, just print an error message similar to how OUT might implicitly handle errors
-		fmt.Printf("Error finding size for IN %s: %v\n", strings.Join(args, ","), err)
+		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
 		// Decide on a default size or stop processing? For now, assume 0 size on error.
-		size = 0 // Continue with size 0 on error? Let's keep original behavior for now.
+		size = 0 // Keep original behavior for now.
 	}
 	env.LOC += int32(size)
 
-	// Emit debug string
-	deb := fmt.Sprintf("IN %s\n", strings.Join(args, ","))
-	env.Client.Emit(deb)
+	// Emit the command
+	env.Client.Emit(fmt.Sprintf("%s %s ; (size: %d)", instName, ngOperands.Serialize(), size))
 }
