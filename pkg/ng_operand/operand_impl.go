@@ -333,54 +333,37 @@ func (o *OperandPegImpl) CalcOffsetByteSize() int {
 }
 
 // DetectImmediateSize は即値オペランドのサイズ (バイト単位) を検出します。
-// 基本的に OperandTypes() で解決された型に基づきますが、単一オペランドの場合は
-// 値が収まる最小サイズを返すように調整します。
-// TODO: 複数の即値オペランドが存在する場合の考慮が必要かもしれません。
+// 実際の即値が収まる最小サイズ (1, 2, 4, 8) を返します。
 func (o *OperandPegImpl) DetectImmediateSize() int {
-	// まず OperandTypes() を呼び出して型を解決
-	resolvedTypes := o.OperandTypes()
-
-	// 解決された型の中から即値型を探す (最初のもの)
-	var immType OperandType = CodeUNKNOWN
-	var immIndex int = -1
-	for i, t := range resolvedTypes {
-		if t == CodeIMM8 || t == CodeIMM16 || t == CodeIMM32 || t == CodeIMM64 {
-			immType = t
-			immIndex = i
-			break
-		}
+	// parsedOperands の nil チェックを追加
+	if o.parsedOperands == nil {
+		log.Printf("warn: DetectImmediateSize が nil の parsedOperands で呼び出されました")
+		return 0
 	}
 
-	if immIndex != -1 {
-		// 単一オペランドで、解決された型が IMM32 だが、
-		// 元の値はより小さいサイズに収まる場合、その最小サイズを返す
-		if len(o.parsedOperands) == 1 && immType == CodeIMM32 {
-			if immIndex < len(o.parsedOperands) && o.parsedOperands[immIndex] != nil {
-				val := o.parsedOperands[immIndex].Immediate
-				if val >= -128 && val <= 127 {
-					return 1 // 8ビットに収まる
-				}
-				if val >= -32768 && val <= 32767 {
-					return 2 // 16ビットに収まる
-				}
-				// それ以外（32ビットにしか収まらない）場合はそのまま IMM32 のサイズ 4 を返す
-			}
-			// parsedOperands が取得できない異常系、フォールバックして4を返す
-			return 4
-		}
+	// 即値オペランドを探す (最初のもの)
+	immOperand, found := lo.Find(o.parsedOperands, func(p *ParsedOperandPeg) bool {
+		// CodeIMM もチェック対象に含める
+		return p != nil && (p.Type == CodeIMM || p.Type == CodeIMM8 || p.Type == CodeIMM16 || p.Type == CodeIMM32 || p.Type == CodeIMM64)
+	})
 
-		// 上記以外の場合（複数オペランド、または解決型が IMM32 以外）は
-		// 解決された型に基づいてサイズを返す
-		switch immType {
-		case CodeIMM8:
-			return 1
-		case CodeIMM16:
-			return 2
-		case CodeIMM32:
-			return 4
-		case CodeIMM64:
-			return 8
+	// found が true でも immOperand の nil チェックを追加
+	if found && immOperand != nil {
+		val := immOperand.Immediate
+		// 値が収まる最小サイズを返す
+		if val >= -128 && val <= 127 {
+			return 1 // 8ビットに収まる
 		}
+		if val >= -32768 && val <= 32767 {
+			return 2 // 16ビットに収まる
+		}
+		// TODO: 64ビット対応が必要な場合はここに IMM32 のチェックを追加
+		// if val >= -2147483648 && val <= 2147483647 {
+		// 	return 4 // 32ビットに収まる
+		// }
+		// return 8 // 64ビット
+		return 4 // デフォルトは32ビットサイズ (64ビット未対応のため)
+
 	}
 
 	return 0 // 即値オペランドが見つからない

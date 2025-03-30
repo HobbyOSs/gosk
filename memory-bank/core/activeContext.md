@@ -10,6 +10,11 @@
     - `lo.MinBy` の比較ロジックを修正し、命令の符号拡張属性 (`isSignExtendable`) と即値サイズ (`fitsInImm8`) を考慮して、`imm8` 形式 (Opcode 83系) と `imm16/32` 形式 (Opcode 81系) を適切に選択するように強化。
 - **テスト修正**: `internal/codegen/x86gen_test.go` の `TestGenerateX86` が PASS することを確認 (`IMUL` テストケースは一時的にスキップ)。関連するテストファイルの `FindEncoding` 呼び出し箇所を修正。
 - **デバッグコード削除**: `pkg/asmdb/instruction_search.go` からデバッグ用の `log.Printf` を削除。
+- **pass1 の LOC 計算修正**:
+    - **問題:** `forceImm8` 廃止後、pass1 のサイズ計算 (`FindMinOutputSize`) が即値8ビットに収まる命令 (例: `ADD SI, 1`) に対しても `imm16` 形式のサイズ (4バイト) を返し、LOC がずれる問題が発生。これにより前方参照ラベルのアドレス解決が不正確になり、`TestDay03Suite` の多くのテストが失敗していた。
+    - **原因:** `FindMinOutputSize` が内部で `FindEncoding(..., matchAnyImm = false)` を呼び出しており、`imm8` 形式のエンコーディングを見つけられなかったため。
+    - **修正:** `FindMinOutputSize` (`pkg/asmdb/instruction_search.go`) が codegen と同様に `FindEncoding(..., matchAnyImm = true)` を呼び出すように修正。`FindEncoding` が選択した最適なエンコーディングのサイズ (`GetOutputSize(nil)`) を使うことで、pass1 と codegen のサイズ解釈を一致させた。
+    - **結果:** `TestHarib00a` から `TestHarib00h` までが PASS するようになった。
 
 ## 現在の焦点
 - **`IMUL r/m, imm` の ModR/M 生成問題**: `TestGenerateX86/IMUL_ECX_4608_(16bit)` が失敗する原因。`getModRMFromOperands` が `IMUL r/m, imm` 形式 (Opcode 69/6B) を正しく処理できない。

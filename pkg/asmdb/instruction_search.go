@@ -269,22 +269,32 @@ func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // ng
 	return size
 }
 
-// Restore FindMinOutputSize method definition
+// FindMinOutputSize は、指定された命令とオペランドに対して可能な最小の出力サイズを計算します。
+// codegen が選択するであろう最適なエンコーディングを考慮します。
 func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Operands) (int, error) { // ng_operand.Operands を使用
-	// サイズ計算時は厳密なマッチングを行うため matchAnyImm は false
-	encoding, err := db.FindEncoding(opcode, operands, false)
+	// codegen と同様に、最適なエンコーディングを見つけるために matchAnyImm = true で検索
+	// これにより、即値が小さい場合に imm8 形式が考慮される
+	encoding, err := db.FindEncoding(opcode, operands, true)
 	if err != nil {
-		return 0, err
+		// フォールバックとして、より厳密なマッチングを試みる (以前の動作に近い)
+		// これが必要になるケースは稀だが、念のため
+		log.Printf("warn: FindEncoding(matchAnyImm=true) failed for %s %s, retrying with false: %v", opcode, operands.InternalString(), err)
+		encoding, err = db.FindEncoding(opcode, operands, false)
+		if err != nil {
+			log.Printf("error: FindEncoding failed even with matchAnyImm=false for %s %s: %v", opcode, operands.InternalString(), err)
+			return 0, err
+		}
 	}
 
-	options := &OutputSizeOptions{
-		ImmSize: operands.DetectImmediateSize(),
-	}
-	size := encoding.GetOutputSize(options) // ここで options を渡す
+	// encoding.GetOutputSize は、エンコーディング自体の定義に基づいてサイズを計算する
+	// (例: imm8 エンコーディングなら即値は1バイト、imm16 なら2バイト)
+	// DetectImmediateSize() の結果はここでは不要 (FindEncoding が最適なものを選択済みのため)
+	size := encoding.GetOutputSize(nil) // options は不要
 
 	// プレフィックスとオフセットのサイズを加算
 	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize()
-	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize) // このログは保持
+	// ログに選択されたエンコーディング情報を追加してデバッグしやすくする (Stringメソッドがないため一旦削除)
+	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize)
 	return minOutputSize, nil
 }
 
