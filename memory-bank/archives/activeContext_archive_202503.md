@@ -135,3 +135,13 @@ ADD 命令において、以下の2つのケースで不正なエンコーディ
     - `internal/codegen/x86gen_no_param.go`: `opcodeMap` から `OpIMUL` を削除。
     - `pkg/ocode/ocode.go`: `OpSUB` 定数を追加し、`go generate` を実行。
     - `pkg/asmdb/instruction_table_fallback.go`: `IMUL r/m, imm` (オペコード `6B`) の `ModRM` 定義を修正。
+
+---
+## 完了した作業 (詳細) - 2025/03/30 (IMUL 修正)
+- **`IMUL r/m, imm` の ModR/M 生成問題修正**:
+    - **問題:** `IMUL ECX, 4608` (16bit) で ModR/M バイトが正しく生成されず、テストが失敗していた。`asmdb` の Opcode 69/6B の ModR/M 定義 (`Reg:"#1", Rm:"#0"`) が、実際の命令動作 (`Reg:"#0", Rm:"#0"`) と異なっている可能性があった。
+    - **修正:**
+        - `handleIMUL` を `internal/codegen/x86gen_imul.go` に分離。
+        - `handleIMUL` 内で `FindEncoding(..., false)` を使用して、即値に基づいた正確なエンコーディング (Opcode 69 または 6B) を選択するように修正。
+        - Opcode 69/6B の場合に限り、`getModRMFromOperands` に渡すエンコーディング情報の ModR/M 定義を一時的に `Reg:"#0", Rm:"#0"` に書き換えるワークアラウンドを適用。
+    - **結果:** `TestGenerateX86/IMUL_ECX_4608_16bit` が PASS するようになった。

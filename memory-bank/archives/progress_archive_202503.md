@@ -151,3 +151,7 @@
     - `internal/codegen/x86gen_no_param.go`: `opcodeMap` から `OpIMUL` を削除。
     - `pkg/ocode/ocode.go`: `OpSUB` 定数を追加し、`go generate` を実行。
     - `pkg/asmdb/instruction_table_fallback.go`: `IMUL r/m, imm` (オペコード `6B`) の `ModRM` 定義を修正。
+
+---
+## 実装済み機能 (詳細) - 2025/03/30 (IMUL 修正)
+- `IMUL r/m, imm` (Opcode 69/6B) の ModR/M 生成ロジック修正 (`handleIMUL` を分離しワークアラウンド適用)

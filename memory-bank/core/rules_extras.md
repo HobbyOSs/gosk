@@ -47,6 +47,43 @@
    - `pkg/asmdb/json-x86-64/x86_64.json` に命令情報が存在しない場合は、`pkg/asmdb/instruction_table_fallback.go` にGo言語で命令のエンコーディング情報を直接追記します。
    - 追記する際は、既存のフォーマットに合わせて `InstructionInfo` 構造体を定義します。
 
+### jq を用いた JSON データ調査 (詳細)
+
+#### json-x86-64/x86_64.json の構造
+
+`pkg/asmdb/json-x86-64/x86_64.json` は、x86-64 アーキテクチャの命令セットに関する詳細な情報を含む JSON ファイルです。このファイルは、命令の名前、オペランド、エンコーディング、属性などの情報を提供します。
+
+ファイルは、トップレベルで `instructions` というキーを持つオブジェクトを含み、`instructions` は命令名 (例: "ADD", "MOV", "IMUL" など) をキーとするオブジェクトの配列です。
+
+各命令オブジェクトは、以下のプロパティを持つ `forms` 配列を含みます。
+
+- `forms`: 命令のエンコーディング形式の配列。各要素はエンコーディング形式に関する情報を持つオブジェクトです。
+  - `encodings`: エンコーディングの詳細情報の配列。通常、最初の要素 (`encodings[0]`) が主要なエンコーディング情報です。
+    - `opcode`: オペコードに関する情報を持つオブジェクト
+      - `byte`: オペコードのバイト表現 (16進数文字列)
+    - `operands`: オペランドに関する情報の配列
+      - `type`: オペランドのタイプ (例: "r8", "r16", "r32", "r64", "m8", "m16", "m32", "m64" など)
+    - `ModRM`: (存在する場合) ModR/M バイトに関する情報
+      - `mode`: アドレッシングモード ("11", "#0", "#1", "#2")
+      - `reg`: reg フィールドの値 (固定値またはオペランドインデックス "#N")
+      - `rm`: r/m フィールドの値 (固定値またはオペランドインデックス "#N")
+    - `immediate`: (存在する場合) 即値に関する情報
+      - `size`: 即値のバイトサイズ (1, 2, 4, 8)
+      - `value`: 即値として使用するオペランドのインデックス ("#N")
+
+#### jq コマンド例 (追加)
+
+```bash
+# 特定命令の全フォームのオペコードとオペランドタイプをTSVで表示
+cat pkg/asmdb/json-x86-64/x86_64.json | jq -r '.instructions["INST_NAME"].forms[]? | [.encodings[0].opcode.byte, (.operands | map(.type)? | join(","))] | @tsv'
+
+# 特定命令の特定フォーム (例: r32, imm32) のエンコーディング詳細を表示
+cat pkg/asmdb/json-x86-64/x86_64.json | jq '.instructions["INST_NAME"].forms[] | select(.operands[0].type == "r32" and .operands[1].type == "imm32") | .encodings[0]'
+
+# 特定のオペコードバイトを持つ命令を検索 (部分一致)
+cat pkg/asmdb/json-x86-64/x86_64.json | jq '.. | objects | select(.opcode? and .opcode.byte? and (.opcode.byte | contains("OPCODE_BYTE")))'
+```
+
 ### ソースコード修正ポリシー
 
 1. **コード変更の基本ルール**
