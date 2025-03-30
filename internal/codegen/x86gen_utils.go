@@ -51,9 +51,19 @@ func GenerateModRM(operands []string, modRM *asmdb.Encoding, bitMode cpu.BitMode
 			return nil, fmt.Errorf("ModRM.RM index out of range")
 		}
 
+		// ModRMByOperand に渡す前にログ出力
 		regOperand := operands[regIndex]
 		rmOperand := operands[rmIndex]
-		return ModRMByOperand(modRMDef.Mode, regOperand, rmOperand, bitMode)
+
+		log.Printf("trace: GenerateModRM: regIndex=%d, regOperand=%s", regIndex, regOperand) // ADD LOG
+		log.Printf("trace: GenerateModRM: rmIndex=%d, rmOperand=%s", rmIndex, rmOperand)     // ADD LOG
+		log.Printf("trace: GenerateModRM: Calling ModRMByOperand with mode=%s, reg=%s, rm=%s", modRMDef.Mode, regOperand, rmOperand)
+
+		modrmBytes, err := ModRMByOperand(modRMDef.Mode, regOperand, rmOperand, bitMode)
+		if err != nil {
+			return nil, fmt.Errorf("error in ModRMByOperand: %w", err) // Wrap error
+		}
+		return modrmBytes, nil
 	} else {
 		// ModR/M の reg フィールドが固定値の場合
 		regValue, err := strconv.Atoi(modRMDef.Reg)

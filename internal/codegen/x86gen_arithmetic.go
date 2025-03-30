@@ -105,10 +105,6 @@ func handleCMP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	return generateArithmeticCode(params.Operands, ctx, "CMP")
 }
 
-func handleIMUL(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
-	return generateArithmeticCode(params.Operands, ctx, "IMUL")
-}
-
 func handleSUB(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	return generateArithmeticCode(params.Operands, ctx, "SUB")
 }
