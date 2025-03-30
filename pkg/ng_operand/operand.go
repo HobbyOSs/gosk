@@ -49,4 +49,7 @@ type Operands interface {
 	ImmediateValueFitsInSigned8Bits() bool
 	// IsControlRegisterOperation は、オペランドに制御レジスタが含まれるかどうかを返します。
 	IsControlRegisterOperation() bool
+	// IsType は、指定されたインデックスのオペランドが指定されたタイプと一致するかどうかを返します。
+	// 汎用的なタイプチェック (例: R32, IMM, M8) に使用できます。
+	IsType(index int, targetType OperandType) bool
 }

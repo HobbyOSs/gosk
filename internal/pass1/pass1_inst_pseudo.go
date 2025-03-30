@@ -34,7 +34,7 @@ func processDB(env *Pass1, tokens []*token.ParseToken) {
 		case token.TTIdentifier:
 			ident := t.AsString()
 			if labelLOC, ok := env.SymTable[ident]; ok { // ラベルが存在する場合
-				loc += 1 // DBは1バイト
+				loc += 1                               // DBは1バイト
 				ocodes = append(ocodes, labelLOC&0xFF) // ラベルアドレスの下位1バイトを追加
 			} else { // ラベルが存在しない場合は文字列として扱う
 				loc += int32(len(ident))
@@ -61,7 +61,7 @@ func processDW(env *Pass1, tokens []*token.ParseToken) {
 		case token.TTIdentifier:
 			ident := t.AsString()
 			if labelLOC, ok := env.SymTable[ident]; ok { // ラベルが存在する場合
-				loc += 2 // DWは2バイト
+				loc += 2                          // DWは2バイト
 				ocodes = append(ocodes, labelLOC) // ラベルアドレス(int32)をそのまま追加
 			} else { // ラベルが存在しない場合は文字列として扱う
 				loc += int32(len(ident))

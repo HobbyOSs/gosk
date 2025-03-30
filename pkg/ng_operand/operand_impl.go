@@ -284,50 +284,50 @@ func (o *OperandPegImpl) CalcOffsetByteSize() int {
 		}
 		memInfo := memOperand.Memory // 見つかったオペランドから MemoryInfo を取得
 
-		// アドレスサイズプレフィックス(67h)が必要な場合の処理
-		if o.Require67h() {
-			// TODO: Add logic to calculate displacement size based on memInfo.Displacement
-			//       even when address size prefix is present.
-			if o.bitMode == cpu.MODE_16BIT {
-				return 4 // 16ビットモードで32ビットアドレッシング -> 基本4バイト (要Disp考慮)
-			}
-			return 2 // 32ビットモードで16ビットアドレッシング -> 基本2バイト (要Disp考慮)
-		}
+		// アドレスサイズプレフィックス(67h)が必要かどうかにかかわらず、
+		// ディスプレースメントが存在すればその値に基づいてサイズを計算する。
+		// プレフィックスの有無はディスプレースメント自体のサイズには影響しない。
 
-		// プレフィックス不要の場合
+		// プレフィックス不要の場合 (コメントは残すが、ロジックは共通化)
 		// 1. 直接アドレス指定 [disp] (ModRM mode 00, rm 110 for 16bit or 101 for 32bit)
 		if memInfo.BaseReg == "" && memInfo.IndexReg == "" {
-			if o.bitMode == cpu.MODE_16BIT {
-				return 2 // 16bit direct address offset
-			}
-			return 4 // 32bit direct address offset
-		}
-
-		// 2. 間接アドレス指定でディスプレースメントがある場合 [reg+disp], [reg+reg*scale+disp]
-		if memInfo.Displacement != 0 {
-			disp := memInfo.Displacement
-			// ModRM mode 01 (disp8) or 10 (disp16/32)
-			if disp >= -128 && disp <= 127 {
-				// Check if ModRM mode 01 is applicable for the registers used
-				// (For simplicity here, assume disp8 is possible if it fits)
-				return 1 // disp8
-			}
+			// 直接アドレスの場合、ディスプレースメントサイズはビットモードに依存
 			if o.bitMode == cpu.MODE_16BIT {
 				return 2 // disp16
 			}
 			return 4 // disp32
 		}
 
-		// 3. 間接アドレス指定でディスプレースメントがない場合 [reg], [reg+reg*scale]
-		// ModRM mode 00 (except for [BP] in 16bit which uses mode 01 with disp8=0)
-		// or mode 11 (register direct, handled elsewhere)
-		// For mode 00, no additional offset bytes are needed.
-		// Special case: [BP] in 16-bit mode uses ModRM mode 01 with disp8=0.
-		if o.bitMode == cpu.MODE_16BIT && memInfo.BaseReg == "BP" && memInfo.IndexReg == "" && memInfo.Displacement == 0 {
-			return 1 // disp8=0 for [BP]
+		// 2. 間接アドレス指定 ([reg+disp], [reg+reg*scale+disp] など)
+		// ディスプレースメントがない場合は 0 バイト (ただし16bitの[BP]は例外)
+		if memInfo.Displacement == 0 {
+			// Special case: [BP] in 16-bit mode uses ModRM mode 01 with disp8=0.
+			if o.bitMode == cpu.MODE_16BIT && memInfo.BaseReg == "BP" && memInfo.IndexReg == "" {
+				return 1 // disp8=0 for [BP]
+			}
+			// Other cases like [BX], [SI], [BX+SI] etc. need no offset bytes with ModRM mode 00.
+			return 0
 		}
-		// Other cases like [BX], [SI], [BX+SI] etc. need no offset bytes with ModRM mode 00.
-		return 0
+
+		// ディスプレースメントがある場合
+		disp := memInfo.Displacement
+		// ModRM mode 01 (disp8) or 10 (disp16/32)
+		// 8ビットに収まるかチェック
+		if disp >= -128 && disp <= 127 {
+			// TODO: ModRM mode 00 で disp8 が使えないケース ([BP]以外) を考慮する必要があるかもしれないが、
+			//       現状は単純に8ビットに収まれば disp8 (1 byte) とする。
+			//       (例: [BX+disp8] は mode 01 を使う)
+			return 1 // disp8
+		}
+
+		// 8ビットに収まらない場合、ビットモードに応じて disp16 または disp32
+		if o.bitMode == cpu.MODE_16BIT {
+			// 16ビットモードでは、16ビットディスプレースメントを使用
+			return 2 // disp16
+		}
+		// 32ビットモードでは、32ビットディスプレースメントを使用
+		return 4 // disp32
+
 	}
 	return 0 // メモリオペランドが見つかりません
 }
@@ -499,6 +499,18 @@ func (o *OperandPegImpl) IsControlRegisterOperation() bool {
 	return lo.SomeBy(o.parsedOperands, func(p *ParsedOperandPeg) bool {
 		return p != nil && isCREGType(p.Type)
 	})
+}
+
+// IsType は、指定されたインデックスのオペランドが指定されたタイプと一致するかどうかを返します。
+func (o *OperandPegImpl) IsType(index int, targetType OperandType) bool {
+	types := o.OperandTypes() // 解決済みのタイプを取得
+	if index < 0 || index >= len(types) {
+		return false // インデックスが範囲外
+	}
+	// TODO: より汎用的なタイプマッチングが必要な場合があるかもしれない
+	//       (例: targetType=CodeR の場合に R8/R16/R32/R64 のいずれかにマッチさせるなど)
+	//       現状は完全一致のみをチェックする。
+	return types[index] == targetType
 }
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。

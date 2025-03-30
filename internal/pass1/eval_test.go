@@ -102,11 +102,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// 	text:        "OR EAX, 0x00000001",
 		// 	expectedLOC: 4,
 		// },
-		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
-		// 	text:        "IMUL ECX, 4608",
-		// 	expectedLOC: 7,
-		// },
+		{
+			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			text:        "IMUL ECX, 4608",
+			expectedLOC: 7, // Master data indicates 7 bytes (66 69 c9 00 12 00 00)
+		},
 		{
 			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV BYTE [ 0x0ff0 ], CH",
@@ -131,6 +131,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
 			text:        "MOV [ 0x0ff1 ], AL",
 			expectedLOC: 3,
+		},
+		{
+			bitMode:     cpu.MODE_16BIT,
+			text:        "MOV ECX, [EBX+16]",
+			expectedLOC: 5, // Master data indicates 5 bytes (67 66 8b 4b 10)
 		},
 	}
 

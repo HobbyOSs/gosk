@@ -282,9 +282,11 @@ func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // ng
 	size := 0
 	// 16/32ビットモード間でオペランドサイズが異なる場合に 0x66 が必要
 	if operands.Require66h() {
-		size += 1
+		size += 1 // オペランドサイズプレフィックス
 	}
-	// TODO: アドレスサイズプレフィックス (0x67) の考慮が必要になる可能性
+	if operands.Require67h() {
+		size += 1 // アドレスサイズプレフィックス
+	}
 	return size
 }
 
