@@ -28,7 +28,7 @@ func TestOperandPegImpl_DetectImmediateSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Call ParseOperands which now returns []*ParsedOperandPeg
-			parsedOperands, err := ParseOperands(tt.internal, cpu.MODE_16BIT, false, false) // Assuming default flags
+			parsedOperands, err := ParseOperands(tt.internal, cpu.MODE_16BIT, false) // Assuming default flags (forceRelAsImm=false)
 			if err != nil {
 				// If immediate is expected, parsing should succeed.
 				if tt.expected != 0 {

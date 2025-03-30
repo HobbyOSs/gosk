@@ -28,13 +28,14 @@ func NewInstructionDB() *InstructionDB {
 }
 
 // FindEncoding は指定された命令とオペランドに対応するエンコーディングを検索します。
-func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operands) (*Encoding, error) { // ng_operand.Operands を使用
+// matchAnyImm が true の場合、imm* タイプの比較を緩和します。
+func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operands, matchAnyImm bool) (*Encoding, error) { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	instr, err := GetInstructionByOpcode(opcode)
 	if err != nil {
 		return nil, errors.New("命令が見つかりません")
 	}
 
-	filteredForms := filterForms(instr.Forms, operands)
+	filteredForms := filterForms(instr.Forms, operands, matchAnyImm) // matchAnyImm を渡す
 
 	if len(filteredForms) == 0 {
 		return nil, errors.New("一致するエンコーディングが見つかりません")
@@ -77,10 +78,6 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 
 	// 最小のエンコーディングサイズを見つける
 	minEncoding := lo.MinBy(allEncodings, func(a, b *Encoding) bool {
-		// --- Debug Start ---
-		log.Printf("debug: MinBy comparing A: %+v vs B: %+v", a, b)
-		// --- Debug End ---
-
 		// 安全のため nil チェック
 		if a == nil {
 			return b != nil
@@ -97,22 +94,14 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 		isValidA := !(isAImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
 		isValidB := !(isBImm8 && !fitsInImm8) // imm8形式だがimm8に収まらない場合は無効
 
-		// --- Debug Start ---
-		log.Printf("debug: MinBy details: fitsInImm8=%v, isAImm8=%v, isBImm8=%v, isValidA=%v, isValidB=%v",
-			fitsInImm8, isAImm8, isBImm8, isValidA, isValidB)
-		// --- Debug End ---
-
 		// 有効性で比較
 		if isValidA && !isValidB {
-			log.Printf("debug: MinBy result: A valid, B invalid -> choose A (true)") // Debug
 			return true
 		}
 		if !isValidA && isValidB {
-			log.Printf("debug: MinBy result: A invalid, B valid -> choose B (false)") // Debug
 			return false
 		}
 		if !isValidA && !isValidB {
-			log.Printf("debug: MinBy result: Both invalid -> choose B (false)") // Debug
 			return false
 		} // 両方無効ならどちらでも良い (エラー処理は後段で行う)
 
@@ -120,26 +109,41 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 		// TODO: GetOutputSize が実際の即値サイズを考慮するように修正が必要かもしれない
 		sizeA := a.GetOutputSize(nil)
 		sizeB := b.GetOutputSize(nil)
-		log.Printf("debug: MinBy size comparison: sizeA=%d, sizeB=%d", sizeA, sizeB) // Debug
 
 		if sizeA != sizeB {
 			result := sizeA < sizeB
-			log.Printf("debug: MinBy result: Different sizes -> choose smaller (A<B: %v)", result) // Debug
 			return result
 		}
 
-		// サイズが同じ場合、imm8 形式を優先 (ただし両方有効な場合のみ)
-		if isAImm8 && !isBImm8 {
-			log.Printf("debug: MinBy result: Same size, A is imm8 -> choose A (true)") // Debug
-			return true
-		} // a (imm8) を優先
-		if !isAImm8 && isBImm8 {
-			log.Printf("debug: MinBy result: Same size, B is imm8 -> choose B (false)") // Debug
-			return false
-		} // b (imm8) を優先
+		// --- 符号拡張を考慮した優先順位付け (サイズが同じ場合) ---
+		signExtendable := isSignExtendable(opcode)
 
-		// サイズも同じで、imm8優先も適用されない場合は false
-		log.Printf("debug: MinBy result: Same size, no imm8 preference -> choose B (false)") // Debug
+		// 1. 符号拡張可能命令 (ADD, SUB, CMP など)
+		if signExtendable {
+			// 即値が imm8 に収まる場合: imm8 形式 (Opcode 83系) を最優先
+			if fitsInImm8 {
+				if isAImm8 && !isBImm8 {
+					return true
+				}
+				if !isAImm8 && isBImm8 {
+					return false
+				}
+			}
+			// 即値が imm8 に収まらない場合、または両方 imm8/非imm8 の場合:
+			// サイズが同じならどちらでも良い (ここでは B を選択)
+			return false
+		}
+
+		// 2. 符号拡張不可命令 (IMUL など)
+		// サイズが同じ場合、imm8 形式を優先 (両方有効な場合のみ)
+		if isAImm8 && !isBImm8 {
+			return true
+		}
+		if !isAImm8 && isBImm8 {
+			return false
+		}
+
+		// サイズも同じで、imm8優先も適用されない場合は false (B を選択)
 		return false
 	})
 
@@ -206,14 +210,14 @@ func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Enco
 	return filteredOtherEncodings
 }
 
-func filterForms(forms []InstructionForm, operands ng_operand.Operands) []InstructionForm { // ng_operand.Operands を使用
+func filterForms(forms []InstructionForm, operands ng_operand.Operands, matchAnyImm bool) []InstructionForm { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	// アキュムレータレジスタを優先的に検索
 	accForms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
 		// 逆参照する前に form.Operands が nil でないことを確認
 		if form.Operands == nil {
 			return false
 		}
-		return matchOperandsWithAccumulator(*form.Operands, operands)
+		return matchOperandsWithAccumulator(*form.Operands, operands, matchAnyImm) // matchAnyImm を渡す
 	})
 	// アキュムレータ形式が見つかった場合は、それを優先して返す
 	if len(accForms) > 0 {
@@ -226,7 +230,7 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands) []Instru
 		if form.Operands == nil {
 			return false
 		}
-		return matchOperandsStrict(*form.Operands, operands)
+		return matchOperandsStrict(*form.Operands, operands, matchAnyImm) // matchAnyImm を渡す
 	})
 	if len(strictForms) > 0 {
 		return strictForms
@@ -240,8 +244,20 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands) []Instru
 		}
 		return matchOperandsRelaxed(*form.Operands, operands)
 	})
-	log.Printf("debug: filterForms returning %d relaxed forms", len(relaxedForms)) // Debug
+	// log.Printf("debug: filterForms returning %d relaxed forms", len(relaxedForms)) // Debug removed
 	return relaxedForms                                                            // relaxedForms を返す
+}
+
+// isSignExtendable は、指定された命令が imm8 からの符号拡張をサポートするかどうかを返します。
+// (例: ADD, SUB, CMP など Opcode 83 系)
+func isSignExtendable(opcode string) bool {
+	// TODO: より正確なリストに更新する必要があるかもしれません
+	switch strings.ToUpper(opcode) {
+	case "ADD", "ADC", "SUB", "SBB", "CMP", "AND", "OR", "XOR":
+		return true
+	default:
+		return false
+	}
 }
 
 // GetPrefixSize はプレフィックスバイトのサイズを計算します
@@ -256,7 +272,8 @@ func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // ng
 
 // Restore FindMinOutputSize method definition
 func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Operands) (int, error) { // ng_operand.Operands を使用
-	encoding, err := db.FindEncoding(opcode, operands)
+	// サイズ計算時は厳密なマッチングを行うため matchAnyImm は false
+	encoding, err := db.FindEncoding(opcode, operands, false)
 	if err != nil {
 		return 0, err
 	}
@@ -275,7 +292,7 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Op
 // matchOperandsWithAccumulator は、queryOperands にアキュムレータが含まれており、
 // formOperands がそれにマッチするかどうかを判定します。
 // アキュムレータ専用形式 (例: ADD AX, imm16) を優先的にマッチさせます。
-func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_operand.Operands) bool {
+func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_operand.Operands, matchAnyImm bool) bool { // matchAnyImm パラメータ追加
 	// queryOperands にアキュムレータが含まれていない場合は false
 	if !hasAccumulator(queryOperands) {
 		return false
@@ -301,11 +318,11 @@ func matchOperandsWithAccumulator(formOperands []Operand, queryOperands ng_opera
 		}
 		// アキュムレータ以外のオペランドの比較
 		if formType != queryType {
-			// 即値タイプの比較を緩和: imm, imm8, imm16, imm32, imm64 は互換性があるとみなす
+			// matchAnyImm が true の場合、imm* タイプ同士は常にマッチ
 			isFormImm := strings.HasPrefix(formType, "imm")
 			isQueryImm := strings.HasPrefix(queryType, "imm")
-			if isFormImm && isQueryImm {
-				continue // 両方とも即値タイプならOKとする
+			if matchAnyImm && isFormImm && isQueryImm {
+				continue
 			}
 			// それ以外のタイプが不一致なら false
 			return false
@@ -323,22 +340,28 @@ func hasAccumulator(queryOperands ng_operand.Operands) bool { // ng_operand.Oper
 	return hasAccumulator
 }
 
-func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands) bool { // ng_operand.Operands を使用
+func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands, matchAnyImm bool) bool { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	queryTypes := queryOperands.OperandTypes() // Get types once
 	if formOperands == nil || len(formOperands) != len(queryTypes) {
-		log.Printf("debug: matchOperandsStrict: Length mismatch (form: %d, query: %d)", len(formOperands), len(queryTypes)) // Debug
+		// log.Printf("debug: matchOperandsStrict: Length mismatch (form: %d, query: %d)", len(formOperands), len(queryTypes)) // Debug removed
 		return false
 	}
 	for i, formOp := range formOperands {
 		queryType := string(queryTypes[i]) // OperandType を string に変換
 		formType := formOp.Type
-		log.Printf("debug: matchOperandsStrict: Comparing form[%d] type '%s' with query type '%s'", i, formType, queryType) // Debug
+		// log.Printf("debug: matchOperandsStrict: Comparing form[%d] type '%s' with query type '%s'", i, formType, queryType) // Debug removed
 		if formType != queryType {
-			log.Printf("debug: matchOperandsStrict: Mismatch at index %d", i) // Debug
+			// matchAnyImm が true の場合、imm* タイプ同士は常にマッチ
+			isFormImm := strings.HasPrefix(formType, "imm")
+			isQueryImm := strings.HasPrefix(queryType, "imm")
+			if matchAnyImm && isFormImm && isQueryImm {
+				continue
+			}
+			// log.Printf("debug: matchOperandsStrict: Mismatch at index %d", i) // Debug removed
 			return false
 		}
 	}
-	log.Printf("debug: matchOperandsStrict: Match successful") // Debug
+	// log.Printf("debug: matchOperandsStrict: Match successful") // Debug removed
 	return true
 }
 

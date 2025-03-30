@@ -28,9 +28,9 @@ func handleMOV(operands []string, ctx *CodeGenContext) []byte {
 	ops = ops.WithBitMode(ctx.BitMode).
 		WithForceRelAsImm(true)
 
-	// AsmDBからエンコーディングを取得
+	// AsmDBからエンコーディングを取得 (matchAnyImm = true)
 	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding("MOV", ops)
+	encoding, err := db.FindEncoding("MOV", ops, true)
 	if err != nil {
 		log.Printf("error: Failed to find encoding: %v", err)
 		return nil

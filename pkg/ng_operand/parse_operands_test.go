@@ -12,7 +12,7 @@ func TestParseOperands_FromString(t *testing.T) {
 	text := "EAX, EBX"
 	// expected := "EAX, EBX" // Original string check is less useful now
 
-	parsedOperands, err := ParseOperands(text, cpu.MODE_16BIT, false, false)
+	parsedOperands, err := ParseOperands(text, cpu.MODE_16BIT, false) // Assuming default flags (forceRelAsImm=false)
 	if err != nil {
 		t.Fatalf("ParseOperands failed for %q: %v", text, err)
 	}

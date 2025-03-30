@@ -2,7 +2,7 @@ package pass1
 
 import (
 	"fmt" // Keep only one fmt import
-	"regexp"
+	// "regexp" // Removed unused import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -16,11 +16,12 @@ func processArithmeticInst(env *Pass1, tokens []*token.ParseToken, instName stri
 		return token.AsString()
 	})
 
-	isAccumulator := false
-	if len(args) > 0 {
-		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
-		isAccumulator = matched
-	}
+	// isAccumulator 関連コード削除
+	// isAccumulator := false
+	// if len(args) > 0 {
+	// 	matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
+	// 	isAccumulator = matched
+	// }
 
 	// Use ng_operand.FromString factory function
 	operands, err := ng_operand.FromString(strings.Join(args, ","))
@@ -30,11 +31,12 @@ func processArithmeticInst(env *Pass1, tokens []*token.ParseToken, instName stri
 		return // エラーが発生したら処理を中断
 	}
 
-	// Set BitMode and ForceImm8
+	// Set BitMode
 	operands = operands.WithBitMode(env.BitMode)
-	if !isAccumulator {
-		operands = operands.WithForceImm8(true)
-	}
+	// WithForceImm8 呼び出し削除
+	// if !isAccumulator {
+	// 	operands = operands.WithForceImm8(true)
+	// }
 
 	// Restore LOC calculation
 	size, err := env.AsmDB.FindMinOutputSize(instName, operands)

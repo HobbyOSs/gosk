@@ -15,7 +15,6 @@ import (
 type OperandPegImpl struct {
 	parsedOperands []*ParsedOperandPeg
 	bitMode        cpu.BitMode
-	forceImm8      bool
 	forceRelAsImm  bool
 }
 
@@ -32,7 +31,7 @@ func NewOperandPegImpl(parsedOperands []*ParsedOperandPeg) *OperandPegImpl {
 // 内部的に ParseOperands を呼び出します。
 func FromString(text string) (Operands, error) {
 	// デフォルトのビットモードとフラグでパース
-	parsedOperands, err := ParseOperands(text, cpu.MODE_16BIT, false, false)
+	parsedOperands, err := ParseOperands(text, cpu.MODE_16BIT, false) // Removed forceImm8 (was false)
 	if err != nil {
 		log.Printf("オペランド文字列 '%s' のパースエラー: %v", text, err)
 		return nil, err
@@ -72,10 +71,7 @@ func (o *OperandPegImpl) OperandTypes() []OperandType {
 			return CodeUNKNOWN
 		}
 
-		// forceImm8 を優先
-		if o.forceImm8 && (parsed.Type == CodeIMM || parsed.Type == CodeIMM8 || parsed.Type == CodeIMM16 || parsed.Type == CodeIMM32 || parsed.Type == CodeIMM64) {
-			return CodeIMM8
-		}
+		// forceImm8 関連ロジック削除
 
 		baseType := parsed.Type
 
@@ -228,8 +224,8 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 				targetType = types[i]
 			}
 
-			// レジスタに基づいてターゲットサイズを解決 (ただし、即値ターゲットに対して forceImm8 が設定されている場合を除く)
-			if targetIndex != -1 && !(o.forceImm8 && lo.Contains([]OperandType{CodeIMM, CodeIMM8, CodeIMM16, CodeIMM32, CodeIMM64}, targetType)) {
+			// レジスタに基づいてターゲットサイズを解決
+			if targetIndex != -1 { // Removed forceImm8 check
 				resolvedType := CodeUNKNOWN
 				switch {
 				case isR8Type(regType): // R8 型用のカスタムヘルパー
@@ -249,8 +245,9 @@ func (o *OperandPegImpl) resolveDependentSizes(types []OperandType) {
 		})
 	})
 
-	// step2: 単一の即値オペランドは IMM32 にデフォルト設定 (forceImm8 でない場合)
-	if !o.forceImm8 && len(types) == 1 {
+	// step2: 単一の即値オペランドは IMM32 にデフォルト設定
+	// forceImm8 関連ロジック削除
+	if len(types) == 1 {
 		if lo.Contains([]OperandType{CodeIMM, CodeIMM8, CodeIMM16}, types[0]) {
 			types[0] = CodeIMM32
 		}
@@ -394,10 +391,7 @@ func (o *OperandPegImpl) WithBitMode(mode cpu.BitMode) Operands {
 	return o
 }
 
-func (o *OperandPegImpl) WithForceImm8(force bool) Operands {
-	o.forceImm8 = force
-	return o
-}
+// WithForceImm8 メソッド削除
 
 func (o *OperandPegImpl) WithForceRelAsImm(force bool) Operands {
 	o.forceRelAsImm = force

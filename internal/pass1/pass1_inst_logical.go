@@ -1,9 +1,9 @@
 package pass1
 
 import (
-	"fmt"    // Keep only one fmt import
-	"log"    // Keep only one log import
-	"regexp" // Keep only one regexp import
+	"fmt" // Keep only one fmt import
+	"log" // Keep only one log import
+	// "regexp" // Removed unused import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -17,11 +17,12 @@ func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string)
 		return token.AsString()
 	})
 
-	isAccumulator := false
-	if len(args) > 0 {
-		matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
-		isAccumulator = matched
-	}
+	// isAccumulator 関連コード削除
+	// isAccumulator := false
+	// if len(args) > 0 {
+	// 	matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
+	// 	isAccumulator = matched
+	// }
 
 	// Use ng_operand.FromString factory function
 	operands, err := ng_operand.FromString(strings.Join(args, ","))
@@ -31,11 +32,11 @@ func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string)
 		return // エラーが発生したら処理を中断
 	}
 
-	// Set BitMode and ForceImm8
+	// Set BitMode (WithForceImm8 削除)
 	operands = operands.WithBitMode(env.BitMode)
-	if !isAccumulator {
-		operands = operands.WithForceImm8(true)
-	}
+	// if !isAccumulator {
+	// 	operands = operands.WithForceImm8(true) // Removed this line
+	// }
 
 	// Restore LOC calculation
 	size, err := env.AsmDB.FindMinOutputSize(instName, operands)
@@ -79,8 +80,8 @@ func processNOT(env *Pass1, tokens []*token.ParseToken) {
 		return // エラーが発生したら処理を中断
 	}
 
-	// Set BitMode
-	operands = operands.WithBitMode(env.BitMode)
+	// Set BitMode (WithForceImm8 削除)
+	operands = operands.WithBitMode(env.BitMode) // 算術命令に合わせて一旦 true に設定 -> このコメントも不要か？
 
 	// Restore LOC calculation
 	size, err := env.AsmDB.FindMinOutputSize("NOT", operands)

@@ -30,9 +30,9 @@ func ParseOperandString(text string) (*ParsedOperandPeg, error) {
 
 // ParseOperands はカンマ区切りのオペランド文字列全体をパースします。
 // 例: "EAX, EBX", "AL, [SI]", "label, 0x10"
-// TODO: BitMode, ForceImm8, ForceRelAsImm をパース処理に反映させる必要があります (現在は引数で受け取るのみ)。
+// TODO: BitMode, ForceRelAsImm をパース処理に反映させる必要があります (現在は引数で受け取るのみ)。
 // 戻り値を []*ParsedOperandPeg に変更しました。
-func ParseOperands(text string, bitMode cpu.BitMode, forceImm8 bool, forceRelAsImm bool) ([]*ParsedOperandPeg, error) {
+func ParseOperands(text string, bitMode cpu.BitMode, forceRelAsImm bool) ([]*ParsedOperandPeg, error) {
 	// カンマで分割する前に、文字列全体をトリムします。
 	trimmedText := strings.TrimSpace(text)
 	if trimmedText == "" {

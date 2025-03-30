@@ -23,8 +23,7 @@ type Operands interface {
 	DetectImmediateSize() int
 	// WithBitMode は、指定されたビットモード (`cpu.BitMode`) を持つ新しい Operands オブジェクトを返します。
 	WithBitMode(mode cpu.BitMode) Operands // 再追加
-	// WithForceImm8 は、即値を強制的に8ビットとして扱うかどうかを設定した新しい Operands オブジェクトを返します。
-	WithForceImm8(force bool) Operands
+	// WithForceImm8 メソッド削除
 	// WithForceRelAsImm は、相対アドレスを即値として強制的に扱うかどうかを設定した新しい Operands オブジェクトを返します。
 	WithForceRelAsImm(force bool) Operands
 	// GetBitMode は、現在のビットモードを返します。

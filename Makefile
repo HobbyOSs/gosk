@@ -4,6 +4,7 @@ GOTEST=gotest
 
 BIN=gosk
 NASK=wine nask.exe
+KILL_DEAD_CODE = find . -type f -name "*.go" -exec sed -i -E '/^\s*\/\/.*(Removed|Delete|Unnecessary|Dead code|No longer needed)/d' {} +
 
 .PHONY: all test gen compress
 
@@ -28,6 +29,7 @@ gen:
 	go generate ./...
 
 fmt:
+	$(KILL_DEAD_CODE)
 	go fmt ./...
 
 dep:

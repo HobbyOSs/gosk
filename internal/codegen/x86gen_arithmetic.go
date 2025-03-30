@@ -25,11 +25,11 @@ func generateArithmeticCode(operands []string, ctx *CodeGenContext, instName str
 		return nil, fmt.Errorf("failed to create operands from string")
 	}
 	ops = ops.WithBitMode(ctx.BitMode)
-	ops = ops.WithForceImm8(true) // Restore this line
+	// ops = ops.WithForceImm8(true) // Removed this line
 
-	// AsmDBからエンコーディングを取得
+	// AsmDBからエンコーディングを取得 (matchAnyImm = true)
 	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding(instName, ops)
+	encoding, err := db.FindEncoding(instName, ops, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find encoding for %s", instName)
 	}

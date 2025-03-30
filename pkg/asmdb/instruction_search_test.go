@@ -24,7 +24,7 @@ func TestFindEncoding(t *testing.T) {
 
 	ops1, err1 := ng_operand.FromString("AL, [SI]") // MOV AL, [SI]
 	assert.NoError(t, err1)
-	encoding, err := db.FindEncoding("MOV", ops1)
+	encoding, err := db.FindEncoding("MOV", ops1, false) // matchAnyImm = false
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
 	assert.Equal(t, 2, encoding.GetOutputSize(nil)) // Pass nil for options
@@ -32,7 +32,7 @@ func TestFindEncoding(t *testing.T) {
 	ops2, err2 := ng_operand.FromString("NONEXISTENT")
 	// Expecting error from FromString or FindEncoding
 	if err2 == nil {
-		encoding, err = db.FindEncoding("MOV", ops2)
+		encoding, err = db.FindEncoding("MOV", ops2, false) // matchAnyImm = false
 		assert.Error(t, err) // Expect error from FindEncoding if FromString succeeds unexpectedly
 		assert.Nil(t, encoding)
 	} else {
@@ -47,14 +47,14 @@ func TestFindEncoding_ModRM(t *testing.T) {
 	// ModRM が必要なケース
 	ops1, err1 := ng_operand.FromString("AL, [SI]") // MOV AL, [SI]
 	assert.NoError(t, err1)
-	encoding, err := db.FindEncoding("MOV", ops1)
+	encoding, err := db.FindEncoding("MOV", ops1, false) // matchAnyImm = false
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
 	assert.NotNil(t, encoding.ModRM, "ModRM should be required for MOV AL, [SI]")
 
 	ops2, err2 := ng_operand.FromString("[SI], AL") // MOV [SI], AL
 	assert.NoError(t, err2)
-	encoding, err = db.FindEncoding("MOV", ops2)
+	encoding, err = db.FindEncoding("MOV", ops2, false) // matchAnyImm = false
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
 	assert.NotNil(t, encoding.ModRM, "ModRM should be required for MOV [SI], AL")
@@ -62,7 +62,7 @@ func TestFindEncoding_ModRM(t *testing.T) {
 	// ModRM が不要なケース
 	ops3, err3 := ng_operand.FromString("AL, [0x1234]") // MOV AL, [0x1234]
 	assert.NoError(t, err3)
-	encoding, err = db.FindEncoding("MOV", ops3)
+	encoding, err = db.FindEncoding("MOV", ops3, false) // matchAnyImm = false
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
 	// TODO: Re-evaluate this assertion after filterEncodings is fixed. Direct addressing might still pick an encoding with ModRM=nil.
@@ -70,7 +70,7 @@ func TestFindEncoding_ModRM(t *testing.T) {
 
 	ops4, err4 := ng_operand.FromString("AX, 0x1234") // MOV AX, 0x1234
 	assert.NoError(t, err4)
-	encoding, err = db.FindEncoding("MOV", ops4)
+	encoding, err = db.FindEncoding("MOV", ops4, false) // matchAnyImm = false
 	assert.NoError(t, err)
 	assert.NotNil(t, encoding)
 	assert.Nil(t, encoding.ModRM, "ModRM should not be required for MOV AX, 0x1234")
@@ -96,7 +96,7 @@ func TestFindMinOutputSize(t *testing.T) {
 
 		t.Logf("Operand types: %v", operands.OperandTypes())
 
-		encoding, err := db.FindEncoding("MOV", operands)
+		encoding, err := db.FindEncoding("MOV", operands, false) // matchAnyImm = false
 		if err != nil {
 			t.Logf("Error finding encoding: %v", err)
 		}

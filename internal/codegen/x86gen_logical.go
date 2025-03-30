@@ -22,12 +22,12 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 		// TODO: より適切なエラーハンドリングを行う
 		return nil, fmt.Errorf("failed to create operands from string in %s", instName)
 	}
-	ops = ops.WithBitMode(ctx.BitMode). // Added WithBitMode
-						WithForceImm8(true) // 算術命令に合わせて一旦 true に設定
+	ops = ops.WithBitMode(ctx.BitMode) // Added WithBitMode
+	// WithForceImm8(true) // Removed this line
 
-	// AsmDBからエンコーディングを取得
+	// AsmDBからエンコーディングを取得 (matchAnyImm = true)
 	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding(instName, ops)
+	encoding, err := db.FindEncoding(instName, ops, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find encoding for %s", instName)
 	}
@@ -132,9 +132,9 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 	ops = ops.WithBitMode(ctx.BitMode) // Added WithBitMode
 
-	// AsmDBからエンコーディングを取得
+	// AsmDBからエンコーディングを取得 (matchAnyImm = true)
 	db := asmdb.NewInstructionDB()
-	encoding, err := db.FindEncoding("NOT", ops)
+	encoding, err := db.FindEncoding("NOT", ops, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find encoding for NOT")
 	}
