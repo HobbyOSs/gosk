@@ -10,7 +10,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep ast for program argument
-	// Remove duplicate cpu import
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

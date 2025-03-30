@@ -27,7 +27,6 @@ func TestOperandPegImpl_OperandType(t *testing.T) {
 		{"Memory Address", "[EBX]", []OperandType{CodeM32}, false},
 		{"Memory Address", "AL,[ SI ]", []OperandType{CodeR8, CodeM8}, false},
 		{"Immediate Value", "0x10", []OperandType{CodeIMM32}, false},
-		// {"Immediate Value force imm8", "SI,1", []OperandType{CodeR16, CodeIMM8}, true, false}, // Removed forceImm8 test case
 		{"Segment Register", " CS", []OperandType{CodeSREG}, false},
 		{"Segmented Address", " DS:SI", []OperandType{CodeM16}, false},
 		{"Segmented Address", "DS:BX ", []OperandType{CodeM16}, false},
@@ -115,7 +114,6 @@ func TestOperandPegImpl_OperandType(t *testing.T) {
 			opImpl := NewOperandPegImpl(parsedOperands)
 			// Set the same bit mode and flags used for parsing to ensure consistency in OperandTypes resolution
 			opImpl.WithBitMode(bitMode)
-			// opImpl.WithForceImm8(tt.forceImm8) // Removed call to WithForceImm8
 			opImpl.WithForceRelAsImm(tt.forceRelAsImm)
 
 			// Get the resolved types from the implementation

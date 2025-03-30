@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	// "fmt" // Remove unused fmt import
 	// Add binary package for displacement conversion
 	"log"     // Keep only one log import
 	"strconv" // Keep only one strconv import

@@ -2,7 +2,6 @@ package pass1
 
 import (
 	"fmt" // Keep only one fmt import
-	// "regexp" // Removed unused import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"

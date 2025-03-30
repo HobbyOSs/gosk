@@ -33,7 +33,7 @@ func TestFindEncoding(t *testing.T) {
 	// Expecting error from FromString or FindEncoding
 	if err2 == nil {
 		encoding, err = db.FindEncoding("MOV", ops2, false) // matchAnyImm = false
-		assert.Error(t, err) // Expect error from FindEncoding if FromString succeeds unexpectedly
+		assert.Error(t, err)                                // Expect error from FindEncoding if FromString succeeds unexpectedly
 		assert.Nil(t, encoding)
 	} else {
 		// If FromString fails, that's also acceptable for a non-existent operand
@@ -89,10 +89,8 @@ func TestFindMinOutputSize(t *testing.T) {
 	})
 
 	t.Run("MOV r16, imm16 should use B8+rw form", func(t *testing.T) {
-		// Use ng_operand.FromString and remove WithForceImm8(true)
 		operands, err := ng_operand.FromString("AX, 0x1234")
 		assert.NoError(t, err)
-		// operands := ops.WithForceImm8(true) // Remove this line
 
 		t.Logf("Operand types: %v", operands.OperandTypes())
 

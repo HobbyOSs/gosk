@@ -8,7 +8,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/gen"
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/comail/colog"
-	// Remove unused cpu import
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeroflucs-given/generics/collections/stack"

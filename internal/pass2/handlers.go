@@ -7,7 +7,6 @@ import (
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep cpu import for NewBitMode
 	"github.com/morikuni/failure"
-	// "github.com/samber/lo" // Removed unused import
 )
 
 type opcodeEvalFn func(*Pass2, []*token.ParseToken)

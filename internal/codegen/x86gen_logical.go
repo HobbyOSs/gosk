@@ -23,7 +23,6 @@ func generateLogicalCode(operands []string, ctx *CodeGenContext, instName string
 		return nil, fmt.Errorf("failed to create operands from string in %s", instName)
 	}
 	ops = ops.WithBitMode(ctx.BitMode) // Added WithBitMode
-	// WithForceImm8(true) // Removed this line
 
 	// AsmDBからエンコーディングを取得 (matchAnyImm = true)
 	db := asmdb.NewInstructionDB()
@@ -149,7 +148,6 @@ func handleNOT(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	if ops.Require67h() {
 		machineCode = append(machineCode, 0x67)
 	}
-	// REX prefix handling removed based on user feedback
 
 	// オペコードの追加 (NOTはAddendを使用しない)
 	opcode, err := ResolveOpcode(encoding.Opcode, -1) // regNumは不要なので-1

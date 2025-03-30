@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Added import
-	// "github.com/HobbyOSs/gosk/pkg/cpu" // Removed unused import
 	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/comail/colog"
 	"github.com/zeroflucs-given/generics/collections/stack"

@@ -7,7 +7,6 @@ import (
 	"path/filepath" // Added missing import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
-	// "github.com/HobbyOSs/gosk/internal/client" // Removed unused import
 	"github.com/HobbyOSs/gosk/internal/codegen"
 	"github.com/HobbyOSs/gosk/internal/gen" // Added missing import
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"

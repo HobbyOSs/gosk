@@ -3,7 +3,6 @@ package pass1
 import (
 	"fmt" // Keep only one fmt import
 	"log" // Keep only one log import
-	// "regexp" // Removed unused import
 	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/token"
@@ -35,7 +34,6 @@ func processLogicalInst(env *Pass1, tokens []*token.ParseToken, instName string)
 	// Set BitMode (WithForceImm8 削除)
 	operands = operands.WithBitMode(env.BitMode)
 	// if !isAccumulator {
-	// 	operands = operands.WithForceImm8(true) // Removed this line
 	// }
 
 	// Restore LOC calculation

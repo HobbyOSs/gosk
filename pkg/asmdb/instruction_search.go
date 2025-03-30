@@ -244,8 +244,7 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands, matchAny
 		}
 		return matchOperandsRelaxed(*form.Operands, operands)
 	})
-	// log.Printf("debug: filterForms returning %d relaxed forms", len(relaxedForms)) // Debug removed
-	return relaxedForms                                                            // relaxedForms を返す
+	return relaxedForms // relaxedForms を返す
 }
 
 // isSignExtendable は、指定された命令が imm8 からの符号拡張をサポートするかどうかを返します。
@@ -343,13 +342,11 @@ func hasAccumulator(queryOperands ng_operand.Operands) bool { // ng_operand.Oper
 func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands, matchAnyImm bool) bool { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	queryTypes := queryOperands.OperandTypes() // Get types once
 	if formOperands == nil || len(formOperands) != len(queryTypes) {
-		// log.Printf("debug: matchOperandsStrict: Length mismatch (form: %d, query: %d)", len(formOperands), len(queryTypes)) // Debug removed
 		return false
 	}
 	for i, formOp := range formOperands {
 		queryType := string(queryTypes[i]) // OperandType を string に変換
 		formType := formOp.Type
-		// log.Printf("debug: matchOperandsStrict: Comparing form[%d] type '%s' with query type '%s'", i, formType, queryType) // Debug removed
 		if formType != queryType {
 			// matchAnyImm が true の場合、imm* タイプ同士は常にマッチ
 			isFormImm := strings.HasPrefix(formType, "imm")
@@ -357,11 +354,9 @@ func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operan
 			if matchAnyImm && isFormImm && isQueryImm {
 				continue
 			}
-			// log.Printf("debug: matchOperandsStrict: Mismatch at index %d", i) // Debug removed
 			return false
 		}
 	}
-	// log.Printf("debug: matchOperandsStrict: Match successful") // Debug removed
 	return true
 }
 
