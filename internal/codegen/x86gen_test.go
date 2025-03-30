@@ -279,6 +279,24 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x66, 0x83, 0xc8, 0x01}, // 66h + OR r/m32, imm8 (83 /1 ib)
 		},
+		{
+			name:    "MOV_AL_imm8_16bit",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"AL", "0xff"}},
+			},
+			expected: []byte{0xb0, 0xff}, // MOV AL, imm8
+		},
+		/* // TODO: 32bitモードでの MOV AL, imm8 は現在不要なためコメントアウト
+		{
+			name:    "MOV_AL_imm8_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpMOV, Operands: []string{"AL", "0xff"}},
+			},
+			expected: []byte{0xb0, 0xff}, // MOV AL, imm8 (no prefix needed)
+		},
+		*/
 	}
 
 	for _, tt := range tests {
