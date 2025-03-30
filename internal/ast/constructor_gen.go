@@ -34,7 +34,7 @@ func NewAddExp(baseExp BaseExp, headExp *MultExp, operators []string, tailExps [
 }
 
 // NewMultExp Create a new MultExp
-func NewMultExp(baseExp BaseExp, headExp *ImmExp, operators []string, tailExps []*ImmExp) *MultExp {
+func NewMultExp(baseExp BaseExp, headExp Exp, operators []string, tailExps []Exp) *MultExp {
 	return &MultExp{
 		BaseExp:   baseExp,
 		HeadExp:   headExp,

@@ -4,34 +4,32 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/HobbyOSs/gosk/internal/ast"   // astパッケージをインポート
-	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Import ng_operand
+	"github.com/HobbyOSs/gosk/internal/ast" // astパッケージをインポート
+	"github.com/HobbyOSs/gosk/pkg/cpu"
 )
 
-// evalSimpleExp evaluates an expression node and returns the result as int32.
-// It now accepts ast.Exp instead of ast.Node.
-func evalSimpleExp(exp ast.Exp, env *Pass1) (int32, error) {
-	// Evaluate the expression node using TraverseAST
-	evalNode := TraverseAST(exp, env) // TraverseAST now returns ast.Exp
+// estimateJumpSize estimates the size of a near jump/call instruction in Pass 1.
+// This is an estimation because the final offset size (rel8/rel16/32) might change in Pass 2.
+func estimateJumpSize(instName string, bitMode cpu.BitMode) int32 {
+	isJcc := instName != "JMP" && instName != "CALL" // Assume others are Jcc
 
-	// Check if the result is a number (NumberExp)
-	if numExp, ok := evalNode.(*ast.NumberExp); ok {
-		return int32(numExp.Value), nil
+	// Default to near relative jump/call sizes (opcode + rel16/32)
+	// JMP rel16/32 (E9 cw/cd): 1 + 2/4 = 3/5 bytes
+	// CALL rel16/32 (E8 cw/cd): 1 + 2/4 = 3/5 bytes
+	// Jcc rel16/32 (0F 8x cw/cd): 2 + 2/4 = 4/6 bytes
+	size := int32(5) // Assume rel32 for JMP/CALL initially
+	if bitMode == cpu.MODE_16BIT {
+		size = 3 // Assume rel16 for JMP/CALL in 16-bit mode
 	}
 
-	// 評価結果が未解決の識別子 (ImmExp with IdentFactor) かどうかを確認
-	if immExp, ok := evalNode.(*ast.ImmExp); ok {
-		if identFactor, ok := immExp.Factor.(*ast.IdentFactor); ok {
-			// TODO: ラベルやEQUの解決 (Pass2で行うか、ここでシンボルテーブルを参照するか)
-			// 現時点では未解決としてエラーを返すか、0を返す
-			log.Printf("WARN: Identifier '%s' evaluation in evalSimpleExp is not fully implemented yet (returning 0).", identFactor.Value)
-			// return 0, fmt.Errorf("identifier evaluation not implemented: %s", identFactor.Value)
-			return 0, nil // 仮に0を返す
+	if isJcc {
+		size = 6 // Assume rel32 for Jcc initially
+		if bitMode == cpu.MODE_16BIT {
+			size = 4 // Assume rel16 for Jcc in 16-bit mode
 		}
 	}
-
-	// その他の評価不能なケース
-	return 0, fmt.Errorf("cannot evaluate expression result to int32: %v (Type: %T)", evalNode.TokenLiteral(), evalNode)
+	// Note: We don't estimate short jumps (rel8) here, Pass 2 will optimize if possible.
+	return size
 }
 
 // processCalcJcc handles JMP and conditional jump instructions.
@@ -42,110 +40,92 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 	}
 
 	operand := operands[0]
+	evaluatedOperand, _ := operand.Eval(env) // Evaluate the operand first, explicitly ignore 'evaluated' flag
 
-	switch op := operand.(type) {
+	// Determine estimated size and emit Ocode based on the *evaluated* operand type
+	var estimatedSize int32
+	var ocode string
+
+	switch op := evaluatedOperand.(type) {
 	case *ast.SegmentExp: // Handle FAR jumps (e.g., JMP FAR label, JMP seg:off)
-		log.Printf("[pass1] Processing SegmentExp for %s: %s", instName, op.TokenLiteral())
+		log.Printf("[pass1] Processing evaluated SegmentExp for %s: %s", instName, op.TokenLiteral())
+		// Evaluate segment and offset parts *again* (Eval on SegmentExp itself might not fully resolve)
+		segEval, segOk := op.Left.Eval(env)
+		offEval, offOk := op.Right.Eval(env)
 
-		// Evaluate segment and offset
-		segment, errSeg := evalSimpleExp(op.Left, env) // Pass ast.Exp
-		if errSeg != nil {
-			log.Printf("Error evaluating segment expression for %s: %v", instName, errSeg)
-			return
-		}
-		if op.Right == nil {
-			log.Printf("Error: SegmentExp without Right part is not supported for %s FAR.", instName)
-			return
-		}
-		offset, errOff := evalSimpleExp(op.Right, env) // Pass ast.Exp
-		if errOff != nil {
-			log.Printf("Error evaluating offset expression for %s: %v", instName, errOff)
-			return
-		}
-
-		// Calculate size (JMP ptr16:16/32)
-		size := int32(7) // EA + ptr16:32 (4 byte offset + 2 byte selector)
-		// if env.BitMode == cpu.MODE_16BIT { size = ? } // Adjust for 16-bit ptr16:16 if needed
-		env.LOC += size
-
-		// Emit Ocode (placeholder format)
-		env.Client.Emit(fmt.Sprintf("%s_FAR %d:%d", instName, segment, offset))
-
-	case *ast.ImmExp: // Handle labels (IdentFactor)
-		if factor, ok := op.Factor.(*ast.IdentFactor); ok {
-			label := factor.Value
-			// Register label in SymTable (placeholder address)
-			if _, exists := env.SymTable[label]; !exists {
-				env.SymTable[label] = 0 // Placeholder for Pass 1
-			}
-			// Calculate size using FindMinOutputSize
-			operandString := op.TokenLiteral()
-			ngOperands, err := ng_operand.FromString(operandString)
-			if err != nil {
-				log.Printf("Error creating operand from string '%s' in %s: %v", operandString, instName, err)
-				return
-			}
-			ngOperands = ngOperands.WithBitMode(env.BitMode)
-			// Jcc might need relative address handling forced differently than CALL?
-			// ngOperands = ngOperands.WithForceRelAsImm(false) // Example if needed
-
-			size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
-			if err != nil {
-				log.Printf("Error finding size for %s %s: %v. Assuming default size 2.", instName, operandString, err)
-				size = 2 // Default size (rel8) on error
-			}
-			env.LOC += int32(size)
-
-			// Emit Ocode with label placeholder (no comment)
-			env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, label))
+		if !segOk || !offOk {
+			log.Printf("Error: Could not fully evaluate segment or offset for FAR %s.", instName)
+			// Emit placeholder based on original operand string if evaluation failed
+			estimatedSize = 7 // Assume ptr16:32
+			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
 		} else {
-			log.Printf("Error: Invalid factor type %T within ImmExp for %s operand.", op.Factor, instName)
+			// Try to get values if they are numbers, otherwise use placeholders
+			var segStr, offStr string
+			if segNum, ok := segEval.(*ast.NumberExp); ok {
+				segStr = fmt.Sprintf("%d", segNum.Value)
+			} else {
+				segStr = fmt.Sprintf("{{expr:%s}}", op.Left.TokenLiteral()) // Placeholder for segment
+			}
+			if offNum, ok := offEval.(*ast.NumberExp); ok {
+				offStr = fmt.Sprintf("%d", offNum.Value)
+			} else {
+				offStr = fmt.Sprintf("{{expr:%s}}", op.Right.TokenLiteral()) // Placeholder for offset
+			}
+
+			estimatedSize = 7 // JMP ptr16:32 (EA + ptr16:32)
+			ocode = fmt.Sprintf("%s_FAR %s:%s", instName, segStr, offStr)
 		}
 
-	case *ast.NumberExp: // Handle immediate address (relative jump target)
-		targetAddr := op.Value // int64
-		// Calculate relative offset (this is tricky in Pass 1 as LOC changes)
-		// Assume the offset calculation happens relative to the *end* of the current instruction.
-		// We need the size first. Assume rel8/rel16/rel32 based on offset range.
-		// This calculation is inherently problematic in a single pass without fixups.
-		// Let's estimate size based on typical jump instructions.
-		// JMP rel8 (EB cb) = 2 bytes
-		// JMP rel16/32 (E9 cw/cd) = 3/5 bytes
-		// Jcc rel8 (7x cb) = 2 bytes
-		// Jcc rel16/32 (0F 8x cw/cd) = 4/6 bytes
-
-		// Calculate size using FindMinOutputSize
-		operandString := op.TokenLiteral()
-		ngOperands, err := ng_operand.FromString(operandString)
-		if err != nil {
-			log.Printf("Error creating operand from string '%s' in %s: %v", operandString, instName, err)
-			return
+	case *ast.ImmExp:
+		if factor, ok := op.Factor.(*ast.IdentFactor); ok { // Unresolved label
+			label := factor.Value
+			log.Printf("[pass1] Processing label '%s' for %s", label, instName)
+			// Register label if not exists
+			if _, exists := env.SymTable[label]; !exists {
+				env.SymTable[label] = 0 // Placeholder address
+			}
+			estimatedSize = estimateJumpSize(instName, env.BitMode)
+			ocode = fmt.Sprintf("%s {{.%s}}", instName, label) // Ocode with label placeholder
+		} else {
+			// Should not happen if ImmExp.Eval works correctly, but handle defensively
+			log.Printf("Error: Unexpected factor type %T within evaluated ImmExp for %s.", op.Factor, instName)
+			estimatedSize = estimateJumpSize(instName, env.BitMode)                 // Estimate size anyway
+			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral()) // Placeholder with original expr
 		}
-		ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-		size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
-		if err != nil {
-			log.Printf("Error finding size for %s %s: %v. Assuming default size 2.", instName, operandString, err)
-			size = 2 // Default size (rel8) on error
-		}
-		env.LOC += int32(size)
+	case *ast.NumberExp: // Resolved immediate address
+		targetAddr := op.Value
+		log.Printf("[pass1] Processing immediate address %d (0x%x) for %s", targetAddr, targetAddr, instName)
+		// Pass 1 cannot reliably calculate relative offset. Use a placeholder.
+		estimatedSize = estimateJumpSize(instName, env.BitMode)
+		// Use a placeholder indicating an immediate address for Pass 2
+		ocode = fmt.Sprintf("%s {{addr:%d}}", instName, targetAddr)
 
-		// Create dummy label for immediate jump
-		fakeLabel := fmt.Sprintf("imm_jmp_%d", env.NextImmJumpID)
-		env.NextImmJumpID++
-		env.SymTable[fakeLabel] = int32(targetAddr) // Store absolute target address
+	case *ast.AddExp, *ast.MultExp: // Partially evaluated expression (e.g., label + offset)
+		log.Printf("[pass1] Processing partially evaluated expression for %s: %s", instName, op.TokenLiteral())
+		// Cannot fully resolve in Pass 1. Use a placeholder for Pass 2.
+		estimatedSize = estimateJumpSize(instName, env.BitMode)
+		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, op.TokenLiteral()) // Placeholder with the expression string
 
-		// Emit Ocode with dummy label placeholder (no comment)
-		log.Printf("[pass1] %s immediate value: %d (0x%x)", instName, targetAddr, targetAddr)
-		env.Client.Emit(fmt.Sprintf("%s {{.%s}}", instName, fakeLabel))
+	// TODO: Handle MemoryAddrExp if needed (e.g., JMP DWORD PTR [EAX])
 
-	// TODO: Handle other operand types like MemoryAddrExp (e.g., JMP DWORD PTR [EAX]) if necessary
 	default:
-		log.Printf("Error: Invalid operand type %T for %s instruction.", operand, instName)
+		log.Printf("Error: Invalid evaluated operand type %T for %s instruction.", evaluatedOperand, instName)
+		// Attempt to use original operand string as a fallback placeholder
+		estimatedSize = estimateJumpSize(instName, env.BitMode) // Estimate size
+		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
 	}
+
+	// Update LOC and emit Ocode
+	if estimatedSize == 0 {
+		log.Printf("WARN: Estimated size is 0 for %s %s. Defaulting to 2.", instName, operand.TokenLiteral())
+		estimatedSize = 2 // Avoid LOC not advancing
+	}
+	env.LOC += estimatedSize
+	env.Client.Emit(ocode)
 }
 
-// getOffsetSize は相対オフセットのサイズ (バイト数) を返す
+// getOffsetSize は相対オフセットのサイズ (バイト数) を返す (Pass 2 で使用)
 func getOffsetSize(imm int32) int32 {
 	if imm >= -128 && imm <= 127 {
 		return 1 // rel8

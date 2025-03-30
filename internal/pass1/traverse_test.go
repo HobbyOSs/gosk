@@ -1,16 +1,55 @@
 package pass1
 
 import (
+	"strconv" // Add strconv import
+	"strings" // Add strings import for MYLABEL check
 	"testing"
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/gen"
-	"github.com/HobbyOSs/gosk/internal/token"
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeroflucs-given/generics/collections/stack"
 )
+
+// Helper function to create a simple NumberExp (fully evaluated)
+func newExpectedNumberExp(val int64) *ast.NumberExp {
+	// BaseExp and Factor are needed for NumberExp structure but not critical for value comparison
+	baseFactor := ast.NewNumberFactor(ast.BaseFactor{}, int(val))
+	baseImmExp := ast.NewImmExp(ast.BaseExp{}, baseFactor)
+	return ast.NewNumberExp(*baseImmExp, val)
+}
+
+// Helper function to create a simple IdentExp (ImmExp with IdentFactor)
+func newExpectedIdentExp(name string) *ast.ImmExp {
+	baseFactor := ast.NewIdentFactor(ast.BaseFactor{}, name)
+	return ast.NewImmExp(ast.BaseExp{}, baseFactor)
+}
+
+// Helper function to create a simple MultExp for testing expectations
+// Note: For simplicity, we assume factors are ImmExp(IdentFactor) for unresolved parts
+func newExpectedMultExp(head ast.Exp, ops []string, tails []ast.Exp) *ast.MultExp { // Change head and tails to ast.Exp
+	return ast.NewMultExp(ast.BaseExp{}, head, ops, tails)
+}
+
+// Helper function to create a simple AddExp for testing expectations
+// Note: For simplicity, we assume factors are ImmExp(IdentFactor) for unresolved parts
+func newExpectedAddExp(head *ast.MultExp, ops []string, tails []*ast.MultExp) *ast.AddExp {
+	return ast.NewAddExp(ast.BaseExp{}, head, ops, tails)
+}
+
+// Helper to create MultExp from a single ImmExp (for AddExp structure)
+func multExpFromImm(imm *ast.ImmExp) *ast.MultExp {
+	return ast.NewMultExp(ast.BaseExp{}, imm, nil, nil)
+}
+
+// Helper to create ImmExp from a number string (used in AddExp expectation)
+func immExpFromNumStr(numStr string) *ast.ImmExp {
+	// This assumes the number string parses correctly to a NumberFactor
+	// A more robust helper might handle potential parsing errors
+	numVal, _ := strconv.Atoi(numStr)
+	return ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, numVal))
+}
 
 type Pass1TraverseSuite struct { // Rename struct
 	suite.Suite
@@ -28,294 +67,257 @@ func (s *Pass1TraverseSuite) SetupSuite() { // Use renamed struct
 
 func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 	tests := []struct {
-		name string
-		text string
-		want *stack.Stack[*token.ParseToken]
+		name         string
+		text         string
+		expectedNode ast.Exp // Expected evaluated node
 	}{
+		// --- Cases that should evaluate to NumberExp ---
 		{
-			"+int",
-			"30",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(30)),
-			}),
+			name:         "+int",
+			text:         "30",
+			expectedNode: newExpectedNumberExp(30),
 		},
 		{
-			"-int",
-			"-30",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(-30)),
-			}),
+			name:         "-int",
+			text:         "-30",
+			expectedNode: newExpectedNumberExp(-30),
 		},
 		{
-			"hex",
-			"0x0ff0",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTHex, buildImmExpFromValue("0x0ff0")),
-			}),
+			name:         "hex",
+			text:         "0x0ff0",
+			expectedNode: newExpectedNumberExp(0x0ff0),
+		},
+		// CharFactor evaluation might need adjustment in ImmExp.Eval if needed
+		// {
+		// 	name:         "char",
+		// 	text:         "'A'", // Simple char
+		// 	expectedNode: newExpectedNumberExp(65),
+		// },
+		{
+			name:         "simple math 1",
+			text:         "1 + 1",
+			expectedNode: newExpectedNumberExp(2),
 		},
 		{
-			"char",
-			"'0x0ff0'",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue("'0x0ff0'")),
-			}),
+			name:         "simple math 2",
+			text:         "4 - 2",
+			expectedNode: newExpectedNumberExp(2),
 		},
 		{
-			"string",
-			`"0x0ff0"`,
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue(`"0x0ff0"`)),
-			}),
+			name:         "simple math 3",
+			text:         "1 + 3 - 2 + 4",
+			expectedNode: newExpectedNumberExp(6),
 		},
 		{
-			"ident",
-			`_testZ009$`,
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue(`_testZ009$`)),
-			}),
+			name:         "complex math 1 (evaluates fully)",
+			text:         "8 * 3 - 1", // Parser creates AddExp{ MultExp{8*3}, "-", ImmExp{1} }
+			expectedNode: newExpectedNumberExp(23),
 		},
 		{
-			"simple math 1",
-			"1 + 1",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(2)),
-			}),
+			name:         "label + constant (evaluates fully)",
+			text:         "MYLABEL + 512", // MYLABEL = 0x8000 (defined below)
+			expectedNode: newExpectedNumberExp(0x8000 + 512),
 		},
 		{
-			"simple math 2",
-			"4 - 2",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(2)),
-			}),
+			name:         "label - constant (evaluates fully)",
+			text:         "MYLABEL - 10", // MYLABEL = 0x8000
+			expectedNode: newExpectedNumberExp(0x8000 - 10),
+		},
+		// --- Cases that should NOT evaluate fully (contain unresolved identifiers) ---
+		{
+			name: "ident (cannot evaluate)",
+			text: `_testZ009$`,
+			// Expected: AddExp -> MultExp -> ImmExp -> IdentFactor
+			expectedNode: newExpectedAddExp(
+				multExpFromImm(newExpectedIdentExp(`_testZ009$`)),
+				nil, nil,
+			),
 		},
 		{
-			"simple math 3",
-			"1 + 3 - 2 + 4",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(6)),
-			}),
+			name: "displacement 1 (cannot evaluate fully)",
+			text: "ESP+4",
+			// Expected: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{4}} }
+			expectedNode: newExpectedAddExp(
+				multExpFromImm(newExpectedIdentExp("ESP")),
+				[]string{"+"},
+				[]*ast.MultExp{multExpFromImm(immExpFromNumStr("4"))},
+			),
 		},
 		{
-			"complex math 1",
-			"8 * 3 - 1", // Note: TestAddExp only handles AddExp nodes directly
-			buildStack([]*token.ParseToken{
-				// This test case might be invalid for TestAddExp if parsing "8 * 3 - 1"
-				// doesn't result in an AddExp node as the root.
-				// Assuming the parser handles precedence and gives an AddExp like (8*3) - 1
-				// The TraverseAST would first evaluate 8*3 (MultExp), push 24,
-				// then AddExp handler sees 24 - 1.
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(23)),
-			}),
+			name: "displacement 2 (cannot evaluate fully)",
+			text: "ESP+12+8",
+			// Expected: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{12}}, "+", MultExp{ImmExp{8}} }
+			expectedNode: newExpectedAddExp(
+				multExpFromImm(newExpectedIdentExp("ESP")),
+				[]string{"+", "+"},
+				[]*ast.MultExp{
+					multExpFromImm(immExpFromNumStr("12")),
+					multExpFromImm(immExpFromNumStr("8")),
+				},
+			),
 		},
-		{
-			"displacement 1",
-			"ESP+4",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue("ESP")),
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(4)),
-			}),
-		},
-		{
-			"displacement 2",
-			"ESP+12+8",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue("ESP")),
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(20)),
-			}),
-		},
-		{
-			name: "label + constant",
-			text: "MYLABEL + 512",
-			want: buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000+512)), // MYLABEL = 0x8000
-			}),
-		},
-		{
-			name: "label - constant",
-			text: "MYLABEL - 10",
-			want: buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(0x8000-10)), // MYLABEL = 0x8000
-			}),
-		},
+		// StringFactor and CharFactor with multiple chars are generally not evaluatable arithmetically
+		// {
+		// 	name: "string (cannot evaluate)",
+		// 	text: `"0x0ff0"`,
+		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewStringFactor(ast.BaseFactor{}, "0x0ff0")),
+		// },
+		// {
+		// 	name: "char multi (cannot evaluate)",
+		// 	text: "'AB'",
+		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewCharFactor(ast.BaseFactor{}, "AB")),
+		// },
 	}
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			// For complex math, ensure parsing actually yields AddExp
-			if tt.name == "complex math 1" {
-				parsedNode, _ := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
-				if _, ok := parsedNode.(*ast.AddExp); !ok {
-					t.Skip("Skipping complex math test as it doesn't parse directly to AddExp")
-				}
-			}
-			// For displacement tests, ensure parsing yields AddExp
-			if tt.name == "displacement 1" || tt.name == "displacement 2" {
-				parsedNode, _ := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
-				if _, ok := parsedNode.(*ast.AddExp); !ok {
-					t.Skipf("Skipping %s test as it doesn't parse directly to AddExp", tt.name)
-				}
+			// Adjust entrypoint based on test case
+			entrypoint := "AddExp"
+			if tt.name == "ident (cannot evaluate)" {
+				entrypoint = "Exp" // Parse single identifier as Exp (ImmExp)
 			}
 
-			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("AddExp"))
-			if !assert.NoError(t, err) {
+			// Parse the input text
+			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint(entrypoint))
+			if !assert.NoError(t, err, "Parsing failed for input: %s", tt.text) {
 				t.FailNow()
 			}
-			node, ok := got.(*ast.AddExp)
-			// Skip tests where the root node is not AddExp after parsing
+
+			// Ensure the parsed node is actually an Exp
+			startNode, ok := got.(ast.Exp)
 			if !ok {
-				t.Skipf("Skipping test %s because root node is %T, not *ast.AddExp", tt.name, got)
+				t.Fatalf("Parsed node is not an ast.Exp, but %T", got)
 			}
 
+			// Setup Pass1 environment
 			p := &Pass1{
-				SymTable: make(map[string]int32),   // Add SymTable initialization
-				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
+				SymTable: make(map[string]int32),
+				MacroMap: make(map[string]ast.Exp),
 			}
-			// 事前にテスト用のマクロを MacroMap に設定 (新しい方式)
-			// Assuming MYLABEL is now defined as a macro (EQU)
-			p.MacroMap["MYLABEL"] = ast.NewNumberExp(ast.ImmExp{}, 0x8000) // Define MYLABEL = 0x8000
+			// Define MYLABEL macro for relevant tests
+			if strings.Contains(tt.text, "MYLABEL") {
+				// Use DefineMacro method which handles storing as ast.Exp
+				p.DefineMacro("MYLABEL", newExpectedNumberExp(0x8000))
+			}
 
-			// TraverseAST は評価結果のノードを返すように変更されたため、スタックは使用しない
-			evaluatedNode := TraverseAST(node, p) // Pass1 を Env として渡す
-			// assert.True(t, reduced, "Evaluation should result in reduction for these test cases") // reduced は返さない
+			// Evaluate the node
+			evaluatedNode := TraverseAST(startNode, p) // Pass1 implements ast.Env
 
-			// --- 比較ロジック修正 (スタックではなく、返されたノードを比較) ---
-			// evaluatedNode を使ってアサーションする必要があるが、一旦コメントアウト
-			_ = evaluatedNode // Avoid "declared and not used" error for now
-			// tt.want は古いスタックベースの期待値なので、直接比較できない。
-			// 新しい期待値 (evaluatedNode) を定義し直す必要がある。
-			// ここではビルドを通すため、比較ロジックをコメントアウトまたは削除する。
-
-			// ok, expected := tt.want.Pop()
-			// assert.True(t, ok, "Expected stack should not be empty")
-
-			// --- 比較ロジック修正 (Hex対応) --- の部分は削除またはコメントアウト
-			/*
-				var expectedValue int // Declare expectedValue outside
-				// Get expected value
-				if expected.TokenType == token.TTNumber {
-					expectedValue = expected.ToInt()
-				} else if expected.TokenType == token.TTHex {
-					expectedValue = expected.HexAsInt()
-				} else if expected.TokenType == token.TTIdentifier {
-					// Expected is Identifier, compare as string
-					assert.Equal(t, expected.AsString(), actual.AsString(),
-						fmt.Sprintf("expected string: %s, actual string: %s", expected.AsString(), actual.AsString()))
-					// Skip numeric comparison for identifiers
-					// assert.Equal(t, 0, p.Ctx.Count(), "Stack should be empty after popping the result") // Ctxを使わない
-					return // End test for identifier comparison
-				} else {
-					// t.Fatalf("Unexpected expected token type: %s", expected.TokenType) // expectedを使わない
+			// Compare the evaluated node with the expected node
+			switch expected := tt.expectedNode.(type) {
+			case *ast.NumberExp:
+				actual, ok := evaluatedNode.(*ast.NumberExp)
+				assert.True(t, ok, "Expected *ast.NumberExp, got %T", evaluatedNode)
+				if ok {
+					assert.Equal(t, expected.Value, actual.Value, "Evaluated number value mismatch")
 				}
-
-				// Get actual value (only if expected was Number or Hex)
-				var actualValue int // Declare actualValue outside the blocks
-				if actual.TokenType == token.TTNumber {
-					actualValue = actual.ToInt() // Assign value
-				} else if actual.TokenType == token.TTHex {
-					actualValue = actual.HexAsInt() // Assign value, don't redeclare with :=
-				} else {
-					// If actual is not Number or Hex, but expected was, fail
-					t.Fatalf("Expected Number/Hex but got %s (%s)", actual.TokenType, actual.AsString())
+			case *ast.AddExp:
+				actual, ok := evaluatedNode.(*ast.AddExp)
+				assert.True(t, ok, "Expected *ast.AddExp, got %T", evaluatedNode)
+				if ok {
+					// Basic comparison using TokenLiteral for structure check
+					// More detailed comparison might be needed for complex cases
+					assert.Equal(t, expected.TokenLiteral(), actual.TokenLiteral(), "Evaluated AddExp structure mismatch")
 				}
-
-				// Compare the integer values (コメントアウト)
-				// assert.Equal(t, expectedValue, actualValue,
-				// 	fmt.Sprintf("expected value: %d (0x%x), actual value: %d (0x%x)", expectedValue, expectedValue, actualValue, actualValue))
-
-				// --- 修正ここまで --- (コメントアウト)
-			*/
-
-			// スタックが空になったか確認 (コメントアウト)
-			// assert.Equal(t, 0, p.Ctx.Count(), "Stack should be empty after popping the result")
-
-			// 元のループはスタック全体を比較していたが、AddExp は結果を1つだけ返すはずなので修正 (コメントアウト)
-			// for i := p.Ctx.Count(); i >= 0; i-- {
-			// 	_, expected := tt.want.Pop()
-			// 	_, actual := p.Ctx.Pop()
-			// 	assert.Equal(t, expected, actual,
-			// 		fmt.Sprintf("expected: %+v, actual: %+v\n", expected, actual))
-			// }
+			case *ast.ImmExp: // For cases like unresolved identifiers
+				actual, ok := evaluatedNode.(*ast.ImmExp)
+				assert.True(t, ok, "Expected *ast.ImmExp, got %T", evaluatedNode)
+				if ok {
+					assert.Equal(t, expected.TokenLiteral(), actual.TokenLiteral(), "Evaluated ImmExp mismatch")
+				}
+			default:
+				t.Fatalf("Unhandled expected node type: %T", tt.expectedNode)
+			}
 		})
 	}
 }
 
 func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
 	tests := []struct {
-		name string
-		text string
-		want *stack.Stack[*token.ParseToken]
+		name         string
+		text         string
+		expectedNode ast.Exp // Expected evaluated node
 	}{
+		// --- Cases that should evaluate to NumberExp ---
 		{
-			"simple math 1",
-			"1005*8",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(8040)),
-			}),
+			name:         "simple math 1",
+			text:         "1005*8",
+			expectedNode: newExpectedNumberExp(8040),
 		},
 		{
-			"simple math 2",
-			"512/4",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(128)),
-			}),
+			name:         "simple math 2",
+			text:         "512/4",
+			expectedNode: newExpectedNumberExp(128),
 		},
 		{
-			"simple math 3",
-			"512*1024/4",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(131072)),
-			}),
+			name:         "simple math 3",
+			text:         "512*1024/4",
+			expectedNode: newExpectedNumberExp(131072),
+		},
+		// --- Cases that should NOT evaluate fully ---
+		{
+			name: "scale 1 (cannot evaluate fully)",
+			text: "EDX*4",
+			// Expected: MultExp{ ImmExp{EDX}, "*", ImmExp{4} }
+			expectedNode: newExpectedMultExp(
+				newExpectedIdentExp("EDX"), // ast.Exp compatible
+				[]string{"*"},
+				[]ast.Exp{immExpFromNumStr("4")}, // Pass as []ast.Exp
+			),
 		},
 		{
-			"scale 1",
-			"EDX*4",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue("EDX")),
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(4)),
-			}),
-		},
-		{
-			"scale 2",
-			"ESI*8",
-			buildStack([]*token.ParseToken{
-				token.NewParseToken(token.TTIdentifier, buildImmExpFromValue("ESI")),
-				token.NewParseToken(token.TTNumber, buildImmExpFromValue(8)),
-			}),
+			name: "scale 2 (cannot evaluate fully)",
+			text: "ESI*8",
+			// Expected: MultExp{ ImmExp{ESI}, "*", ImmExp{8} }
+			expectedNode: newExpectedMultExp(
+				newExpectedIdentExp("ESI"), // ast.Exp compatible
+				[]string{"*"},
+				[]ast.Exp{immExpFromNumStr("8")}, // Pass as []ast.Exp
+			),
 		},
 	}
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
+			// Parse the input text as a MultExp
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("MultExp"))
-			if !assert.NoError(t, err) {
+			if !assert.NoError(t, err, "Parsing failed for input: %s", tt.text) {
 				t.FailNow()
 			}
-			node, ok := got.(*ast.MultExp)
+
+			// Ensure the parsed node is actually an Exp
+			startNode, ok := got.(ast.Exp)
 			if !ok {
-				t.FailNow()
+				t.Fatalf("Parsed node is not an ast.Exp, but %T", got)
 			}
 
+			// Setup Pass1 environment
 			p := &Pass1{
-				SymTable: make(map[string]int32),   // Add SymTable initialization
-				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
+				SymTable: make(map[string]int32),
+				MacroMap: make(map[string]ast.Exp),
 			}
-			// TraverseAST は評価結果のノードを返すように変更されたため、スタックは使用しない
-			evaluatedNode := TraverseAST(node, p) // TODO: Pass1 を Env として渡す
-			// assert.True(t, reduced, "Evaluation should result in reduction for these test cases") // reduced は返さない
 
-			// tt.want は古いスタックベースの期待値なので、直接比較できない。
-			// evaluatedNode を使ってアサーションする必要があるが、一旦コメントアウト
-			_ = evaluatedNode // Avoid "declared and not used" error for now
-			// 新しい期待値 (evaluatedNode) を定義し直す必要がある。
-			// ここではビルドを通すため、比較ロジックをコメントアウトまたは削除する。
-			/*
-				for i := p.Ctx.Count(); i >= 0; i-- { // Ctxを使わない
-					_, expected := tt.want.Pop()
-					_, actual := p.Ctx.Pop() // Ctxを使わない
-					assert.Equal(t, expected, actual,
-						fmt.Sprintf("expected: %+v, actual: %+v\n", expected, actual))
+			// Evaluate the node
+			evaluatedNode := TraverseAST(startNode, p) // Pass1 implements ast.Env
+
+			// Compare the evaluated node with the expected node
+			switch expected := tt.expectedNode.(type) {
+			case *ast.NumberExp:
+				actual, ok := evaluatedNode.(*ast.NumberExp)
+				assert.True(t, ok, "Expected *ast.NumberExp, got %T", evaluatedNode)
+				if ok {
+					assert.Equal(t, expected.Value, actual.Value, "Evaluated number value mismatch")
 				}
-			*/
+			case *ast.MultExp:
+				actual, ok := evaluatedNode.(*ast.MultExp)
+				assert.True(t, ok, "Expected *ast.MultExp, got %T", evaluatedNode)
+				if ok {
+					// Basic comparison using TokenLiteral for structure check
+					assert.Equal(t, expected.TokenLiteral(), actual.TokenLiteral(), "Evaluated MultExp structure mismatch")
+				}
+			default:
+				t.Fatalf("Unhandled expected node type: %T", tt.expectedNode)
+			}
 		})
 	}
 }

@@ -94,7 +94,7 @@ DeclareStmt <- _ f:IdentFactor _ "EQU" _ e:Exp _ {
     if !ok {
         return nil, parseError("declareStmt ident")
     }
-    exp, ok := e.(ast.Exp)
+    exp, ok := e.(ast.Exp) // Use the general Exp interface
     if !ok {
         return nil, parseError("declareStmt exp")
     }
@@ -218,9 +218,9 @@ OpcodeStmt <- _ o:Opcode _ {
     return ast.NewOpcodeStmt(ast.BaseStatement{}, opcode), nil
 }
 
-Operand <- Exp
+Operand <- Exp // Use the adjusted Exp rule
 
-Exp <- MemoryAddrExp / SegmentExp
+Exp <- MemoryAddrExp / SegmentExp / AddExp // Define Exp order: specific to general
 
 // オペコードを最も長いパターンにマッチさせるために、辞書順ではなく文字列長でソートしている
 Opcode = "FYL2XP1" / "FXTRACT" / "FUCOMPP" / "FSINCOS" / "FRNDINT" / "FNSTENV" / "FINCSTP" /
@@ -287,7 +287,8 @@ MemoryAddrExp <- WS d:DataType? WS j:JumpType? WS '[' WS l:AddExp r:(':' AddExp)
     return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, jt, left, right), nil
 }
 
-SegmentExp <- WS d:DataType? WS l:AddExp r:(':' AddExp)? {
+// Reintroduce SegmentExp, but make the colon and right side mandatory
+SegmentExp <- WS d:DataType? WS l:AddExp ':' r:AddExp {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
         dt, _ = ast.NewDataType(dts)
@@ -296,17 +297,14 @@ SegmentExp <- WS d:DataType? WS l:AddExp r:(':' AddExp)? {
     if !ok {
         return nil, parseError("segmentExp left")
     }
-    tuple := toAnySlice(r)
-    if tuple == nil || tuple[1] == nil {
-        return ast.NewSegmentExp(ast.BaseExp{}, dt, left, nil), nil
-    }
-    right, ok := tuple[1].(*ast.AddExp)
+    right, ok := r.(*ast.AddExp) // Right side is now mandatory
     if !ok {
-        return ast.NewSegmentExp(ast.BaseExp{}, dt,left, nil), nil
+        return nil, parseError("segmentExp right")
     }
-
+    // Note: JumpType is not applicable to SegmentExp
     return ast.NewSegmentExp(ast.BaseExp{}, dt, left, right), nil
 }
+
 
 AddExp <- head:MultExp tail:(WS ('+' / '-') WS MultExp)* {
     mult, ok := head.(*ast.MultExp)
@@ -337,14 +335,31 @@ AddExp <- head:MultExp tail:(WS ('+' / '-') WS MultExp)* {
     return ast.NewAddExp(ast.BaseExp{}, mult, ops, exps), nil
 }
 
-MultExp <- head:ImmExp tail:(WS ('*' / '/' / '%') WS ImmExp)* {
-    imm, ok := head.(*ast.ImmExp)
+// Separate rules for Factor and Parenthesized AddExp
+PrimaryFactor <- f:Factor {
+    factor, ok := f.(ast.Factor)
+    if !ok {
+         return nil, parseError("primaryFactor factor")
+    }
+    // Wrap Factor in ImmExp
+    return ast.NewImmExp(ast.BaseExp{}, factor), nil
+}
+PrimaryParen <- '(' _ e:AddExp _ ')' {
+    // Return the AddExp directly
+    return e, nil
+}
+// PrimaryExp chooses between the two
+PrimaryExp <- PrimaryFactor / PrimaryParen
+
+MultExp <- head:PrimaryExp tail:(WS ('*' / '/' / '%') WS PrimaryExp)* {
+    // head can now be Factor (wrapped in ImmExp) or AddExp
+    headExp, ok := head.(ast.Exp) // Use general Exp interface
     if !ok {
         return nil, parseError("multExp head")
     }
 
     ops := make([]string, 0)
-    exps := make([]*ast.ImmExp, 0)
+    tailExps := make([]ast.Exp, 0) // Store tails as general Exp
 
     for _, anySlice := range toAnySlice(tail) {
         tuple := toAnySlice(anySlice)
@@ -357,19 +372,21 @@ MultExp <- head:ImmExp tail:(WS ('*' / '/' / '%') WS ImmExp)* {
         }
         ops = append(ops, op)
 
-        exp, ok := tuple[3].(*ast.ImmExp)
+        exp, ok := tuple[3].(ast.Exp) // Tail is also PrimaryExp (Exp)
         if !ok {
-            return nil, parseError("multExp tail")
+            return nil, parseError("multExp tail exp")
         }
-        exps = append(exps, exp)
+        tailExps = append(tailExps, exp)
     }
-    return ast.NewMultExp(ast.BaseExp{}, imm, ops, exps), nil
+    // Explicitly pass tailExps (which is []ast.Exp) to the constructor
+    return ast.NewMultExp(ast.BaseExp{}, headExp, ops, tailExps), nil
 }
 
+// ImmExp might become redundant later if PrimaryExp handles Factors directly
 ImmExp <- f:Factor {
     factor, ok := f.(ast.Factor)
     if !ok {
-        return nil, parseError("immExp")
+        return nil, parseError("immExp factor")
     }
     return ast.NewImmExp(ast.BaseExp{}, factor), nil
 }

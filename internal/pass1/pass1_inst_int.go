@@ -14,12 +14,19 @@ func processINT(env *Pass1, operands []ast.Exp) {
 		return
 	}
 
-	numExp, ok := operands[0].(*ast.NumberExp)
+	// Evaluate the operand expression
+	exp := operands[0]
+	evaluatedExp, _ := exp.Eval(env) // Ignore the 'evaluated' flag for now
+
+	// Check if the evaluated result is a NumberExp
+	numExp, ok := evaluatedExp.(*ast.NumberExp)
 	if !ok {
-		log.Printf("Error: INT directive requires a numeric operand, got %T.", operands[0])
+		// Log the type we actually got after evaluation
+		log.Printf("Error: INT directive requires a numeric operand after evaluation, got %T.", evaluatedExp)
 		return
 	}
 
+	// Check if the interrupt number is within the valid range (0-255)
 	interruptNum := numExp.Value // Value is int64
 	if interruptNum < 0 || interruptNum > 255 {
 		log.Printf("Error: INT operand %d out of range (0-255).", interruptNum)

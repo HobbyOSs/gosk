@@ -29,7 +29,7 @@ func buildMultExpFromValue(value any) *ast.MultExp {
 	return &ast.MultExp{
 		HeadExp:   buildImmExpFromValue(value),
 		Operators: []string{},
-		TailExps:  []*ast.ImmExp{},
+		TailExps:  []ast.Exp{},
 	}
 }
 
@@ -41,19 +41,38 @@ func buildAddExpFromValue(value any) *ast.AddExp {
 	}
 }
 
-func buildSegmentExpFromValue(value any) *ast.SegmentExp {
-	return &ast.SegmentExp{
-		DataType: "",
-		Left:     buildAddExpFromValue(value),
-		Right:    nil,
+// buildAddExpFromValue は単純な値から AddExp を構築するヘルパー (既存)
+// buildMultExpFromValue は単純な値から MultExp を構築するヘルパー (既存)
+// buildImmExpFromValue は単純な値から ImmExp を構築するヘルパー (既存)
+
+// buildMemoryAddrExpFromValue はメモリアドレス式を構築するヘルパー (既存)
+func buildMemoryAddrExpFromValue(left any, right any) *ast.MemoryAddrExp {
+	// Note: This helper might need adjustment if MemoryAddrExp structure changes significantly
+	// For now, assume it correctly builds based on AddExp for left/right parts.
+	var leftExp *ast.AddExp
+	if left != nil {
+		leftExp = buildAddExpFromValue(left)
+	}
+	var rightExp *ast.AddExp
+	if right != nil {
+		rightExp = buildAddExpFromValue(right)
+	}
+
+	return &ast.MemoryAddrExp{
+		DataType: ast.None, // Default to None, specific tests can override
+		Left:     leftExp,
+		Right:    rightExp,
 	}
 }
 
-func buildMemoryAddrExpFromValue(left any, right any) *ast.MemoryAddrExp {
-	return &ast.MemoryAddrExp{
-		DataType: "",
-		Left:     buildAddExpFromValue(left),
-		Right:    buildAddExpFromValue(right),
+// buildSegmentExp はセグメント式を構築するヘルパー (新規または修正)
+// Note: This helper assumes a structure where Left and Right are AddExp.
+// It's used for explicit segment expressions like "DWORD 2*8:0x..."
+func buildSegmentExp(dataType ast.DataType, leftExp *ast.AddExp, rightExp *ast.AddExp) *ast.SegmentExp {
+	return &ast.SegmentExp{
+		DataType: dataType,
+		Left:     leftExp,
+		Right:    rightExp,
 	}
 }
 
@@ -85,79 +104,58 @@ func TestParse(t *testing.T) {
 		{"line comment1", "Comment", "# sample", "# sample"},
 		{"line comment2", "Comment", "; sample", "; sample"},
 		// exp
-		{"simple exp1", "Exp", "10",
-			buildSegmentExpFromValue(10),
+		{"simple exp1", "Exp", "10", // Expect AddExp for simple numbers
+			buildAddExpFromValue(10),
 		},
-		{"simple exp2", "Exp", "CYLS",
-			buildSegmentExpFromValue("CYLS"),
+		{"simple exp2", "Exp", "CYLS", // Expect AddExp for simple identifiers
+			buildAddExpFromValue("CYLS"),
 		},
-		{"complex exp1", "Exp", "DWORD 2*8:0x0000001b",
-			&ast.SegmentExp{
-				DataType: ast.Dword,
-				Left: &ast.AddExp{
+		{"complex exp1 (SegmentExp)", "Exp", "DWORD 2*8:0x0000001b", // Expect SegmentExp for explicit segment syntax
+			buildSegmentExp(
+				ast.Dword,
+				&ast.AddExp{ // Left part of SegmentExp
 					HeadExp: &ast.MultExp{
 						HeadExp:   buildImmExpFromValue(2),
 						Operators: []string{"*"},
-						TailExps:  []*ast.ImmExp{buildImmExpFromValue(8)},
+						TailExps:  []ast.Exp{buildImmExpFromValue(8)}, // Correct type: []ast.Exp
 					},
 					Operators: []string{},
 					TailExps:  []*ast.MultExp{},
 				},
-				Right: buildAddExpFromValue("0x0000001b"),
-			},
+				buildAddExpFromValue("0x0000001b"), // Right part of SegmentExp
+			),
 		},
-		{"complex exp2", "Exp", "512*18*2/4",
-			&ast.SegmentExp{
-				BaseExp:  ast.BaseExp{},
-				DataType: ast.None,
-				Left: &ast.AddExp{
-					HeadExp: &ast.MultExp{
-						HeadExp:   buildImmExpFromValue(512),
-						Operators: []string{"*", "*", "/"},
-						TailExps: []*ast.ImmExp{
-							buildImmExpFromValue(18),
-							buildImmExpFromValue(2),
-							buildImmExpFromValue(4),
-						},
+		{"complex exp2 (AddExp)", "Exp", "512*18*2/4", // Expect AddExp for complex arithmetic without segment/memory syntax
+			&ast.AddExp{
+				HeadExp: &ast.MultExp{
+					HeadExp:   buildImmExpFromValue(512),
+					Operators: []string{"*", "*", "/"},
+					TailExps: []ast.Exp{ // Correct type: []ast.Exp
+						buildImmExpFromValue(18),
+						buildImmExpFromValue(2),
+						buildImmExpFromValue(4),
 					},
-					Operators: []string{},
-					TailExps:  []*ast.MultExp{},
 				},
-				Right: nil,
+				Operators: []string{},
+				TailExps:  []*ast.MultExp{},
 			},
 		},
-		{"memory address direct", "Exp", "[100]",
-			&ast.MemoryAddrExp{
-				DataType: ast.None,
-				Left:     buildAddExpFromValue(100),
-				Right:    nil,
-			},
+		{"memory address direct", "Exp", "[100]", // Expect MemoryAddrExp
+			buildMemoryAddrExpFromValue(100, nil),
 		},
-		{"memory address direct (complex)", "Exp", "[CS:0x0020]",
-			&ast.MemoryAddrExp{
-				DataType: ast.None,
-				Left:     buildAddExpFromValue("CS"),
-				Right:    buildAddExpFromValue("0x0020"),
-			},
+		{"memory address direct (complex)", "Exp", "[CS:0x0020]", // Expect MemoryAddrExp
+			buildMemoryAddrExpFromValue("CS", "0x0020"),
 		},
-		{"memory address register indirect", "Exp", "[BX]",
-			&ast.MemoryAddrExp{
-				DataType: ast.None,
-				Left:     buildAddExpFromValue("BX"),
-				Right:    nil,
-			},
+		{"memory address register indirect", "Exp", "[BX]", // Expect MemoryAddrExp
+			buildMemoryAddrExpFromValue("BX", nil),
 		},
-		{"memory address register indirect (complex)", "Exp", "[CS:ECX]",
-			&ast.MemoryAddrExp{
-				DataType: ast.None,
-				Left:     buildAddExpFromValue("CS"),
-				Right:    buildAddExpFromValue("ECX"),
-			},
+		{"memory address register indirect (complex)", "Exp", "[CS:ECX]", // Expect MemoryAddrExp
+			buildMemoryAddrExpFromValue("CS", "ECX"),
 		},
-		{"memory address based", "Exp", "[ESP+12]",
+		{"memory address based", "Exp", "[ESP+12]", // Expect MemoryAddrExp
 			&ast.MemoryAddrExp{
 				DataType: ast.None,
-				Left: &ast.AddExp{
+				Left: &ast.AddExp{ // The expression inside [] is an AddExp
 					HeadExp:   buildMultExpFromValue("ESP"),
 					Operators: []string{"+"},
 					TailExps:  []*ast.MultExp{buildMultExpFromValue(12)},
@@ -165,23 +163,23 @@ func TestParse(t *testing.T) {
 				Right: nil,
 			},
 		},
-		{
-			name:       "jmp dword far",
+		{ // Renamed from "jmp dword far" to be more specific about the AST type
+			name:       "segment exp (dword far)",
 			entryPoint: "Exp",
 			text:       "DWORD 2*8:0x0000001b",
-			want: &ast.SegmentExp{
-				DataType: ast.Dword,
-				Left: &ast.AddExp{
+			want: buildSegmentExp( // Use the new helper
+				ast.Dword,
+				&ast.AddExp{
 					HeadExp: &ast.MultExp{
 						HeadExp:   buildImmExpFromValue(2),
 						Operators: []string{"*"},
-						TailExps:  []*ast.ImmExp{buildImmExpFromValue(8)},
+						TailExps:  []ast.Exp{buildImmExpFromValue(8)}, // Correct type: []ast.Exp
 					},
 					Operators: []string{},
 					TailExps:  []*ast.MultExp{},
 				},
-				Right: buildAddExpFromValue("0x0000001b"),
-			},
+				buildAddExpFromValue("0x0000001b"),
+			),
 		},
 
 		// stmt
@@ -189,33 +187,33 @@ func TestParse(t *testing.T) {
 			ast.NewDeclareStmt(
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "CYLS"),
-				buildSegmentExpFromValue(10),
+				buildAddExpFromValue(10), // Expect AddExp for the value
 			),
 		},
-		{"label", "LabelStmt", "_test:\n",
-			ast.NewLabelStmt(
+		{"label", "LabelStmt", "_test:\n", // LabelStmt remains the same
+			ast.NewLabelStmt( // No changes needed here
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "_test:"),
 			),
 		},
-		{"single symtable", "ExportSymStmt", "GLOBAL _io_hlt",
-			ast.NewExportSymStmt(
+		{"single symtable", "ExportSymStmt", "GLOBAL _io_hlt", // ExportSymStmt remains the same
+			ast.NewExportSymStmt( // No changes needed here
 				ast.BaseStatement{},
 				[]*ast.IdentFactor{
 					ast.NewIdentFactor(ast.BaseFactor{}, "_io_hlt"),
 				},
 			),
 		},
-		{"single export", "ExternSymStmt", "EXTERN _inthandler21",
-			ast.NewExternSymStmt(
+		{"single export", "ExternSymStmt", "EXTERN _inthandler21", // ExternSymStmt remains the same
+			ast.NewExternSymStmt( // No changes needed here
 				ast.BaseStatement{},
 				[]*ast.IdentFactor{
 					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler21"),
 				},
 			),
 		},
-		{"multiple export", "ExternSymStmt", "EXTERN _inthandler21, _inthandler27, _inthandler2c",
-			ast.NewExternSymStmt(
+		{"multiple export", "ExternSymStmt", "EXTERN _inthandler21, _inthandler27, _inthandler2c", // ExternSymStmt remains the same
+			ast.NewExternSymStmt( // No changes needed here
 				ast.BaseStatement{},
 				[]*ast.IdentFactor{
 					ast.NewIdentFactor(ast.BaseFactor{}, "_inthandler21"),
@@ -224,15 +222,15 @@ func TestParse(t *testing.T) {
 				},
 			),
 		},
-		{"config1", "ConfigStmt", "[BITS 32]",
-			ast.NewConfigStmt(
+		{"config1", "ConfigStmt", "[BITS 32]", // ConfigStmt remains the same
+			ast.NewConfigStmt( // No changes needed here
 				ast.BaseStatement{},
 				ast.Bits,
 				&ast.NumberFactor{BaseFactor: ast.BaseFactor{}, Value: 32},
 			),
 		},
-		{"opcode only", "OpcodeStmt", "HLT",
-			ast.NewOpcodeStmt(
+		{"opcode only", "OpcodeStmt", "HLT", // OpcodeStmt remains the same
+			ast.NewOpcodeStmt( // No changes needed here
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "HLT"),
 			),
@@ -242,7 +240,7 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "ORG"),
 				[]ast.Exp{
-					buildSegmentExpFromValue("0x7c00"),
+					buildAddExpFromValue("0x7c00"), // Expect AddExp for operand
 				},
 			),
 		},
@@ -251,7 +249,7 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
 				[]ast.Exp{
-					buildSegmentExpFromValue("fin"),
+					buildAddExpFromValue("fin"), // Expect AddExp for operand
 				},
 			),
 		},
@@ -260,16 +258,13 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "RESB"),
 				[]ast.Exp{
-					&ast.SegmentExp{
-						DataType: "",
-						Left: &ast.AddExp{
-							HeadExp:   buildMultExpFromValue("0x7dfe"),
-							Operators: []string{"-"},
-							TailExps: []*ast.MultExp{
-								buildMultExpFromValue("$"),
-							},
+					// Expect AddExp for the complex expression operand
+					&ast.AddExp{
+						HeadExp:   buildMultExpFromValue("0x7dfe"),
+						Operators: []string{"-"},
+						TailExps: []*ast.MultExp{
+							buildMultExpFromValue("$"),
 						},
-						Right: nil,
 					},
 				},
 			),
@@ -279,9 +274,9 @@ func TestParse(t *testing.T) {
 				ast.BaseStatement{},
 				ast.NewIdentFactor(ast.BaseFactor{}, "DB"),
 				[]ast.Exp{
-					buildSegmentExpFromValue(10),
-					buildSegmentExpFromValue(20),
-					buildSegmentExpFromValue(30),
+					buildAddExpFromValue(10), // Expect AddExp for operands
+					buildAddExpFromValue(20),
+					buildAddExpFromValue(30),
 				},
 			),
 		},
@@ -293,7 +288,7 @@ func TestParse(t *testing.T) {
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "ORG"),
 						[]ast.Exp{
-							buildSegmentExpFromValue("0x7c00"),
+							buildAddExpFromValue("0x7c00"), // Expect AddExp
 						},
 					),
 				},
@@ -306,8 +301,8 @@ func TestParse(t *testing.T) {
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "MOV"),
 						[]ast.Exp{
-							buildMemoryAddrExpFromValue("CS", "DS"),
-							buildSegmentExpFromValue(8),
+							buildMemoryAddrExpFromValue("CS", "DS"), // MemoryAddrExp
+							buildAddExpFromValue(8),                 // AddExp
 						},
 					),
 				},
@@ -320,12 +315,12 @@ func TestParse(t *testing.T) {
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "MOV"),
 						[]ast.Exp{
-							&ast.MemoryAddrExp{
+							&ast.MemoryAddrExp{ // MemoryAddrExp with DataType
 								DataType: ast.Dword,
 								Left:     buildAddExpFromValue("VRAM"),
 								Right:    nil,
 							},
-							buildSegmentExpFromValue("0x000a0000"),
+							buildAddExpFromValue("0x000a0000"), // AddExp
 						},
 					),
 				},
@@ -334,12 +329,12 @@ func TestParse(t *testing.T) {
 		{"cfg program3", "Program", "HLT ;\n JMP fin",
 			&ast.Program{
 				Statements: []ast.Statement{
-					ast.NewOpcodeStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, "HLT")),
+					ast.NewOpcodeStmt(ast.BaseStatement{}, ast.NewIdentFactor(ast.BaseFactor{}, "HLT")), // OpcodeStmt
 					ast.NewMnemonicStmt(
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
 						[]ast.Exp{
-							buildSegmentExpFromValue("fin"),
+							buildAddExpFromValue("fin"), // AddExp
 						},
 					),
 				},
@@ -348,7 +343,7 @@ func TestParse(t *testing.T) {
 		{"cfg program4", "Program", "_io_hlt:	;\n",
 			&ast.Program{
 				Statements: []ast.Statement{
-					ast.NewLabelStmt(
+					ast.NewLabelStmt( // LabelStmt
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "_io_hlt:"),
 					),
@@ -359,7 +354,7 @@ func TestParse(t *testing.T) {
 		JMP FAR [ESP+4] ; eip, cs`,
 			&ast.Program{
 				Statements: []ast.Statement{
-					ast.NewLabelStmt(
+					ast.NewLabelStmt( // LabelStmt
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "_farjmp:"),
 					),
@@ -367,8 +362,8 @@ func TestParse(t *testing.T) {
 						ast.BaseStatement{},
 						ast.NewIdentFactor(ast.BaseFactor{}, "JMP"),
 						[]ast.Exp{
-							&ast.MemoryAddrExp{
-								DataType: "",
+							&ast.MemoryAddrExp{ // MemoryAddrExp with JumpType
+								DataType: ast.None, // Explicitly None if not specified
 								JumpType: "FAR",
 								Left: &ast.AddExp{
 									HeadExp:   buildMultExpFromValue("ESP"),

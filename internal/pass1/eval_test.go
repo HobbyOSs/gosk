@@ -135,6 +135,40 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV ECX, [EBX+16]",
 			expectedLOC: 5, // Master data indicates 5 bytes (67 66 8b 4b 10)
 		},
+		// --- EQU Test Cases ---
+		{
+			bitMode: cpu.MODE_16BIT,
+			text: `
+				MY_CONST EQU 1234
+				MOV AX, MY_CONST
+			`,
+			expectedLOC: 3, // MOV AX, imm16
+		},
+		{
+			bitMode: cpu.MODE_16BIT,
+			text: `
+				ADDR EQU 0x100
+				MOV BX, [ADDR]
+			`,
+			expectedLOC: 4, // MOV BX, [imm16]
+		},
+		{
+			bitMode: cpu.MODE_16BIT,
+			text: `
+				OFFSET EQU 8
+				MOV AL, [BP+OFFSET]
+			`,
+			expectedLOC: 3, // MOV AL, [BP+imm8]
+		},
+		{
+			bitMode: cpu.MODE_16BIT,
+			text: `
+				VAL1 EQU 10
+				VAL2 EQU VAL1 * 2
+				ADD CX, VAL2
+			`,
+			expectedLOC: 4, // ADD CX, imm16 (VAL2 = 20)
+		},
 	}
 
 	for _, tt := range tests {

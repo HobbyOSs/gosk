@@ -83,7 +83,7 @@ func TestExpToString(t *testing.T) {
 			exp: &MultExp{
 				HeadExp:   &ImmExp{Factor: &NumberFactor{Value: 4}},
 				Operators: []string{"*"},
-				TailExps: []*ImmExp{
+				TailExps: []Exp{
 					&ImmExp{Factor: &IdentFactor{Value: "ESI"}},
 				},
 			},

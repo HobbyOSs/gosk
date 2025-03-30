@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt" // Keep fmt for panic
 	"strconv"
 	"strings"
 )
@@ -124,67 +123,45 @@ func (a *AddExp) expressionNode() {}
 func (a *AddExp) Eval(env Env) (Exp, bool) {
 	// Evaluate head expression
 	evalHeadExp, headReduced := a.HeadExp.Eval(env)
-	evalHead, ok := evalHeadExp.(*MultExp)
-	if !ok {
-		if headNum, isNum := evalHeadExp.(*NumberExp); isNum {
-			// Wrap NumberExp into a simple MultExp (ImmExp with NumberFactor)
-			evalHead = &MultExp{BaseExp: BaseExp{}, HeadExp: &headNum.ImmExp}
-		} else {
-			// Head evaluated to something unexpected
-			return a, false
-		}
-	}
+	_, headIsNum := evalHeadExp.(*NumberExp) // Check if head is number
 
 	// Evaluate tail expressions
-	evalTails := make([]*MultExp, len(a.TailExps))
+	evalTailExps := make([]Exp, len(a.TailExps))       // Store evaluated tail expressions (Exp interface)
+	evalTailNodes := make([]*MultExp, len(a.TailExps)) // Store as *MultExp if possible (for reconstruction)
 	anyTailReduced := false
-	allAreNumbers := true
-
-	// Check if head is a number
-	headNumCheck, headIsNum := evalHead.Eval(env) // Re-eval potentially wrapped head
-	if _, ok := headNumCheck.(*NumberExp); !ok {
-		allAreNumbers = false
-	}
+	allTailsAreNumbers := true
 
 	for i, tail := range a.TailExps {
 		evalTailExp, tailReduced := tail.Eval(env)
-		evalTailNode, ok := evalTailExp.(*MultExp)
-		if !ok {
-			if tailNum, isNum := evalTailExp.(*NumberExp); isNum {
-				// Wrap NumberExp into a simple MultExp
-				evalTailNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &tailNum.ImmExp}
-			} else {
-				// Tail evaluated to something unexpected
-				allAreNumbers = false
-				evalTails[i] = tail // Keep original if eval failed
-				continue
-			}
-		}
-
-		evalTails[i] = evalTailNode
+		evalTailExps[i] = evalTailExp // Store the evaluated result
 		if tailReduced {
 			anyTailReduced = true
 		}
 
-		// Check if this evaluated tail is a number
-		tailNumCheck, _ := evalTailNode.Eval(env) // Re-eval potentially wrapped tail
-		if _, ok := tailNumCheck.(*NumberExp); !ok {
-			allAreNumbers = false
+		// Check if the evaluated tail is a number
+		_, tailIsNum := evalTailExp.(*NumberExp)
+		if !tailIsNum {
+			allTailsAreNumbers = false
+		}
+
+		// Try to keep the *MultExp structure if possible for reconstruction
+		if me, ok := evalTailExp.(*MultExp); ok {
+			evalTailNodes[i] = me
+		} else if num, ok := evalTailExp.(*NumberExp); ok {
+			// Wrap NumberExp back into MultExp for reconstruction consistency
+			evalTailNodes[i] = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
+		} else {
+			// If it's neither MultExp nor NumberExp, we can't reconstruct easily
+			// Keep the original tail for reconstruction (or handle error)
+			evalTailNodes[i] = tail
 		}
 	}
 
 	// If head and all tails evaluated to numbers, calculate the result
-	if headIsNum && allAreNumbers {
-		currentValue := headNumCheck.(*NumberExp).Value // Use the checked value
+	if headIsNum && allTailsAreNumbers {
+		currentValue := evalHeadExp.(*NumberExp).Value // Head is NumberExp
 		for i, op := range a.Operators {
-			// Eval the simplified MultExp tail to get the NumberExp
-			tailNumExp, _ := evalTails[i].Eval(env)
-			numTail, ok := tailNumExp.(*NumberExp)
-			if !ok {
-				// This should ideally not happen if allAreNumbers logic is correct
-				panic("Internal error: Expected NumberExp after simplification in AddExp")
-			}
-
+			numTail := evalTailExps[i].(*NumberExp) // Tails are NumberExp
 			switch op {
 			case "+":
 				currentValue += numTail.Value
@@ -200,11 +177,22 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 	}
 
 	// If not all parts evaluated to numbers, but some reduction occurred, return updated AddExp
+	// Need to get the potentially updated HeadExp as *MultExp
+	evalHeadNode, ok := evalHeadExp.(*MultExp)
+	if !ok {
+		if num, ok := evalHeadExp.(*NumberExp); ok {
+			evalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
+		} else {
+			// This case should ideally not be reached if headReduced is true
+			// but the result wasn't MultExp or NumberExp. Return original.
+			return a, false
+		}
+	}
 	if headReduced || anyTailReduced {
-		return NewAddExp(a.BaseExp, evalHead, a.Operators, evalTails), true
+		return NewAddExp(a.BaseExp, evalHeadNode, a.Operators, evalTailNodes), true
 	}
 
-	// No reduction possible
+	// No reduction possible, return original node
 	return a, false
 }
 func (a *AddExp) TokenLiteral() string {
@@ -224,65 +212,47 @@ func (a *AddExp) TokenLiteral() string {
 //go:generate newc
 type MultExp struct {
 	BaseExp
-	HeadExp   *ImmExp
+	HeadExp   Exp // Changed back to Exp interface
 	Operators []string
-	TailExps  []*ImmExp
+	TailExps  []Exp // Changed back to Exp interface
 }
 
 func (m *MultExp) expressionNode() {}
+
+// Need to regenerate constructor using `go generate ./...` after this change
+// The generated constructor `NewMultExp` will now accept Exp for head and tails.
+
 func (m *MultExp) Eval(env Env) (Exp, bool) {
 	// Evaluate head expression
-	evalHeadExp, headReduced := m.HeadExp.Eval(env)
-	evalHead, ok := evalHeadExp.(*ImmExp) // Expecting ImmExp or NumberExp
-	if !ok {
-		// Head evaluated to something unexpected (e.g., macro expanded to AddExp)
-		return m, false // Cannot evaluate if head is not ImmExp compatible
-	}
-	headNum, headIsNum := evalHeadExp.(*NumberExp) // Check if it's specifically a NumberExp
+	evalHeadExp, headReduced := m.HeadExp.Eval(env) // HeadExp is Exp
+	_, headIsNum := evalHeadExp.(*NumberExp)
 
 	// Evaluate tail expressions
-	evalTails := make([]*ImmExp, len(m.TailExps))
+	evalTailExps := make([]Exp, len(m.TailExps)) // Store evaluated tails (Exp)
 	anyTailReduced := false
-	allAreNumbers := true // Assume true initially
+	allTailsAreNumbers := true
 
-	if !headIsNum {
-		allAreNumbers = false // Head must be number for full evaluation
-	}
-
-	for i, tail := range m.TailExps {
+	for i, tail := range m.TailExps { // TailExps are Exp
 		evalTailExp, tailReduced := tail.Eval(env)
-		evalTailNode, ok := evalTailExp.(*ImmExp) // Expecting ImmExp or NumberExp
-		if !ok {
-			// Tail evaluated to something unexpected
-			allAreNumbers = false
-			evalTails[i] = tail // Keep original if eval failed
-			continue
-		}
-
-		evalTails[i] = evalTailNode // Store evaluated ImmExp (or NumberExp)
+		evalTailExps[i] = evalTailExp
 		if tailReduced {
 			anyTailReduced = true
 		}
 
-		// Check if the factor within the evaluated tail is a NumberFactor
-		if _, isNumFactor := evalTailNode.Factor.(*NumberFactor); !isNumFactor {
-			allAreNumbers = false
+		// Check if the evaluated tail is a number
+		_, tailIsNum := evalTailExp.(*NumberExp)
+		if !tailIsNum {
+			allTailsAreNumbers = false
 		}
+		// No need to store evalTailNodes separately anymore
 	}
 
 	// If head and all tails evaluated to numbers, calculate the result
-	if headIsNum && allAreNumbers {
-		// Get head value (we know headNum is *NumberExp here)
-		currentValue := headNum.Value
+	if headIsNum && allTailsAreNumbers {
+		currentValue := evalHeadExp.(*NumberExp).Value // Head is NumberExp
 		for i, op := range m.Operators {
-			// Get tail value by checking its factor (we know it's NumberFactor if allAreNumbers is true)
-			numFactor, ok := evalTails[i].Factor.(*NumberFactor)
-			if !ok {
-				// This should not happen if allAreNumbers logic is correct
-				panic(fmt.Sprintf("Internal error: Expected NumberFactor in MultExp calculation but got %T", evalTails[i].Factor))
-			}
-			tailValue := int64(numFactor.Value) // Convert factor value to int64
-
+			numTail := evalTailExps[i].(*NumberExp) // Tails are NumberExp
+			tailValue := numTail.Value
 			switch op {
 			case "*":
 				currentValue *= tailValue
@@ -306,21 +276,22 @@ func (m *MultExp) Eval(env Env) (Exp, bool) {
 
 	// If not all parts evaluated to numbers, but some reduction occurred, return updated MultExp
 	if headReduced || anyTailReduced {
-		return NewMultExp(m.BaseExp, evalHead, m.Operators, evalTails), true
+		// Pass the evaluated expressions (Exp interface) directly to the constructor
+		return NewMultExp(m.BaseExp, evalHeadExp, m.Operators, evalTailExps), true
 	}
 
-	// No reduction possible
+	// No reduction possible, return original node
 	return m, false
 }
 func (m *MultExp) TokenLiteral() string {
-	head := ExpToString(m.HeadExp)
+	head := m.HeadExp.TokenLiteral() // Call TokenLiteral() on HeadExp
 	var buf strings.Builder
 	buf.WriteString(head)
 	for i, op := range m.Operators {
 		buf.WriteByte(' ')
 		buf.WriteString(op)
 		buf.WriteByte(' ')
-		tailStr := ExpToString(m.TailExps[i])
+		tailStr := m.TailExps[i].TokenLiteral() // Call TokenLiteral() on TailExps[i]
 		buf.WriteString(tailStr)
 	}
 	return buf.String()
@@ -416,9 +387,9 @@ func NewNumberExp(base ImmExp, value int64) *NumberExp {
 	}
 }
 
-// Eval for NumberExp simply returns itself as it's already fully evaluated.
+// Eval for NumberExp returns itself and true, indicating it's a fully evaluated value.
 func (n *NumberExp) Eval(env Env) (Exp, bool) {
-	return n, false // Already evaluated, no reduction happened *in this step*
+	return n, true // It's an evaluated value.
 }
 
 // TokenLiteral returns the string representation of the number.
