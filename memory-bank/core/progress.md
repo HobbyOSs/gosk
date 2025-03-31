@@ -24,6 +24,7 @@
     - `internal/pass1/traverse_test.go` の関連テストケースを修正・成功確認。
 
 ## まだ必要な実装
+- **`ast.SegmentExp.Eval` の実装:** 現在は未実装であり、評価ロジックを追加する必要がある。
 - **テストの修正と実行:**
     - `internal/pass1/eval_test.go` (`TestEvalProgramLOC`) の `INT 0x10` ケースが失敗する原因 (`*ast.SegmentExp` 問題) を調査・修正する。
         - パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。

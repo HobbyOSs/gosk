@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// TODO: go generateで作成できないか
 type DataType string
 
 const (
@@ -27,7 +26,6 @@ func NewDataType(s string) (DataType, bool) {
 	return c, ok
 }
 
-// TODO: go generateで作成できないか
 type JumpType string
 
 const (
@@ -54,13 +52,13 @@ type SegmentExp struct {
 	BaseExp
 	DataType DataType
 	Left     *AddExp
-	Right    *AddExp // nullable
+	Right    *AddExp // nullable (nil許容)
 }
 
 func (s *SegmentExp) expressionNode() {}
 func (s *SegmentExp) Eval(env Env) (Exp, bool) {
-	// TODO: Implement SegmentExp evaluation logic
-	// For now, just return the node itself, indicating no reduction.
+	// TODO: SegmentExp の評価ロジックを実装する
+	// 現時点では、ノード自体を返し、簡約がないことを示します。
 	return s, false
 }
 func (s *SegmentExp) TokenLiteral() string {
@@ -80,37 +78,36 @@ func (s *SegmentExp) TokenLiteral() string {
 	}
 }
 
-// wrapExpInAddExp wraps a simple Exp (NumberExp, ImmExp) into the structure needed for AddExp fields.
+// wrapExpInAddExp は、単純な Exp (NumberExp, ImmExp) を AddExp フィールドに必要な構造にラップします。
 func wrapExpInAddExp(exp Exp) *AddExp {
 	if exp == nil {
 		return nil
 	}
 	if addExp, ok := exp.(*AddExp); ok {
-		// If it's already an AddExp, return it
+		// すでに AddExp の場合はそれを返します
 		return addExp
 	}
 
 	var immExp *ImmExp
 	if numExp, ok := exp.(*NumberExp); ok {
-		// Ensure the NumberExp has a valid ImmExp embedded
+		// NumberExp に有効な ImmExp が埋め込まれていることを確認します
 		if numExp.ImmExp.Factor == nil {
-			// If Factor is missing (shouldn't happen with NewNumberExp), create it
+			// Factor が欠落している場合 (NewNumberExp では発生しないはず)、作成します
 			numExp.ImmExp.Factor = NewNumberFactor(BaseFactor{}, int(numExp.Value))
 		}
 		immExp = &numExp.ImmExp
 	} else if ie, ok := exp.(*ImmExp); ok {
 		immExp = ie
 	} else {
-		// Cannot easily wrap other types like MultExp directly here.
-		// This helper is primarily for NumberExp/ImmExp results from Eval.
-		// log.Printf("wrapExpInAddExp: Cannot wrap type %T", exp)
-		return nil // Return nil if wrapping is not straightforward
+		// MultExp のような他の型をここで直接ラップするのは簡単ではありません。
+		// このヘルパーは主に Eval からの NumberExp/ImmExp の結果用です。
+		return nil // ラップが簡単でない場合は nil を返します
 	}
 
-	// Create MultExp -> AddExp structure
-	// Ensure BaseExp is initialized for NewMultExp and NewAddExp
-	multExp := NewMultExp(BaseExp{}, immExp, nil, nil) // Head is the ImmExp
-	addExp := NewAddExp(BaseExp{}, multExp, nil, nil)  // AddExp with only head
+	// MultExp -> AddExp 構造を作成します
+	// NewMultExp と NewAddExp のために BaseExp が初期化されていることを確認します
+	multExp := NewMultExp(BaseExp{}, immExp, nil, nil) // Head は ImmExp
+	addExp := NewAddExp(BaseExp{}, multExp, nil, nil)  // Head のみを持つ AddExp
 	return addExp
 }
 
@@ -120,63 +117,61 @@ type MemoryAddrExp struct {
 	DataType DataType
 	JumpType JumpType
 	Left     *AddExp
-	Right    *AddExp // nullable
+	Right    *AddExp // nullable (nil許容)
 }
 
 func (m *MemoryAddrExp) expressionNode() {}
 func (m *MemoryAddrExp) Eval(env Env) (Exp, bool) {
-	// Evaluate the internal expression(s)
-	evalLeftNode, leftReduced := m.Left.Eval(env) // Returns Exp
-	evalRightNode := Exp(nil)                     // Initialize evalRightNode
+	// 内部の式を評価します
+	evalLeftNode, leftReduced := m.Left.Eval(env) // Exp を返します
+	evalRightNode := Exp(nil)                     // evalRightNode を初期化します
 	rightReduced := false
 	if m.Right != nil {
-		evalRightNode, rightReduced = m.Right.Eval(env) // Returns Exp
+		evalRightNode, rightReduced = m.Right.Eval(env) // Exp を返します
 	}
 
-	// Wrap the evaluated nodes back into AddExp structure if possible
+	// 可能であれば、評価されたノードを AddExp 構造にラップし直します
 	evalLeftExp := wrapExpInAddExp(evalLeftNode)
 	if evalLeftExp == nil && leftReduced {
-		// If wrapping failed but reduction happened, we can't represent the state.
-		// Return original to avoid losing information or creating invalid structure.
-		// log.Printf("Warning: MemoryAddrExp Left expression evaluated to unwrappable type %T", evalLeftNode)
+		// ラップに失敗したが簡約が発生した場合、状態を表すことができません。
+		// 情報の損失や無効な構造の作成を避けるために、オリジナルを返します。
 		return m, false
 	} else if evalLeftExp == nil {
-		evalLeftExp = m.Left // Keep original if no reduction and no wrapping possible
+		evalLeftExp = m.Left // 簡約がなく、ラップも不可能な場合はオリジナルを保持します
 	}
 
 	evalRightExp := (*AddExp)(nil)
 	if m.Right != nil {
 		evalRightExp = wrapExpInAddExp(evalRightNode)
 		if evalRightExp == nil && rightReduced {
-			// log.Printf("Warning: MemoryAddrExp Right expression evaluated to unwrappable type %T", evalRightNode)
 			return m, false
 		} else if evalRightExp == nil {
-			evalRightExp = m.Right // Keep original
+			evalRightExp = m.Right // オリジナルを保持します
 		}
 	}
 
-	// If neither internal expression was reduced, return the original node
+	// どちらの内部式も簡約されなかった場合は、元のノードを返します
 	if !leftReduced && !rightReduced {
 		return m, false
 	}
 
-	// Construct a new MemoryAddrExp with the potentially wrapped internal expressions
+	// ラップされる可能性のある内部式を持つ新しい MemoryAddrExp を構築します
 	newMemExp := NewMemoryAddrExp(m.BaseExp, m.DataType, m.JumpType, evalLeftExp, evalRightExp)
-	return newMemExp, true // Return the new node and indicate reduction occurred
+	return newMemExp, true // 新しいノードを返し、簡約が発生したことを示します
 }
 func (m *MemoryAddrExp) TokenLiteral() string {
-	// Use existing ExpToString from ast_exp_string.go
+	// ast_exp_string.go の既存の ExpToString を使用します
 	var str = ""
 	if m.DataType != None {
 		str += string(m.DataType)
 		str += " "
 	}
 	str += "[ "
-	// Use ExpToString to handle potentially evaluated Left expression
-	str += ExpToString(m.Left) // m.Left might point to the original if Eval didn't replace it
+	// 評価される可能性のある Left 式を処理するために ExpToString を使用します
+	str += ExpToString(m.Left) // m.Left は Eval が置き換えなかった場合、オリジナルを指す可能性があります
 	if m.Right != nil {
 		str += " : "
-		// Use ExpToString for Right as well
+		// Right にも ExpToString を使用します
 		str += ExpToString(m.Right)
 	}
 	str += " ]"
@@ -193,27 +188,27 @@ type AddExp struct {
 
 func (a *AddExp) expressionNode() {}
 
-// Eval performs constant folding for AddExp.
-// It sums up all constant number terms and keeps non-constant terms.
-// Modified to keep non-constant terms first.
+// Eval は AddExp の定数畳み込みを実行します。
+// すべての定数項を合計し、非定数項を保持します。
+// 非定数項を最初に保持するように変更されました。
 func (a *AddExp) Eval(env Env) (Exp, bool) {
-	// Evaluate head expression first
+	// 最初に head 式を評価します
 	evalHead, headReduced := a.HeadExp.Eval(env)
 
-	// Keep track of the sum of constant terms and the list of non-constant terms/operators
+	// 定数項の合計と非定数項/演算子のリストを追跡します
 	constSum := 0
-	newTerms := []Exp{} // Use Exp interface to hold evaluated non-constant terms
+	newTerms := []Exp{} // 評価された非定数項を保持するために Exp インターフェースを使用します
 	newOps := []string{}
-	reduced := headReduced // Start with head reduction status
+	reduced := headReduced // head の簡約ステータスから開始します
 
-	// Process the evaluated head
+	// 評価された head を処理します
 	if v, ok := env.GetConstValue(evalHead); ok {
 		constSum += v
 	} else {
 		newTerms = append(newTerms, evalHead)
 	}
 
-	// Process tail expressions
+	// tail 式を処理します
 	for i, op := range a.Operators {
 		tail := a.TailExps[i]
 		evalTail, tailReduced := tail.Eval(env)
@@ -222,124 +217,123 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 		}
 
 		if v, ok := env.GetConstValue(evalTail); ok {
-			// If it's a constant, add/subtract it to the sum
+			// 定数の場合は、合計に加算/減算します
 			if op == "+" {
 				constSum += v
 			} else if op == "-" {
 				constSum -= v
 			} else {
-				// Should not happen based on grammar, but handle defensively
-				// If an unsupported operator appears with a constant, treat as non-reducible
-				// Keep the operator and the constant term
-				if len(newTerms) > 0 { // Only add operator if there's a preceding term
+				// 文法に基づいて発生しないはずですが、防御的に処理します
+				// サポートされていない演算子が定数と共に現れた場合、簡約不可として扱います
+				// 演算子と定数項を保持します
+				if len(newTerms) > 0 { // 先行する項がある場合にのみ演算子を追加します
 					newOps = append(newOps, op)
 				}
-				newTerms = append(newTerms, evalTail) // Add the constant term back
+				newTerms = append(newTerms, evalTail) // 定数項を戻します
 			}
 		} else {
-			// If it's not a constant, add it to the list of terms
-			// Only add operator if there was a preceding term
-			if len(newTerms) > 0 { // Add operator if it's not the very first term
+			// 定数でない場合は、項のリストに追加します
+			// 先行する項があった場合にのみ演算子を追加します
+			if len(newTerms) > 0 { // 最初の項でない場合に演算子を追加します
 				newOps = append(newOps, op)
 			}
 			newTerms = append(newTerms, evalTail)
 		}
 	}
 
-	// --- Construct the result ---
+	// --- 結果の構築 ---
 
-	// Case 1: All terms evaluated to constants
+	// ケース 1: すべての項が定数に評価された場合
 	if len(newTerms) == 0 {
-		// Return a single NumberExp with the final sum
+		// 最終的な合計を持つ単一の NumberExp を返します
 		return NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum)), true
 	}
 
-	// Case 2: Mixed constants and non-constants
+	// ケース 2: 定数と非定数が混在する場合
 
-	// Reorder terms: non-constants first, then the constant sum (if non-zero)
+	// 項の順序を変更: 非定数を最初に、次に定数の合計 (ゼロでない場合)
 	finalTerms := []Exp{}
 	finalOps := []string{}
 
-	// Add non-constant terms first
+	// 最初に非定数項を追加します
 	if len(newTerms) > 0 {
 		finalTerms = append(finalTerms, newTerms...)
-		finalOps = append(finalOps, newOps...) // Keep original operators between non-const terms
+		finalOps = append(finalOps, newOps...) // 非定数項間の元の演算子を保持します
 	}
 
-	// Add the constant sum at the end if it's non-zero
+	// ゼロでない場合は、最後に定数の合計を追加します
 	if constSum != 0 {
 		constTerm := NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
 		if len(finalTerms) > 0 {
-			// Add '+' or '-' operator before the constant term if other terms exist
+			// 他の項が存在する場合、定数項の前に '+' または '-' 演算子を追加します
 			if constSum > 0 {
 				finalOps = append(finalOps, "+")
 			} else {
 				finalOps = append(finalOps, "-")
-				// Use the absolute value for the NumberExp if operator is '-'
+				// 演算子が '-' の場合は NumberExp に絶対値を使用します
 				constTerm = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(-constSum))
 			}
 		} else {
-			// If only the constant term exists, make it the only term
-			// Handle negative constant as head if it's the only term
+			// 定数項のみが存在する場合は、それを唯一の項にします
+			// 唯一の項である場合は、負の定数を head として処理します
 			if constSum < 0 {
-				// This case should ideally be handled by Case 1 returning NumberExp,
-				// but let's ensure the NumberExp value is correct if we reach here.
+				// このケースは理想的にはケース 1 で NumberExp を返すことで処理されるべきですが、
+				// ここに到達した場合に NumberExp の値が正しいことを確認します。
 				constTerm = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
 			}
 		}
 		finalTerms = append(finalTerms, constTerm)
 	}
 
-	// If after reordering, only one term remains (could be non-constant or constSum), return it directly if possible
+	// 順序変更後、1 つの項のみが残る場合 (非定数または constSum の可能性がある)、可能であれば直接返します
 	if len(finalTerms) == 1 && len(finalOps) == 0 {
-		// If it's a NumberExp, return it (already handled by Case 1 ideally)
+		// NumberExp の場合はそれを返します (理想的にはケース 1 で処理済み)
 		if numExp, ok := finalTerms[0].(*NumberExp); ok {
 			return numExp, true
 		}
-		// If it's a single non-constant term, we still need to wrap it in AddExp structure below
+		// 単一の非定数項の場合は、以下で AddExp 構造にラップする必要があります
 	}
 
-	// If no terms remain (e.g., "LABEL - LABEL"), result is 0
+	// 項が残らない場合 (例: "LABEL - LABEL")、結果は 0 です
 	if len(finalTerms) == 0 {
 		return NewNumberExp(ImmExp{BaseExp: a.BaseExp}, 0), true
 	}
 
-	// --- Reconstruct AddExp with the new order ---
+	// --- 新しい順序で AddExp を再構築 ---
 
-	// The first term in finalTerms is the new head
+	// finalTerms の最初の項が新しい head です
 	finalHead := finalTerms[0]
 
-	// Convert remaining evaluated terms back to *MultExp for the AddExp structure
+	// 残りの評価された項を AddExp 構造のために *MultExp に変換し直します
 	finalTailNodes := make([]*MultExp, 0, len(finalTerms)-1)
-	for _, term := range finalTerms[1:] { // Iterate over reordered finalTerms
+	for _, term := range finalTerms[1:] { // 順序変更された finalTerms を反復処理します
 		if me, ok := term.(*MultExp); ok {
 			finalTailNodes = append(finalTailNodes, me)
 		} else if num, ok := term.(*NumberExp); ok {
-			// Wrap NumberExp back into MultExp
-			// Ensure the embedded ImmExp has the correct Factor
+			// NumberExp を MultExp にラップし直します
+			// 埋め込まれた ImmExp が正しい Factor を持っていることを確認します
 			numImmExp := num.ImmExp
 			if numImmExp.Factor == nil {
 				numImmExp.Factor = NewNumberFactor(BaseFactor{}, int(num.Value))
 			}
 			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: &numImmExp})
 		} else if imm, ok := term.(*ImmExp); ok {
-			// Wrap ImmExp (like identifiers) into MultExp
+			// ImmExp (識別子など) を MultExp にラップします
 			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: imm})
 		} else {
-			// If it's some other Exp type that can't be easily put into MultExp,
-			// we might not be able to simplify perfectly. Return original or error.
-			// For now, let's assume terms are MultExp, NumberExp, or ImmExp.
-			// Returning original if we hit an unexpected type.
-			// log.Printf("Warning: Cannot reconstruct AddExp tail from type %T", term)
-			return a, false // Cannot simplify if unexpected type found
+			// MultExp に簡単に入れることができない他の Exp 型の場合は、
+			// 完全に簡約できない可能性があります。オリジナルを返すかエラーを返します。
+			// 現時点では、項は MultExp、NumberExp、または ImmExp であると仮定します。
+			// 予期しない型が見つかった場合はオリジナルを返します。
+			return a, false // 予期しない型が見つかった場合は簡約できません
 		}
 	}
 
-	// Convert the finalHead (which is Exp) back to *MultExp
+	// finalHead (Exp) を *MultExp に変換し直します
 	finalHeadNode, ok := finalHead.(*MultExp)
 	if !ok {
 		if num, ok := finalHead.(*NumberExp); ok {
-			// Ensure the embedded ImmExp has the correct Factor
+			// 埋め込まれた ImmExp が正しい Factor を持っていることを確認します
 			numImmExp := num.ImmExp
 			if numImmExp.Factor == nil {
 				numImmExp.Factor = NewNumberFactor(BaseFactor{}, int(num.Value))
@@ -348,23 +342,22 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 		} else if imm, ok := finalHead.(*ImmExp); ok {
 			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: imm}
 		} else {
-			// log.Printf("Warning: Cannot reconstruct AddExp head from type %T", finalHead)
-			return a, false // Cannot simplify if unexpected head type
+			return a, false // 予期しない head 型の場合は簡約できません
 		}
 	}
 
-	// If only one term remains after reordering, construct AddExp with only the head.
+	// 順序変更後、1 つの項のみが残る場合は、head のみを持つ AddExp を構築します。
 	if len(finalOps) == 0 {
-		// This handles the case where one non-constant term remains,
-		// or only the constSum remained (which should have been handled earlier).
+		// これは、1 つの非定数項が残る場合、
+		// または constSum のみが残った場合 (これは以前に処理されているはずです) を処理します。
 		simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, nil, nil)
-		return simplifiedAddExp, reduced // Return true if any reduction happened
+		return simplifiedAddExp, reduced // 簡約が発生した場合は true を返します
 	}
 
-	// Construct the simplified AddExp with multiple terms in the new order
+	// 新しい順序で複数の項を持つ簡約された AddExp を構築します
 	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, finalOps, finalTailNodes)
 
-	// Return the simplified expression, indicating reduction occurred
+	// 簡約された式を返し、簡約が発生したことを示します
 	return simplifiedAddExp, reduced
 }
 
@@ -385,86 +378,86 @@ func (a *AddExp) TokenLiteral() string {
 //go:generate newc
 type MultExp struct {
 	BaseExp
-	HeadExp   Exp // Changed back to Exp interface
+	HeadExp   Exp // Exp インターフェースに戻しました
 	Operators []string
-	TailExps  []Exp // Changed back to Exp interface
+	TailExps  []Exp // Exp インターフェースに戻しました
 }
 
 func (m *MultExp) expressionNode() {}
 
-// Need to regenerate constructor using `go generate ./...` after this change
-// The generated constructor `NewMultExp` will now accept Exp for head and tails.
+// この変更後、`go generate ./...` を使用してコンストラクタを再生成する必要があります
+// 生成されたコンストラクタ `NewMultExp` は、head と tails に Exp を受け入れるようになります。
 
 func (m *MultExp) Eval(env Env) (Exp, bool) {
-	// Evaluate head expression
-	evalHeadExp, headReduced := m.HeadExp.Eval(env) // HeadExp is Exp
+	// head 式を評価します
+	evalHeadExp, headReduced := m.HeadExp.Eval(env) // HeadExp は Exp です
 	_, headIsNum := evalHeadExp.(*NumberExp)
 
-	// Evaluate tail expressions
-	evalTailExps := make([]Exp, len(m.TailExps)) // Store evaluated tails (Exp)
+	// tail 式を評価します
+	evalTailExps := make([]Exp, len(m.TailExps)) // 評価された tails (Exp) を格納します
 	anyTailReduced := false
 	allTailsAreNumbers := true
 
-	for i, tail := range m.TailExps { // TailExps are Exp
+	for i, tail := range m.TailExps { // TailExps は Exp です
 		evalTailExp, tailReduced := tail.Eval(env)
 		evalTailExps[i] = evalTailExp
 		if tailReduced {
 			anyTailReduced = true
 		}
 
-		// Check if the evaluated tail is a number
+		// 評価された tail が数値かどうかを確認します
 		_, tailIsNum := evalTailExp.(*NumberExp)
 		if !tailIsNum {
 			allTailsAreNumbers = false
 		}
-		// No need to store evalTailNodes separately anymore
+		// evalTailNodes を個別に格納する必要はもうありません
 	}
 
-	// If head and all tails evaluated to numbers, calculate the result
+	// head とすべての tails が数値に評価された場合、結果を計算します
 	if headIsNum && allTailsAreNumbers {
-		currentValue := evalHeadExp.(*NumberExp).Value // Head is NumberExp
+		currentValue := evalHeadExp.(*NumberExp).Value // Head は NumberExp です
 		for i, op := range m.Operators {
-			numTail := evalTailExps[i].(*NumberExp) // Tails are NumberExp
+			numTail := evalTailExps[i].(*NumberExp) // Tails は NumberExp です
 			tailValue := numTail.Value
 			switch op {
 			case "*":
 				currentValue *= tailValue
 			case "/":
 				if tailValue == 0 {
-					return m, false // Division by zero
+					return m, false // ゼロ除算
 				}
 				currentValue /= tailValue
 			case "%":
 				if tailValue == 0 {
-					return m, false // Modulo by zero
+					return m, false // ゼロによる剰余
 				}
 				currentValue %= tailValue
 			default:
-				return m, false // Unsupported operator
+				return m, false // サポートされていない演算子
 			}
 		}
-		// Return a new NumberExp
+		// 新しい NumberExp を返します
 		return NewNumberExp(ImmExp{BaseExp: m.BaseExp}, currentValue), true
 	}
 
-	// If not all parts evaluated to numbers, but some reduction occurred, return updated MultExp
+	// すべての部分が数値に評価されなかったが、何らかの簡約が発生した場合は、更新された MultExp を返します
 	if headReduced || anyTailReduced {
-		// Pass the evaluated expressions (Exp interface) directly to the constructor
+		// 評価された式 (Exp インターフェース) を直接コンストラクタに渡します
 		return NewMultExp(m.BaseExp, evalHeadExp, m.Operators, evalTailExps), true
 	}
 
-	// No reduction possible, return original node
+	// 簡約不可、元のノードを返します
 	return m, false
 }
 func (m *MultExp) TokenLiteral() string {
-	head := m.HeadExp.TokenLiteral() // Call TokenLiteral() on HeadExp
+	head := m.HeadExp.TokenLiteral() // HeadExp で TokenLiteral() を呼び出します
 	var buf strings.Builder
 	buf.WriteString(head)
 	for i, op := range m.Operators {
 		buf.WriteByte(' ')
 		buf.WriteString(op)
 		buf.WriteByte(' ')
-		tailStr := m.TailExps[i].TokenLiteral() // Call TokenLiteral() on TailExps[i]
+		tailStr := m.TailExps[i].TokenLiteral() // TailExps[i] で TokenLiteral() を呼び出します
 		buf.WriteString(tailStr)
 	}
 	return buf.String()
@@ -502,32 +495,32 @@ func (imm *ImmExp) Eval(env Env) (Exp, bool) {
 		return numExp, true
 	case *IdentFactor:
 		identValue := f.Value
-		// Check for '$' first
+		// 最初に '$' をチェックします
 		if identValue == "$" {
-			// Use the GetLOC method from the Env interface
-			dollarVal := int64(env.GetLOC()) // Use LOC (int32) as the value of $
+			// Env インターフェースから GetLOC メソッドを使用します
+			dollarVal := int64(env.GetLOC()) // LOC (int32) を $ の値として使用します
 			newFactor := NewNumberFactor(BaseFactor{}, int(dollarVal))
 			numExp := NewNumberExp(ImmExp{BaseExp: imm.BaseExp, Factor: newFactor}, dollarVal)
 			return numExp, true
-			// No need for type assertion or else block here,
-			// as GetLOC is now part of the Env interface.
+			// GetLOC は Env インターフェースの一部になったため、
+			// ここで型アサーションや else ブロックは不要です。
 		}
-		// If not '$', check for macro
+		// '$' でない場合は、マクロをチェックします
 		macroExp, ok := env.LookupMacro(identValue)
 		if ok {
-			// Recursively evaluate the macro definition
-			// Ensure the macro itself is evaluated
+			// マクロ定義を再帰的に評価します
+			// マクロ自体が評価されることを確認します
 			evalMacroExp, reduced := macroExp.Eval(env)
-			return evalMacroExp, reduced // Return the evaluated macro expression
+			return evalMacroExp, reduced // 評価されたマクロ式を返します
 		}
-		// If not a macro or '$', it's an unresolved identifier (like a label)
-		return imm, false // Return the ImmExp containing the IdentFactor
+		// マクロでも '$' でもない場合は、未解決の識別子 (ラベルなど) です
+		return imm, false // IdentFactor を含む ImmExp を返します
 	case *StringFactor:
-		// String factors themselves don't evaluate arithmetically,
-		// but they are valid factors within an ImmExp. Return as is.
+		// 文字列ファクター自体は算術的に評価されませんが、
+		// ImmExp 内の有効なファクターです。そのまま返します。
 		return imm, false
 	default:
-		// Unknown factor type
+		// 不明なファクタータイプ
 		return imm, false
 	}
 }
@@ -535,7 +528,7 @@ func (imm *ImmExp) TokenLiteral() string {
 	return imm.Factor.TokenLiteral()
 }
 
-// --- Helper functions for parsing ---
+// --- 解析用のヘルパー関数 ---
 
 func parseHex(s string) (int64, bool) {
 	if !strings.HasPrefix(s, "0x") && !strings.HasPrefix(s, "0X") {
@@ -554,56 +547,40 @@ func parseChar(s string) (int64, bool) {
 	}
 	charStr := s[1 : len(s)-1]
 	if len(charStr) != 1 {
-		// TODO: Handle escape sequences like '\n', '\\', '\'' etc.
+		// TODO: '\n', '\\', '\'' などのエスケープシーケンスを処理する
 		return 0, false
 	}
 	return int64(charStr[0]), true
 }
 
-// NumberExp represents a fully evaluated numeric constant expression.
+// NumberExp は完全に評価された数値定数式を表します。
 type NumberExp struct {
-	ImmExp       // Embed ImmExp to satisfy Exp interface
-	Value  int64 // The evaluated numeric value
+	ImmExp       // Exp インターフェースを満たすために ImmExp を埋め込みます
+	Value  int64 // 評価された数値
 }
 
-// NewNumberExp creates a new NumberExp.
+// NewNumberExp は新しい NumberExp を作成します。
 func NewNumberExp(base ImmExp, value int64) *NumberExp {
-	base.Factor = NewNumberFactor(BaseFactor{}, int(value)) // Ensure Factor is NumberFactor
+	base.Factor = NewNumberFactor(BaseFactor{}, int(value)) // Factor が NumberFactor であることを確認します
 	return &NumberExp{
 		ImmExp: base,
 		Value:  value,
 	}
 }
 
-// Eval for NumberExp returns itself and true, indicating it's a fully evaluated value.
+// NumberExp の Eval は自身と true を返し、完全に評価された値であることを示します。
 func (n *NumberExp) Eval(env Env) (Exp, bool) {
-	return n, true // It's an evaluated value.
+	return n, true // 評価された値です。
 }
 
-// TokenLiteral returns the string representation of the number.
+// TokenLiteral は数値の文字列表現を返します。
 func (n *NumberExp) TokenLiteral() string {
-	// Use the embedded Factor's TokenLiteral, which should be a NumberFactor.
+	// 埋め込まれた Factor の TokenLiteral を使用します。これは NumberFactor である必要があります。
 	return n.Factor.TokenLiteral()
 }
 
-// Ensure NumberExp satisfies the Exp interface.
+// NumberExp が Exp インターフェースを満たすことを確認します。
 var _ Exp = &NumberExp{}
 
-// --- Add Eval implementations for other expression types (AddExp, MultExp, etc.) ---
-// Placeholder for UnaryExp if it exists or is needed
-// //go:generate newc
-// type UnaryExp struct {
-// 	BaseExp
-// 	Operator string
-// 	Exp      Exp
-// }
-//
-// func (u *UnaryExp) expressionNode() {}
-// func (u *UnaryExp) Eval(env Env) (Exp, bool) {
-// 	// TODO: Implement UnaryExp evaluation logic
-// 	return u, false
-// }
-// func (u *UnaryExp) TokenLiteral() string {
-// 	// TODO: Implement TokenLiteral for UnaryExp
-// 	return u.Operator + ExpToString(u.Exp)
-// }
+// --- 他の式タイプ (AddExp, MultExp など) の Eval 実装を追加 ---
+// UnaryExp が存在する場合、または必要な場合のプレースホルダー

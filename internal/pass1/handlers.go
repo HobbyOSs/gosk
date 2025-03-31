@@ -5,25 +5,25 @@ import (
 	"github.com/samber/lo"
 )
 
-// opcodeEvalFn defines the function signature for instruction handlers in pass1.
-// It takes the Pass1 environment and a slice of evaluated operand expressions.
+// opcodeEvalFn は pass1 における命令ハンドラの関数シグネチャを定義します。
+// Pass1 環境と評価済みオペランド式のスライスを受け取ります。
 type opcodeEvalFn func(env *Pass1, operands []ast.Exp)
 
 var (
-	// opcodeEvalFns maps mnemonic strings to their corresponding handler functions.
+	// opcodeEvalFns はニーモニック文字列を対応するハンドラ関数にマッピングします。
 	opcodeEvalFns = make(map[string]opcodeEvalFn, 0)
 )
 
 func init() {
-	// Assign the refactored handlers to the map.
+	// リファクタリングされたハンドラをマップに割り当てます。
 
 	// 疑似命令
-	opcodeEvalFns["ALIGNB"] = processALIGNB // Refactored
-	opcodeEvalFns["DB"] = processDB         // Refactored
-	opcodeEvalFns["DD"] = processDD         // Refactored
-	opcodeEvalFns["DW"] = processDW         // Refactored
-	opcodeEvalFns["ORG"] = processORG       // Refactored
-	opcodeEvalFns["RESB"] = processRESB     // Refactored
+	opcodeEvalFns["ALIGNB"] = processALIGNB
+	opcodeEvalFns["DB"] = processDB
+	opcodeEvalFns["DD"] = processDD
+	opcodeEvalFns["DW"] = processDW
+	opcodeEvalFns["ORG"] = processORG
+	opcodeEvalFns["RESB"] = processRESB
 
 	// Jump命令
 	jmpOps := []string{
@@ -34,17 +34,17 @@ func init() {
 	jmpFns := lo.SliceToMap(
 		jmpOps,
 		func(op string) (string, opcodeEvalFn) {
-			// Assign the refactored processCalcJcc
-			localOp := op // Capture loop variable
+			// リファクタリングされた processCalcJcc を割り当てます
+			localOp := op // ループ変数をキャプチャ
 			return localOp, func(env *Pass1, operands []ast.Exp) {
-				processCalcJcc(env, operands, localOp) // Call refactored handler
+				processCalcJcc(env, operands, localOp) // リファクタリングされたハンドラを呼び出す
 			}
 		},
 	)
 	opcodeEvalFns = lo.Assign(opcodeEvalFns, jmpFns)
 
-	// No-parameter instructions
-	noParamOps := []string{ // Keep noParamOps for the loop below
+	// パラメータなし命令
+	noParamOps := []string{ // 以下のループのために noParamOps を保持
 		"AAA", "AAD", "AAM", "AAS", "CBW", "CDQ", "CDQE", "CLC", "CLD", "CLI", "CLTS", "CMC",
 		"CPUID", "CQO", "CS", "CWD", "CWDE", "DAA", "DAS", "DIV", "DS", "EMMS", "ENTER", "ES",
 		"F2XM1", "FABS", "FADDP", "FCHS", "FCLEX", "FCOM", "FCOMP", "FCOMPP", "FCOS", "FDECSTP",
@@ -61,79 +61,36 @@ func init() {
 		"SYSENTER", "SYSEXIT", "SYSRET", "TAKEN", "UD2", "VMCALL", "VMLAUNCH", "VMRESUME",
 		"VMXOFF", "WAIT", "WBINVD", "WRMSR", "XGETBV", "XRSTOR", "XSETBV",
 	}
-	// Assign processNoParam for no-parameter instructions
+	// パラメータなし命令に processNoParam を割り当てます
 	for _, op := range noParamOps {
-		opcodeEvalFns[op] = processNoParam // Assign the actual handler
+		opcodeEvalFns[op] = processNoParam // 実際のハンドラを割り当てます
 	}
-	/* Remove the old SliceToMap block and placeholder logic
-	noParamFns := lo.SliceToMap(
-		noParamOps,
-		// processNoParam のシグネチャが変わるため、一旦コメントアウト。後で修正する。
-		// func(op string) (string, opcodeEvalFn) {
-		// 	return op, processNoParam
-		// },
-		func(op string) (string, opcodeEvalFn) {
-			// TODO: Implement proper processNoParam with new signature
-			return op, func(env *Pass1, operands []ast.Exp) {
-				// Placeholder implementation for processNoParam
-				log.Printf("TODO: Implement processNoParam for %s with new signature.", op) // Use Printf
-				// Original processNoParam logic needs to be adapted here.
-				// It likely involves calling env.Client.EmitXXX() without operands
-			// and calculating the instruction size.
-			// For now, just log and maybe update LOC with a placeholder size.
-			// size := calculateNoParamInstructionSize(env, localOp) // Placeholder function
-			// env.Client.EmitXXX(localOp) // Placeholder call
-			// env.LOC += size
-		}
-	}
-	/* Remove the old SliceToMap block for noParamFns
-	noParamFns := lo.SliceToMap( // Remove this variable declaration
-		noParamOps,
-		// processNoParam のシグネチャが変わるため、一旦コメントアウト。後で修正する。
-		// func(op string) (string, opcodeEvalFn) {
-		// 	return op, processNoParam
-		// },
-		func(op string) (string, opcodeEvalFn) {
-			// TODO: Implement proper processNoParam with new signature
-			return op, func(env *Pass1, operands []ast.Exp) {
-				// Placeholder implementation for processNoParam
-				log.Printf("TODO: Implement processNoParam for %s with new signature.", op) // Use Printf
-				// Original processNoParam logic needs to be adapted here.
-				// It likely involves calling env.Client.EmitXXX() without operands
-				// and calculating the instruction size.
-				// For now, just log and maybe update LOC with a placeholder size.
-				// size := calculateNoParamInstructionSize(env, op) // Placeholder function
-				// env.Client.EmitXXX(op) // Placeholder call
-				// env.LOC += size
-		},
-	)
-	*/ // End of removed SliceToMap block
 
-	// Assign refactored handlers for remaining instructions
-	opcodeEvalFns["RET"] = processRET   // Refactored,
-	opcodeEvalFns["MOV"] = processMOV   // Refactored,
-	opcodeEvalFns["INT"] = processINT   // Refactored,
-	opcodeEvalFns["ADD"] = processADD   // Refactored (uses helper),
-	opcodeEvalFns["ADC"] = processADC   // Refactored (uses helper),
-	opcodeEvalFns["SUB"] = processSUB   // Refactored (uses helper),
-	opcodeEvalFns["SBB"] = processSBB   // Refactored (uses helper),
-	opcodeEvalFns["CMP"] = processCMP   // Refactored (uses helper),
-	opcodeEvalFns["INC"] = processINC   // Refactored (uses helper),
-	opcodeEvalFns["DEC"] = processDEC   // Refactored (uses helper),
-	opcodeEvalFns["NEG"] = processNEG   // Refactored (uses helper),
-	opcodeEvalFns["MUL"] = processMUL   // Refactored (uses helper),
-	opcodeEvalFns["IMUL"] = processIMUL // Refactored,
-	opcodeEvalFns["DIV"] = processDIV   // Refactored (uses helper),
-	opcodeEvalFns["IDIV"] = processIDIV // Refactored (uses helper),
-	opcodeEvalFns["AND"] = processAND   // Refactored (uses helper),
-	opcodeEvalFns["OR"] = processOR     // Refactored (uses helper),
-	opcodeEvalFns["XOR"] = processXOR   // Refactored (uses helper),
-	opcodeEvalFns["NOT"] = processNOT   // Refactored,
-	opcodeEvalFns["SHR"] = processSHR   // Refactored (uses helper),
-	opcodeEvalFns["SHL"] = processSHL   // Refactored (uses helper),
-	opcodeEvalFns["SAR"] = processSAR   // Refactored (uses helper),
-	opcodeEvalFns["IN"] = processIN     // Refactored,
-	opcodeEvalFns["OUT"] = processOUT   // Refactored,
-	opcodeEvalFns["CALL"] = processCALL // Refactored,
-	opcodeEvalFns["LGDT"] = processLGDT // Refactored,
+	// 残りの命令にリファクタリングされたハンドラを割り当てます
+	opcodeEvalFns["RET"] = processRET
+	opcodeEvalFns["MOV"] = processMOV
+	opcodeEvalFns["INT"] = processINT
+	opcodeEvalFns["ADD"] = processADD
+	opcodeEvalFns["ADC"] = processADC
+	opcodeEvalFns["SUB"] = processSUB
+	opcodeEvalFns["SBB"] = processSBB
+	opcodeEvalFns["CMP"] = processCMP
+	opcodeEvalFns["INC"] = processINC
+	opcodeEvalFns["DEC"] = processDEC
+	opcodeEvalFns["NEG"] = processNEG
+	opcodeEvalFns["MUL"] = processMUL
+	opcodeEvalFns["IMUL"] = processIMUL
+	opcodeEvalFns["DIV"] = processDIV
+	opcodeEvalFns["IDIV"] = processIDIV
+	opcodeEvalFns["AND"] = processAND
+	opcodeEvalFns["OR"] = processOR
+	opcodeEvalFns["XOR"] = processXOR
+	opcodeEvalFns["NOT"] = processNOT
+	opcodeEvalFns["SHR"] = processSHR
+	opcodeEvalFns["SHL"] = processSHL
+	opcodeEvalFns["SAR"] = processSAR
+	opcodeEvalFns["IN"] = processIN
+	opcodeEvalFns["OUT"] = processOUT
+	opcodeEvalFns["CALL"] = processCALL
+	opcodeEvalFns["LGDT"] = processLGDT
 }

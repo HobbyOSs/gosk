@@ -1,44 +1,41 @@
 package ast
 
-// Env defines the interface for the environment needed during evaluation.
-// It provides methods to lookup macros or other definitions.
+// Env は評価中に必要な環境のインターフェースを定義します。
+// マクロやその他の定義を検索するメソッドを提供します。
 type Env interface {
 	LookupMacro(name string) (Exp, bool)
-	// GetLOC returns the current location counter value needed for '$' evaluation.
+	// GetLOC は '$' 評価に必要な現在のロケーションカウンタ値を返します。
 	GetLOC() int32
-	// GetConstValue extracts the integer value from an expression if it's a constant number.
-	// This is typically implemented by the environment (e.g., Pass1).
+	// GetConstValue は、式が定数である場合に整数値を抽出します。
+	// これは通常、環境 (例: Pass1) によって実装されます。
 	GetConstValue(exp Exp) (int, bool)
-	// Add other methods needed for evaluation if necessary
+	// 必要に応じて評価に必要な他のメソッドを追加します
 }
 
-// Exp represents an expression node in the AST.
+// Exp は AST 内の式ノードを表します。
 type Exp interface {
 	Node
 	expressionNode()
 	Type() string
-	// Eval evaluates the expression within the given environment.
-	// It returns the evaluated/reduced expression and a boolean indicating
-	// whether the evaluation resulted in a reduction (true) or not (false).
-	// If evaluation is not possible (e.g., involves unresolved identifiers),
-	// it should return the original expression node and false.
+	// Eval は指定された環境内で式を評価します。
+	// 評価/簡約された式と、評価が簡約をもたらしたかどうか (true)
+	// そうでないか (false) を示すブール値を返します。
+	// 評価が不可能な場合 (例: 未解決の識別子を含む)、
+	// 元の式ノードと false を返す必要があります。
 	Eval(env Env) (Exp, bool)
 }
 
-// BaseExp provides a base implementation, but Type() should be implemented by concrete types.
+// BaseExp は基本実装を提供しますが、Type() は具象型によって実装される必要があります。
 type BaseExp struct{}
 
-// Type returns the name of the concrete expression type.
-// NOTE: This generic implementation using reflection might not be reliable.
-// It's recommended that each concrete Exp type implements its own Type() method.
+// Type は具象式の型の名前を返します。
+// 注意: リフレクションを使用したこの汎用実装は信頼できない可能性があります。
+// 各具象 Exp 型が独自の Type() メソッドを実装することを推奨します。
 func (b BaseExp) Type() string {
-	// This reflection-based approach is often problematic.
-	// Returning a placeholder or panicking might be safer.
-	// return reflect.TypeOf(b).Elem().Name() // Original problematic implementation
+	// このリフレクションベースのアプローチはしばしば問題があります。
+	// プレースホルダーを返すか、パニックする方が安全かもしれません。
 	panic("BaseExp.Type() should not be called directly. Implement Type() in concrete Exp types.")
-
 }
 
-// expressionNode() is a marker method to identify expression nodes.
-// We can add it to BaseExp if needed for embedding structs.
-// func (b BaseExp) expressionNode() {}
+// expressionNode() は式ノードを識別するためのマーカーメソッドです。
+// 構造体を埋め込むために必要であれば BaseExp に追加できます。

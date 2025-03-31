@@ -8,65 +8,61 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 )
 
-// TraverseAST now takes ast.Node and *Pass1 (as Env) and returns the potentially transformed ast.Node.
-// It no longer uses the stack (env.Ctx).
+// TraverseAST は ast.Node と *Pass1 (Env として) を受け取り、変換される可能性のある ast.Node を返します。
+// スタック (env.Ctx) は使用しません。
 func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 	if node == nil {
 		return nil
 	}
 
-	// Implement the Env interface for Pass1
-	// This allows passing 'env' directly to Eval methods.
-	var evalEnv ast.Env = env // Pass1 implements ast.Env via DefineMacro/LookupMacro methods below
+	// Pass1 の Env インターフェースを実装します。
+	// これにより、'env' を Eval メソッドに直接渡すことができます。
+	var evalEnv ast.Env = env // Pass1 は DefineMacro/LookupMacro メソッドを通じて ast.Env を実装します。
 
 	switch n := node.(type) {
 	case *ast.Program:
-		log.Println("trace: program handler!!!")
 		newStatements := make([]ast.Statement, 0, len(n.Statements))
 		for _, stmt := range n.Statements {
-			// Traverse each statement. TraverseAST now returns Node.
+			// 各ステートメントを走査します。TraverseAST は Node を返すようになりました。
 			processedStmt := TraverseAST(stmt, env)
 			if processedStmt != nil {
-				// Ensure the returned node is indeed a Statement
+				// 返されたノードが実際に Statement であることを確認します。
 				if statement, ok := processedStmt.(ast.Statement); ok {
 					newStatements = append(newStatements, statement)
 				} else {
-					// If TraverseAST returns an evaluated expression (like NumberExp from EQU), discard it at the statement level.
+					// TraverseAST が評価された式 (EQU からの NumberExp など) を返した場合、ステートメントレベルで破棄します。
 					log.Printf("info: TraverseAST returned a non-Statement node (%T) for a statement, discarding.", processedStmt)
 				}
 			}
 		}
-		// Return a new Program node with modified statements.
-		return ast.NewProgram(newStatements) // Corrected call to NewProgram
+		// 変更されたステートメントを持つ新しい Program ノードを返します。
+		return ast.NewProgram(newStatements) // NewProgram の呼び出しを修正
 
-	case *ast.DeclareStmt: // EQU statement
-		log.Println("trace: declare handler!!!")
-		// Evaluate the value expression first.
+	case *ast.DeclareStmt: // EQU ステートメント
+		// まず値の式を評価します。
 		evalValueNode := TraverseAST(n.Value, env)
 		evalValueExp, ok := evalValueNode.(ast.Exp)
 		if !ok {
 			log.Printf("error: EQU value expression %s evaluated to non-expression type %T", n.Value.TokenLiteral(), evalValueNode)
-			return nil // Or handle error appropriately
+			return nil // またはエラーを適切に処理します
 		}
 
-		// Define the macro in the environment using the method on Pass1.
+		// Pass1 のメソッドを使用して環境にマクロを定義します。
 		env.DefineMacro(n.Id.Value, evalValueExp)
 		log.Printf("debug: Defined macro '%s' = %s", n.Id.Value, evalValueExp.TokenLiteral())
-		// EQU statement itself doesn't produce output, so return nil.
+		// EQU ステートメント自体は出力を生成しないため、nil を返します。
 		return nil
 
 	case *ast.LabelStmt:
-		log.Println("trace: label handler!!!")
 		label := strings.TrimSuffix(n.Label.Value, ":")
 		env.SymTable[label] = env.LOC
-		// Label statement itself doesn't produce output node after processing.
-		return nil // Or return n if labels should remain in the AST for pass2
+		// ラベルステートメント自体は処理後に出力ノードを生成しません。
+		return nil // または、pass2 でラベルを AST に残す場合は n を返します
 
 	case *ast.MnemonicStmt:
-		log.Println("trace: mnemonic stmt handler!!!")
 		opcode := n.Opcode.Value
 
-		// Evaluate operands first using TraverseAST -> Eval
+		// TraverseAST -> Eval を使用して最初にオペランドを評価します
 		evalOperands := make([]ast.Exp, len(n.Operands))
 		canProcess := true
 		for i, operand := range n.Operands {
@@ -76,75 +72,71 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 			} else {
 				log.Printf("error: Operand %d for %s evaluated to non-expression type %T", i, opcode, evalOperandNode)
 				canProcess = false
-				break // Stop processing if an operand is invalid
+				break // オペランドが無効な場合は処理を停止します
 			}
 		}
 
 		if !canProcess {
-			// Cannot process this instruction if operands are invalid
-			return n // Return original node if operands are invalid
+			// オペランドが無効な場合、この命令を処理できません
+			return n // オペランドが無効な場合は元のノードを返します
 		}
 
-		// Find and call the appropriate handler function
+		// 適切なハンドラ関数を見つけて呼び出します
 		if handler, ok := opcodeEvalFns[opcode]; ok {
-			handler(env, evalOperands) // Call handler with evaluated operands
+			handler(env, evalOperands) // 評価されたオペランドでハンドラを呼び出します
 		} else {
 			log.Printf("error: No handler found for opcode %s", opcode)
-			// Decide how to handle unknown opcodes (e.g., skip, error, default size?)
-			// For now, just log. LOC won't be updated.
+			// 不明なオペコードの処理方法を決定します (例: スキップ、エラー、デフォルトサイズ?)
+			// 現時点ではログのみ。LOC は更新されません。
 		}
 
-		// LOC and Emit are handled within the specific handler function now.
-		return nil // Mnemonic statement processed, return nil
+		// LOC と Emit は特定のハンドラ関数内で処理されるようになりました。
+		return nil // Mnemonic ステートメントが処理されたため、nil を返します
 
-	case *ast.OpcodeStmt: // Instruction without operands
-		log.Println("trace: opcode stmt handler!!!")
+	case *ast.OpcodeStmt: // オペランドのない命令
 		opcode := n.Opcode.Value
 
-		// Find and call the appropriate handler function (passing empty operands)
+		// 適切なハンドラ関数を見つけて呼び出します (空のオペランドを渡します)
 		if handler, ok := opcodeEvalFns[opcode]; ok {
-			handler(env, []ast.Exp{}) // Call handler with empty operands
+			handler(env, []ast.Exp{}) // 空のオペランドでハンドラを呼び出します
 		} else {
 			log.Printf("error: No handler found for opcode %s", opcode)
 		}
 
-		// LOC and Emit are handled within the specific handler function now.
-		return nil // Opcode statement processed, return nil
+		// LOC と Emit は特定のハンドラ関数内で処理されるようになりました。
+		return nil // Opcode ステートメントが処理されたため、nil を返します
 
-	// --- Expression Evaluation ---
-	// AddExp and MultExp have specific Eval logic implemented in ast_exp_impl.go
-	// ImmExp, SegmentExp, MemoryAddrExp also have Eval methods
-	case ast.Exp: // Catch all expression types
-		evalExp, _ := n.Eval(evalEnv) // Use evalEnv which is ast.Env type
-		return evalExp                // Return the evaluated expression node
+	// --- 式の評価 ---
+	// AddExp と MultExp には ast_exp_impl.go で実装された特定の Eval ロジックがあります
+	// ImmExp、SegmentExp、MemoryAddrExp にも Eval メソッドがあります
+	case ast.Exp: // すべての式タイプをキャッチします
+		evalExp, _ := n.Eval(evalEnv) // ast.Env 型である evalEnv を使用します
+		return evalExp                // 評価された式ノードを返します
 
-	// --- Factor Handling ---
+	// --- ファクターの処理 ---
 	case *ast.NumberFactor, *ast.StringFactor, *ast.HexFactor, *ast.IdentFactor, *ast.CharFactor:
 		log.Printf("warning: TraverseAST encountered a Factor type (%T) directly. Wrapping in ImmExp.", n)
-		// Wrap factor in ImmExp before returning, as factors should be part of expressions.
+		// ファクターは式の一部である必要があるため、返す前に ImmExp でラップします。
 		return ast.NewImmExp(ast.BaseExp{}, n.(ast.Factor))
 
-	// --- Other Statement Types ---
+	// --- その他のステートメントタイプ ---
 	case *ast.ExportSymStmt:
-		log.Println("trace: export sym stmt handler!!!")
-		// TODO: Implement logic if needed (e.g., add to env.GlobalSymbolList)
-		return nil // Or return n
+		// TODO: 必要に応じてロジックを実装します (例: env.GlobalSymbolList に追加)
+		return nil // または n を返します
 	case *ast.ExternSymStmt:
-		log.Println("trace: extern sym stmt handler!!!")
-		// TODO: Implement logic if needed (e.g., add to env.ExternSymbolList)
-		return nil // Or return n
+		// TODO: 必要に応じてロジックを実装します (例: env.ExternSymbolList に追加)
+		return nil // または n を返します
 	case *ast.ConfigStmt:
-		log.Println("trace: config stmt handler!!!")
 		if n.ConfigType == ast.Bits {
-			// Evaluate the factor to get the bit mode value
+			// ファクターを評価してビットモード値を取得します
 			factorNode := TraverseAST(n.Factor, env)
-			// Factor should be wrapped in ImmExp by the Factor case above
+			// ファクターは上記の Factor ケースで ImmExp でラップされている必要があります
 			immExp, ok := factorNode.(*ast.ImmExp)
 			if !ok {
 				log.Printf("error: BITS directive requires a constant value, got %T", factorNode)
 				return nil
 			}
-			evalExp, _ := immExp.Eval(evalEnv) // Use evalEnv
+			evalExp, _ := immExp.Eval(evalEnv) // evalEnv を使用します
 			numExp, ok := evalExp.(*ast.NumberExp)
 			if !ok {
 				log.Printf("error: BITS directive value did not evaluate to a number: %s", evalExp.TokenLiteral())
@@ -161,18 +153,17 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 			env.Client.SetBitMode(bitMode)
 			log.Printf("debug: Set bit mode to %d", bitModeVal)
 		}
-		return nil // Config statement doesn't produce an output node
+		return nil // Config ステートメントは出力ノードを生成しません
 
 	default:
 		log.Printf("Unknown AST node type in TraverseAST: %T\n", node)
-		return node // Return unknown nodes unchanged
+		return node // 不明なノードは変更せずに返します
 	}
-	// return node // Should not be reached
 }
 
-// DefineMacro implements the ast.Env interface for Pass1 by defining it as a method.
+// DefineMacro は、メソッドとして定義することにより、Pass1 の ast.Env インターフェースを実装します。
 func (p *Pass1) DefineMacro(name string, exp ast.Exp) {
-	// Initialize the new map if it's nil
+	// 新しいマップが nil の場合は初期化します
 	if p.MacroMap == nil {
 		p.MacroMap = make(map[string]ast.Exp)
 	}
@@ -181,50 +172,45 @@ func (p *Pass1) DefineMacro(name string, exp ast.Exp) {
 
 }
 
-// LookupMacro implements the ast.Env interface for Pass1 by defining it as a method.
+// LookupMacro は、メソッドとして定義することにより、Pass1 の ast.Env インターフェースを実装します。
 func (p *Pass1) LookupMacro(name string) (ast.Exp, bool) {
-	// Use the new MacroMap
+	// 新しい MacroMap を使用します
 	if p.MacroMap == nil {
-		return nil, false // Map not initialized
+		return nil, false // マップが初期化されていません
 	}
 	exp, ok := p.MacroMap[name]
-	// No fallback to old EquMap needed here for Eval logic
+	// Eval ロジックでは、古い EquMap へのフォールバックは不要です
 	return exp, ok
 }
 
-// GetLOC implements the ast.Env interface for Pass1.
-// It returns the current location counter.
+// GetLOC は Pass1 の ast.Env インターフェースを実装します。
+// 現在のロケーションカウンタを返します。
 func (p *Pass1) GetLOC() int32 {
 	return p.LOC
 }
 
-// GetConstValue implements the ast.Env interface for Pass1.
-// It wraps the local getConstValue helper function.
+// GetConstValue は Pass1 の ast.Env インターフェースを実装します。
+// ローカルの getConstValue ヘルパー関数をラップします。
 func (p *Pass1) GetConstValue(exp ast.Exp) (int, bool) {
 	return getConstValue(exp)
 }
 
-// getConstValue extracts the integer value from an expression if it's a constant number.
+// getConstValue は、式が定数である場合に整数値を抽出します。
 func getConstValue(exp ast.Exp) (int, bool) {
-	// First, check if it's already a NumberExp (result of previous evaluation)
+	// まず、すでに NumberExp (以前の評価の結果) であるかどうかを確認します
 	if numExp, ok := exp.(*ast.NumberExp); ok {
 		return int(numExp.Value), true
 	}
-	// If not, check if it's an ImmExp containing a NumberFactor
+	// そうでない場合は、NumberFactor を含む ImmExp であるかどうかを確認します
 	if imm, ok := exp.(*ast.ImmExp); ok {
 		if num, ok := imm.Factor.(*ast.NumberFactor); ok {
 			return num.Value, true
 		}
-		// Potentially handle HexFactor here if needed, assuming it evaluates to a number
-		// Use blank identifier for now as ImmExp.Eval should handle HexFactor evaluation first.
+		// 必要に応じてここで HexFactor を処理します (数値に評価されると仮定)
+		// ImmExp.Eval が最初に HexFactor の評価を処理する必要があるため、現時点では空白識別子を使用します。
 		if _, ok := imm.Factor.(*ast.HexFactor); ok {
-			// Assuming HexFactor has a Value field or method
-			// val, err := strconv.ParseInt(strings.TrimPrefix(hex.Value, "0x"), 16, 64)
-			// if err == nil {
-			// 	return int(val), true
-			// }
-			// For simplicity, let ImmExp.Eval handle HexFactor evaluation first
-			// If ImmExp.Eval returns NumberExp, the first check will catch it.
+			// 単純化のため、ImmExp.Eval が最初に HexFactor の評価を処理するようにします
+			// ImmExp.Eval が NumberExp を返す場合、最初のチェックでキャッチされます。
 		}
 	}
 	return 0, false

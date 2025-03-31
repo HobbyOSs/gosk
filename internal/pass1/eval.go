@@ -8,9 +8,9 @@ import (
 )
 
 type Pass1 struct {
-	LOC              int32              // LOC(location of counter)
-	BitMode          cpu.BitMode        // Keep cpu.BitMode
-	MacroMap         map[string]ast.Exp // New map to store evaluated macro expressions
+	LOC              int32              // LOC(ロケーションカウンタ)
+	BitMode          cpu.BitMode        // cpu.BitMode を保持
+	MacroMap         map[string]ast.Exp // 評価されたマクロ式を格納する新しいマップ
 	SymTable         map[string]int32   // Pass1のシンボルテーブル
 	NextImmJumpID    int                // 即値用のカウンタ
 	DollarPosition   uint32             // ORG命令で設定されるエントリーポイントのアドレス

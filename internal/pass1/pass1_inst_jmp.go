@@ -8,31 +8,31 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 )
 
-// estimateJumpSize estimates the size of a near jump/call instruction in Pass 1.
-// This is an estimation because the final offset size (rel8/rel16/32) might change in Pass 2.
+// estimateJumpSize は Pass 1 での near ジャンプ/コール命令のサイズを推定します。
+// これは推定値です。最終的なオフセットサイズ (rel8/rel16/32) は Pass 2 で変更される可能性があるためです。
 func estimateJumpSize(instName string, bitMode cpu.BitMode) int32 {
-	isJcc := instName != "JMP" && instName != "CALL" // Assume others are Jcc
+	isJcc := instName != "JMP" && instName != "CALL" // その他は Jcc と仮定します
 
-	// Default to near relative jump/call sizes (opcode + rel16/32)
-	// JMP rel16/32 (E9 cw/cd): 1 + 2/4 = 3/5 bytes
-	// CALL rel16/32 (E8 cw/cd): 1 + 2/4 = 3/5 bytes
-	// Jcc rel16/32 (0F 8x cw/cd): 2 + 2/4 = 4/6 bytes
-	size := int32(5) // Assume rel32 for JMP/CALL initially
+	// デフォルトでは near 相対ジャンプ/コールサイズ (オペコード + rel16/32) になります
+	// JMP rel16/32 (E9 cw/cd): 1 + 2/4 = 3/5 バイト
+	// CALL rel16/32 (E8 cw/cd): 1 + 2/4 = 3/5 バイト
+	// Jcc rel16/32 (0F 8x cw/cd): 2 + 2/4 = 4/6 バイト
+	size := int32(5) // 最初は JMP/CALL に rel32 を仮定します
 	if bitMode == cpu.MODE_16BIT {
-		size = 3 // Assume rel16 for JMP/CALL in 16-bit mode
+		size = 3 // 16 ビットモードでは JMP/CALL に rel16 を仮定します
 	}
 
 	if isJcc {
-		size = 6 // Assume rel32 for Jcc initially
+		size = 6 // 最初は Jcc に rel32 を仮定します
 		if bitMode == cpu.MODE_16BIT {
-			size = 4 // Assume rel16 for Jcc in 16-bit mode
+			size = 4 // 16 ビットモードでは Jcc に rel16 を仮定します
 		}
 	}
-	// Note: We don't estimate short jumps (rel8) here, Pass 2 will optimize if possible.
+	// 注意: ここでは short ジャンプ (rel8) は推定しません。Pass 2 で可能であれば最適化されます。
 	return size
 }
 
-// processCalcJcc handles JMP and conditional jump instructions.
+// processCalcJcc は JMP および条件付きジャンプ命令を処理します。
 func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 	if len(operands) != 1 {
 		log.Printf("Error: %s instruction requires exactly one operand, got %d", instName, len(operands))
@@ -40,36 +40,36 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 	}
 
 	operand := operands[0]
-	evaluatedOperand, _ := operand.Eval(env) // Evaluate the operand first, explicitly ignore 'evaluated' flag
+	evaluatedOperand, _ := operand.Eval(env) // 最初にオペランドを評価し、'evaluated' フラグを明示的に無視します
 
-	// Determine estimated size and emit Ocode based on the *evaluated* operand type
+	// *評価された* オペランドタイプに基づいて推定サイズを決定し、Ocode を発行します
 	var estimatedSize int32
 	var ocode string
 
 	switch op := evaluatedOperand.(type) {
-	case *ast.SegmentExp: // Handle FAR jumps (e.g., JMP FAR label, JMP seg:off)
+	case *ast.SegmentExp: // FAR ジャンプを処理します (例: JMP FAR label, JMP seg:off)
 		log.Printf("[pass1] Processing evaluated SegmentExp for %s: %s", instName, op.TokenLiteral())
-		// Evaluate segment and offset parts *again* (Eval on SegmentExp itself might not fully resolve)
+		// セグメントとオフセット部分を *再度* 評価します (SegmentExp 自体の Eval では完全には解決されない場合があります)
 		segEval, segOk := op.Left.Eval(env)
 		offEval, offOk := op.Right.Eval(env)
 
 		if !segOk || !offOk {
 			log.Printf("Error: Could not fully evaluate segment or offset for FAR %s.", instName)
-			// Emit placeholder based on original operand string if evaluation failed
-			estimatedSize = 7 // Assume ptr16:32
+			// 評価に失敗した場合は、元のオペランド文字列に基づいてプレースホルダーを発行します
+			estimatedSize = 7 // ptr16:32 を仮定します
 			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
 		} else {
-			// Try to get values if they are numbers, otherwise use placeholders
+			// 数値の場合は値を取得し、それ以外の場合はプレースホルダーを使用します
 			var segStr, offStr string
 			if segNum, ok := segEval.(*ast.NumberExp); ok {
 				segStr = fmt.Sprintf("%d", segNum.Value)
 			} else {
-				segStr = fmt.Sprintf("{{expr:%s}}", op.Left.TokenLiteral()) // Placeholder for segment
+				segStr = fmt.Sprintf("{{expr:%s}}", op.Left.TokenLiteral()) // セグメントのプレースホルダー
 			}
 			if offNum, ok := offEval.(*ast.NumberExp); ok {
 				offStr = fmt.Sprintf("%d", offNum.Value)
 			} else {
-				offStr = fmt.Sprintf("{{expr:%s}}", op.Right.TokenLiteral()) // Placeholder for offset
+				offStr = fmt.Sprintf("{{expr:%s}}", op.Right.TokenLiteral()) // オフセットのプレースホルダー
 			}
 
 			estimatedSize = 7 // JMP ptr16:32 (EA + ptr16:32)
@@ -77,49 +77,49 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 		}
 
 	case *ast.ImmExp:
-		if factor, ok := op.Factor.(*ast.IdentFactor); ok { // Unresolved label
+		if factor, ok := op.Factor.(*ast.IdentFactor); ok { // 未解決のラベル
 			label := factor.Value
 			log.Printf("[pass1] Processing label '%s' for %s", label, instName)
-			// Register label if not exists
+			// ラベルが存在しない場合は登録します
 			if _, exists := env.SymTable[label]; !exists {
-				env.SymTable[label] = 0 // Placeholder address
+				env.SymTable[label] = 0 // プレースホルダーアドレス
 			}
 			estimatedSize = estimateJumpSize(instName, env.BitMode)
-			ocode = fmt.Sprintf("%s {{.%s}}", instName, label) // Ocode with label placeholder
+			ocode = fmt.Sprintf("%s {{.%s}}", instName, label) // ラベルプレースホルダー付きの Ocode
 		} else {
-			// Should not happen if ImmExp.Eval works correctly, but handle defensively
+			// ImmExp.Eval が正しく機能すれば発生しないはずですが、防御的に処理します
 			log.Printf("Error: Unexpected factor type %T within evaluated ImmExp for %s.", op.Factor, instName)
-			estimatedSize = estimateJumpSize(instName, env.BitMode)                 // Estimate size anyway
-			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral()) // Placeholder with original expr
+			estimatedSize = estimateJumpSize(instName, env.BitMode)                 // とにかくサイズを推定します
+			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral()) // 元の式を持つプレースホルダー
 		}
 
-	case *ast.NumberExp: // Resolved immediate address
+	case *ast.NumberExp: // 解決された即値アドレス
 		targetAddr := op.Value
 		log.Printf("[pass1] Processing immediate address %d (0x%x) for %s", targetAddr, targetAddr, instName)
-		// Pass 1 cannot reliably calculate relative offset. Use a placeholder.
+		// Pass 1 では相対オフセットを確実に計算できません。プレースホルダーを使用します。
 		estimatedSize = estimateJumpSize(instName, env.BitMode)
-		// Use a placeholder indicating an immediate address for Pass 2
+		// Pass 2 用に即値アドレスを示すプレースホルダーを使用します
 		ocode = fmt.Sprintf("%s {{addr:%d}}", instName, targetAddr)
 
-	case *ast.AddExp, *ast.MultExp: // Partially evaluated expression (e.g., label + offset)
+	case *ast.AddExp, *ast.MultExp: // 部分的に評価された式 (例: label + offset)
 		log.Printf("[pass1] Processing partially evaluated expression for %s: %s", instName, op.TokenLiteral())
-		// Cannot fully resolve in Pass 1. Use a placeholder for Pass 2.
+		// Pass 1 では完全に解決できません。Pass 2 用にプレースホルダーを使用します。
 		estimatedSize = estimateJumpSize(instName, env.BitMode)
-		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, op.TokenLiteral()) // Placeholder with the expression string
+		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, op.TokenLiteral()) // 式文字列を持つプレースホルダー
 
-	// TODO: Handle MemoryAddrExp if needed (e.g., JMP DWORD PTR [EAX])
+	// MemoryAddrExp の処理が必要な場合 (例: JMP DWORD PTR [EAX])
 
 	default:
 		log.Printf("Error: Invalid evaluated operand type %T for %s instruction.", evaluatedOperand, instName)
-		// Attempt to use original operand string as a fallback placeholder
-		estimatedSize = estimateJumpSize(instName, env.BitMode) // Estimate size
+		// フォールバックプレースホルダーとして元のオペランド文字列を使用しようとします
+		estimatedSize = estimateJumpSize(instName, env.BitMode) // サイズを推定します
 		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
 	}
 
-	// Update LOC and emit Ocode
+	// LOC を更新し、Ocode を発行します
 	if estimatedSize == 0 {
 		log.Printf("WARN: Estimated size is 0 for %s %s. Defaulting to 2.", instName, operand.TokenLiteral())
-		estimatedSize = 2 // Avoid LOC not advancing
+		estimatedSize = 2 // LOC が進まないのを避けます
 	}
 	env.LOC += estimatedSize
 	env.Client.Emit(ocode)

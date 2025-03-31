@@ -94,7 +94,7 @@ DeclareStmt <- _ f:IdentFactor _ "EQU" _ e:Exp _ {
     if !ok {
         return nil, parseError("declareStmt ident")
     }
-    exp, ok := e.(ast.Exp) // Use the general Exp interface
+    exp, ok := e.(ast.Exp) // 一般的な Exp インターフェースを使用
     if !ok {
         return nil, parseError("declareStmt exp")
     }
@@ -218,11 +218,11 @@ OpcodeStmt <- _ o:Opcode _ {
     return ast.NewOpcodeStmt(ast.BaseStatement{}, opcode), nil
 }
 
-Operand <- Exp // Use the adjusted Exp rule
+Operand <- Exp // 調整された Exp ルールを使用
 
-Exp <- MemoryAddrExp / SegmentExp / AddExp // Define Exp order: specific to general
+Exp <- MemoryAddrExp / SegmentExp / AddExp // Exp の順序を定義: 具体的なものから一般的なものへ
 
-// オペコードを最も長いパターンにマッチさせるために、辞書順ではなく文字列長でソートしている
+// オペコードは最も長いパターンにマッチさせるために、辞書順ではなく文字列長でソートされています。
 Opcode = "FYL2XP1" / "FXTRACT" / "FUCOMPP" / "FSINCOS" / "FRNDINT" / "FNSTENV" / "FINCSTP" /
     "FDECSTP" / "CMPXCHG" / "WBINVD" / "SETNLE" / "SETNGE" / "SETNBE" / "SETNAE" /
     "PUSHFW" / "PUSHFD" / "PUSHAW" / "PUSHAD" / "LOOPNZ" / "LOOPNE" / "INVLPG" / "FUCOMP" /
@@ -287,7 +287,7 @@ MemoryAddrExp <- WS d:DataType? WS j:JumpType? WS '[' WS l:AddExp r:(':' AddExp)
     return ast.NewMemoryAddrExp(ast.BaseExp{}, dt, jt, left, right), nil
 }
 
-// Reintroduce SegmentExp, but make the colon and right side mandatory
+// SegmentExp を再導入しますが、コロンと右側を必須にします
 SegmentExp <- WS d:DataType? WS l:AddExp ':' r:AddExp {
     var dt ast.DataType
     if dts, err := gats.ToString(d); err == nil {
@@ -297,11 +297,11 @@ SegmentExp <- WS d:DataType? WS l:AddExp ':' r:AddExp {
     if !ok {
         return nil, parseError("segmentExp left")
     }
-    right, ok := r.(*ast.AddExp) // Right side is now mandatory
+    right, ok := r.(*ast.AddExp) // 右側は必須になりました
     if !ok {
         return nil, parseError("segmentExp right")
     }
-    // Note: JumpType is not applicable to SegmentExp
+    // 注意: JumpType は SegmentExp には適用されません
     return ast.NewSegmentExp(ast.BaseExp{}, dt, left, right), nil
 }
 
@@ -341,25 +341,25 @@ PrimaryFactor <- f:Factor {
     if !ok {
          return nil, parseError("primaryFactor factor")
     }
-    // Wrap Factor in ImmExp
+    // Factor を ImmExp でラップ
     return ast.NewImmExp(ast.BaseExp{}, factor), nil
 }
 PrimaryParen <- '(' _ e:AddExp _ ')' {
-    // Return the AddExp directly
+    // AddExp を直接返す
     return e, nil
 }
-// PrimaryExp chooses between the two
+// PrimaryExp は 2 つの中から選択
 PrimaryExp <- PrimaryFactor / PrimaryParen
 
 MultExp <- head:PrimaryExp tail:(WS ('*' / '/' / '%') WS PrimaryExp)* {
-    // head can now be Factor (wrapped in ImmExp) or AddExp
-    headExp, ok := head.(ast.Exp) // Use general Exp interface
+    // head は Factor (ImmExp でラップ) または AddExp になり得る
+    headExp, ok := head.(ast.Exp) // 一般的な Exp インターフェースを使用
     if !ok {
         return nil, parseError("multExp head")
     }
 
     ops := make([]string, 0)
-    tailExps := make([]ast.Exp, 0) // Store tails as general Exp
+    tailExps := make([]ast.Exp, 0) // tails を一般的な Exp として格納
 
     for _, anySlice := range toAnySlice(tail) {
         tuple := toAnySlice(anySlice)
@@ -372,17 +372,17 @@ MultExp <- head:PrimaryExp tail:(WS ('*' / '/' / '%') WS PrimaryExp)* {
         }
         ops = append(ops, op)
 
-        exp, ok := tuple[3].(ast.Exp) // Tail is also PrimaryExp (Exp)
+        exp, ok := tuple[3].(ast.Exp) // Tail も PrimaryExp (Exp)
         if !ok {
             return nil, parseError("multExp tail exp")
         }
         tailExps = append(tailExps, exp)
     }
-    // Explicitly pass tailExps (which is []ast.Exp) to the constructor
+    // tailExps ([]ast.Exp) を明示的にコンストラクタに渡す
     return ast.NewMultExp(ast.BaseExp{}, headExp, ops, tailExps), nil
 }
 
-// ImmExp might become redundant later if PrimaryExp handles Factors directly
+// PrimaryExp が Factor を直接処理する場合、ImmExp は後で冗長になる可能性がある
 ImmExp <- f:Factor {
     factor, ok := f.(ast.Factor)
     if !ok {

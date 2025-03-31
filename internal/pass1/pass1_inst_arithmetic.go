@@ -11,32 +11,25 @@ import (
 	"github.com/samber/lo"
 )
 
-// processArithmeticInst handles common logic for arithmetic instructions.
+// processArithmeticInst は算術命令の共通ロジックを処理します。
 func processArithmeticInst(env *Pass1, operands []ast.Exp, instName string) {
-	// Get string representation of operands
+	// オペランドの文字列表現を取得します
 	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
-		return exp.TokenLiteral() // Assuming TokenLiteral is suitable
+		return exp.TokenLiteral() // TokenLiteral が適切であると仮定します
 	})
 	operandString := strings.Join(operandStrings, ",")
 
-	// with the new operand parsing approach. Size calculation should handle this.
-	// isAccumulator := false
-	// if len(args) > 0 {
-	// 	matched, _ := regexp.MatchString(`(?i)^(AL|AX|EAX|RAX)$`, args[0])
-	// 	isAccumulator = matched
-	// }
-
-	// Create ng_operand.Operands from the combined string
+	// 結合された文字列から ng_operand.Operands を作成します
 	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
 		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
 		return
 	}
 
-	// Set BitMode
+	// BitMode を設定します
 	ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-	// Calculate instruction size
+	// 命令サイズを計算します
 	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
 		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
@@ -44,11 +37,11 @@ func processArithmeticInst(env *Pass1, operands []ast.Exp, instName string) {
 	}
 	env.LOC += int32(size)
 
-	// Emit the command (without comment)
+	// コマンドを発行します (コメントなし)
 	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }
 
-// --- Update callers to use the new signature ---
+// --- 呼び出し元を新しいシグネチャを使用するように更新 ---
 
 // 加算命令
 func processADD(env *Pass1, operands []ast.Exp) {
@@ -98,34 +91,34 @@ func processMUL(env *Pass1, operands []ast.Exp) {
 // 符号付き乗算命令
 func processIMUL(env *Pass1, operands []ast.Exp) {
 	instName := "IMUL"
-	// Get string representation of operands
+	// オペランドの文字列表現を取得します
 	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
 		return exp.TokenLiteral()
 	})
 	operandString := strings.Join(operandStrings, ",")
 
-	// Create ng_operand.Operands from the combined string
+	// 結合された文字列から ng_operand.Operands を作成します
 	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
 		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
 		return
 	}
 
-	// Set BitMode
+	// BitMode を設定します
 	ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-	// Calculate instruction size using FindMinOutputSize
+	// FindMinOutputSize を使用して命令サイズを計算します
 	calculatedSize, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
 		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
 		return
 	}
 
-	var size int = calculatedSize // Use calculated size by default
+	var size int = calculatedSize // デフォルトで計算されたサイズを使用します
 
 	// ★★★ IMUL ECX, 4608 (16bit mode) のサイズを強制的に7に修正 ★★★
 	// FindMinOutputSize が 4 を返す問題を回避するための暫定対応
-	// Check based on the generated operand string
+	// 生成されたオペランド文字列に基づいてチェックします
 	if env.BitMode == cpu.MODE_16BIT && operandString == "ECX,4608" {
 		log.Printf("debug: [pass1] Forcing size to 7 for IMUL ECX, 4608 in 16-bit mode.\n")
 		size = 7
@@ -134,7 +127,7 @@ func processIMUL(env *Pass1, operands []ast.Exp) {
 	// LOC を加算
 	env.LOC += int32(size)
 
-	// Emit the command (without comment)
+	// コマンドを発行します (コメントなし)
 	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }
 

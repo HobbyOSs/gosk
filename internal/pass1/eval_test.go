@@ -27,17 +27,17 @@ func (s *Pass1EvalSuite) SetupSuite() {
 }
 
 type EvalTestParam struct {
-	name        string      // Add name field for easier identification
-	bitMode     cpu.BitMode // Change cpu.BitMode to cpu.BitMode
+	name        string      // 識別しやすいように name フィールドを追加
+	bitMode     cpu.BitMode // cpu.BitMode を cpu.BitMode に変更
 	text        string
 	expectedLOC int32
 }
 
 func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 	tests := []EvalTestParam{
-		// パラメタライズテスト；
+		// パラメータ化テスト；
 		// 引数:
-		// * 16bit/32bitモード
+		// * 16bit/32bit モード
 		// * アセンブラ文の一部
 		// * 期待される機械語サイズ
 		{
@@ -52,12 +52,6 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "INT 0x10",
 			expectedLOC: 2,
 		},
-		// {
-		// 	name:        "CALL_label",
-		// 	bitMode:     cpu.MODE_16BIT,
-		// 	text:        "CALL waitkbdout",
-		// 	expectedLOC: 5,
-		// },
 		{
 			name:        "MOV_reg_mem",
 			bitMode:     cpu.MODE_16BIT,
@@ -94,23 +88,11 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV [0x0ff0],CH",
 			expectedLOC: 4,
 		},
-		// {
-		// 	name:        "MOV_reg_imm16_high",
-		// 	bitMode:     cpu.MODE_16BIT,
-		// 	text:        "MOV CL, 0x0ff0",
-		// 	expectedLOC: 4,
-		// },
-		// {
-		// 	name:        "OR_reg_imm32",
-		// 	bitMode:     cpu.MODE_16BIT,
-		// 	text:        "OR EAX, 0x00000001",
-		// 	expectedLOC: 4,
-		// },
 		{
 			name:        "IMUL_reg_imm16",
 			bitMode:     cpu.MODE_16BIT,
 			text:        "IMUL ECX, 4608",
-			expectedLOC: 7, // Master data indicates 7 bytes (66 69 c9 00 12 00 00)
+			expectedLOC: 7, // マスターデータは 7 バイト (66 69 c9 00 12 00 00) を示します
 		},
 		{
 			name:        "MOV_mem_reg8_byte",
@@ -118,18 +100,6 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "MOV BYTE [ 0x0ff0 ], CH",
 			expectedLOC: 4,
 		},
-		// {
-		// 	name:        "SUB_reg_imm32",
-		// 	bitMode:     cpu.MODE_16BIT,
-		// 	text:        "SUB ECX, 128",
-		// 	expectedLOC: 7,
-		// },
-		// {
-		// 	name:        "MOV_reg_mem_disp",
-		// 	bitMode:     cpu.MODE_16BIT,
-		// 	text:        "MOV ECX, [EBX+16]",
-		// 	expectedLOC: 5,
-		// },
 		{
 			name:        "MOV_reg_seg",
 			bitMode:     cpu.MODE_32BIT,
@@ -146,9 +116,9 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			name:        "MOV_reg_mem_disp_16bit",
 			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV ECX, [EBX+16]",
-			expectedLOC: 5, // Master data indicates 5 bytes (67 66 8b 4b 10)
+			expectedLOC: 5, // マスターデータは 5 バイト (67 66 8b 4b 10) を示します
 		},
-		// --- EQU Test Cases ---
+		// --- EQU テストケース ---
 		{
 			name:    "EQU_simple_mov",
 			bitMode: cpu.MODE_16BIT,
@@ -189,7 +159,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 	}
 
 	for _, tt := range tests {
-		// Use tt.name if provided, otherwise fallback to tt.text
+		// 提供されている場合は tt.name を使用し、それ以外の場合は tt.text にフォールバックします
 		testName := tt.name
 		if testName == "" {
 			testName = tt.text
@@ -204,10 +174,10 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			pass1 := &Pass1{
 				LOC:      0,
 				BitMode:  tt.bitMode,
-				SymTable: make(map[string]int32), // Add SymTable initialization
+				SymTable: make(map[string]int32), // SymTable の初期化を追加
 				Client:   client,
 				AsmDB:    asmdb.NewInstructionDB(),
-				MacroMap: make(map[string]ast.Exp), // Add MacroMap initialization
+				MacroMap: make(map[string]ast.Exp), // MacroMap の初期化を追加
 			}
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
 			if !assert.NoError(t, err) {

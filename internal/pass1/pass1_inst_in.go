@@ -11,34 +11,34 @@ import (
 	"github.com/samber/lo"
 )
 
-// processIN handles the IN instruction.
+// processIN は IN 命令を処理します。
 func processIN(env *Pass1, operands []ast.Exp) {
 	instName := "IN"
-	// Get string representation of operands
+	// オペランドの文字列表現を取得します
 	operandStrings := lo.Map(operands, func(exp ast.Exp, _ int) string {
 		return exp.TokenLiteral()
 	})
 	operandString := strings.Join(operandStrings, ",")
 
-	// Create ng_operand.Operands from the combined string
+	// 結合された文字列から ng_operand.Operands を作成します
 	ngOperands, err := ng_operand.FromString(operandString)
 	if err != nil {
 		log.Printf("Error creating operands from string '%s' in %s: %v", operandString, instName, err)
 		return
 	}
 
-	// Set BitMode
+	// BitMode を設定します
 	ngOperands = ngOperands.WithBitMode(env.BitMode)
 
-	// Calculate instruction size
+	// 命令サイズを計算します
 	size, err := env.AsmDB.FindMinOutputSize(instName, ngOperands)
 	if err != nil {
 		log.Printf("Error finding min output size for %s %s: %v", instName, operandString, err)
-		// Decide on a default size or stop processing? For now, assume 0 size on error.
-		size = 0 // Keep original behavior for now.
+		// デフォルトサイズを決定するか、処理を停止しますか？ 現時点では、エラー時にサイズ 0 を想定します。
+		size = 0 // 現時点では元の動作を維持します。
 	}
 	env.LOC += int32(size)
 
-	// Emit the command
+	// コマンドを発行します
 	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
 }

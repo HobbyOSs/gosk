@@ -13,66 +13,66 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// Helper function to create a simple NumberExp (fully evaluated)
+// ヘルパー関数: 単純な NumberExp (完全に評価済み) を作成します
 func newExpectedNumberExp(val int64) *ast.NumberExp {
-	// BaseExp and Factor are needed for NumberExp structure but not critical for value comparison
+	// BaseExp と Factor は NumberExp の構造に必要ですが、値の比較には重要ではありません
 	baseFactor := ast.NewNumberFactor(ast.BaseFactor{}, int(val))
 	baseImmExp := ast.NewImmExp(ast.BaseExp{}, baseFactor)
 	return ast.NewNumberExp(*baseImmExp, val)
 }
 
-// Helper function to create a simple IdentExp (ImmExp with IdentFactor)
+// ヘルパー関数: 単純な IdentExp (IdentFactor を持つ ImmExp) を作成します
 func newExpectedIdentExp(name string) *ast.ImmExp {
 	baseFactor := ast.NewIdentFactor(ast.BaseFactor{}, name)
 	return ast.NewImmExp(ast.BaseExp{}, baseFactor)
 }
 
-// Helper function to create a simple MultExp for testing expectations
-// Note: For simplicity, we assume factors are ImmExp(IdentFactor) for unresolved parts
-func newExpectedMultExp(head ast.Exp, ops []string, tails []ast.Exp) *ast.MultExp { // Change head and tails to ast.Exp
+// ヘルパー関数: テストの期待値用に単純な MultExp を作成します
+// 注意: 単純化のため、未解決の部分のファクターは ImmExp(IdentFactor) であると仮定します
+func newExpectedMultExp(head ast.Exp, ops []string, tails []ast.Exp) *ast.MultExp { // head と tails を ast.Exp に変更
 	return ast.NewMultExp(ast.BaseExp{}, head, ops, tails)
 }
 
-// Helper function to create a simple AddExp for testing expectations
-// Note: For simplicity, we assume factors are ImmExp(IdentFactor) for unresolved parts
+// ヘルパー関数: テストの期待値用に単純な AddExp を作成します
+// 注意: 単純化のため、未解決の部分のファクターは ImmExp(IdentFactor) であると仮定します
 func newExpectedAddExp(head *ast.MultExp, ops []string, tails []*ast.MultExp) *ast.AddExp {
 	return ast.NewAddExp(ast.BaseExp{}, head, ops, tails)
 }
 
-// Helper to create MultExp from a single ImmExp (for AddExp structure)
+// ヘルパー: 単一の ImmExp から MultExp を作成します (AddExp 構造用)
 func multExpFromImm(imm *ast.ImmExp) *ast.MultExp {
 	return ast.NewMultExp(ast.BaseExp{}, imm, nil, nil)
 }
 
-// Helper to create ImmExp from a number string (used in AddExp expectation)
+// ヘルパー: 数値文字列から ImmExp を作成します (AddExp の期待値で使用)
 func immExpFromNumStr(numStr string) *ast.ImmExp {
-	// This assumes the number string parses correctly to a NumberFactor
-	// A more robust helper might handle potential parsing errors
+	// これは、数値文字列が NumberFactor に正しく解析されることを前提としています
+	// より堅牢なヘルパーは、潜在的な解析エラーを処理する可能性があります
 	numVal, _ := strconv.Atoi(numStr)
 	return ast.NewImmExp(ast.BaseExp{}, ast.NewNumberFactor(ast.BaseFactor{}, numVal))
 }
 
-type Pass1TraverseSuite struct { // Rename struct
+type Pass1TraverseSuite struct { // 構造体の名前を変更
 	suite.Suite
 }
 
-func TestPass1TraverseSuite(t *testing.T) { // Rename test function
-	suite.Run(t, new(Pass1TraverseSuite)) // Use renamed struct
+func TestPass1TraverseSuite(t *testing.T) { // テスト関数の名前を変更
+	suite.Run(t, new(Pass1TraverseSuite)) // 名前変更された構造体を使用
 }
 
-func (s *Pass1TraverseSuite) SetupSuite() { // Use renamed struct
+func (s *Pass1TraverseSuite) SetupSuite() { // 名前変更された構造体を使用
 	setUpColog(colog.LDebug)
 }
 
-// They should exist in test_helper.go
+// これらは test_helper.go に存在するはずです
 
-func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
+func (s *Pass1TraverseSuite) TestAddExp() { // 名前変更された構造体を使用
 	tests := []struct {
 		name         string
 		text         string
-		expectedNode ast.Exp // Expected evaluated node
+		expectedNode ast.Exp // 期待される評価済みノード
 	}{
-		// --- Cases that should evaluate to NumberExp ---
+		// --- NumberExp に評価されるべきケース ---
 		{
 			name:         "+int",
 			text:         "30",
@@ -88,10 +88,10 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			text:         "0x0ff0",
 			expectedNode: newExpectedNumberExp(0x0ff0),
 		},
-		// CharFactor evaluation might need adjustment in ImmExp.Eval if needed
+		// CharFactor の評価は、必要に応じて ImmExp.Eval で調整が必要になる場合があります
 		// {
 		// 	name:         "char",
-		// 	text:         "'A'", // Simple char
+		// 	text:         "'A'", // 単純な文字
 		// 	expectedNode: newExpectedNumberExp(65),
 		// },
 		{
@@ -110,64 +110,64 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			expectedNode: newExpectedNumberExp(6),
 		},
 		{
-			name:         "complex math 1 (evaluates fully)",
-			text:         "8 * 3 - 1", // Parser creates AddExp{ MultExp{8*3}, "-", ImmExp{1} }
+			name:         "complex math 1 (完全に評価)",
+			text:         "8 * 3 - 1", // パーサーは AddExp{ MultExp{8*3}, "-", ImmExp{1} } を作成します
 			expectedNode: newExpectedNumberExp(23),
 		},
 		{
-			name:         "label + constant (evaluates fully)",
-			text:         "MYLABEL + 512", // MYLABEL = 0x8000 (defined below)
+			name:         "label + constant (完全に評価)",
+			text:         "MYLABEL + 512", // MYLABEL = 0x8000 (以下で定義)
 			expectedNode: newExpectedNumberExp(0x8000 + 512),
 		},
 		{
-			name:         "label - constant (evaluates fully)",
+			name:         "label - constant (完全に評価)",
 			text:         "MYLABEL - 10", // MYLABEL = 0x8000
 			expectedNode: newExpectedNumberExp(0x8000 - 10),
 		},
-		// --- Cases that should NOT evaluate fully (contain unresolved identifiers) ---
+		// --- 完全に評価されるべきではないケース (未解決の識別子を含む) ---
 		{
-			name: "ident (cannot evaluate)",
+			name: "ident (評価不可)",
 			text: `_testZ009$`,
-			// Expected: AddExp -> MultExp -> ImmExp -> IdentFactor
+			// 期待値: AddExp -> MultExp -> ImmExp -> IdentFactor
 			expectedNode: newExpectedAddExp(
 				multExpFromImm(newExpectedIdentExp(`_testZ009$`)),
 				nil, nil,
 			),
 		},
 		{
-			name: "displacement 1 (cannot evaluate fully, constant folded)",
+			name: "displacement 1 (評価不可、定数畳み込み)",
 			text: "ESP+4",
-			// Expected: AddExp{ MultExp{ImmExp{4}}, "+", MultExp{ImmExp{ESP}} }
-			// Constant folding should place the constant 4 first.
+			// 期待値: AddExp{ MultExp{ImmExp{4}}, "+", MultExp{ImmExp{ESP}} }
+			// 定数畳み込みにより、定数 4 が最初に配置されるはずです。
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(immExpFromNumStr("4")), // Head is the constant 4
-				[]string{"+"},                         // Operator
+				multExpFromImm(immExpFromNumStr("4")), // Head は定数 4
+				[]string{"+"},                         // 演算子
 				[]*ast.MultExp{
-					multExpFromImm(newExpectedIdentExp("ESP")), // Tail is the non-constant term ESP
+					multExpFromImm(newExpectedIdentExp("ESP")), // Tail は非定数項 ESP
 				},
 			),
 		},
 		{
-			name: "displacement 2 (cannot evaluate fully, constant folded)",
+			name: "displacement 2 (評価不可、定数畳み込み)",
 			text: "ESP+12+8",
-			// Expected: AddExp{ MultExp{ImmExp{20}}, "+", MultExp{ImmExp{ESP}} }
-			// Constant folding should combine 12 + 8 = 20 and place the constant first.
+			// 期待値: AddExp{ MultExp{ImmExp{20}}, "+", MultExp{ImmExp{ESP}} }
+			// 定数畳み込みにより、12 + 8 = 20 が結合され、定数が最初に配置されるはずです。
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(immExpFromNumStr("20")), // Head is the constant sum 20
-				[]string{"+"},                          // Operator
+				multExpFromImm(immExpFromNumStr("20")), // Head は定数の合計 20
+				[]string{"+"},                          // 演算子
 				[]*ast.MultExp{
-					multExpFromImm(newExpectedIdentExp("ESP")), // Tail is the non-constant term ESP
+					multExpFromImm(newExpectedIdentExp("ESP")), // Tail は非定数項 ESP
 				},
 			),
 		},
-		// StringFactor and CharFactor with multiple chars are generally not evaluatable arithmetically
+		// 複数の文字を持つ StringFactor と CharFactor は、通常、算術的に評価できません
 		// {
-		// 	name: "string (cannot evaluate)",
+		// 	name: "string (評価不可)",
 		// 	text: `"0x0ff0"`,
 		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewStringFactor(ast.BaseFactor{}, "0x0ff0")),
 		// },
 		// {
-		// 	name: "char multi (cannot evaluate)",
+		// 	name: "char multi (評価不可)",
 		// 	text: "'AB'",
 		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewCharFactor(ast.BaseFactor{}, "AB")),
 		// },
@@ -175,39 +175,39 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			// Adjust entrypoint based on test case
+			// テストケースに基づいてエントリポイントを調整します
 			entrypoint := "AddExp"
-			if tt.name == "ident (cannot evaluate)" {
-				entrypoint = "Exp" // Parse single identifier as Exp (ImmExp)
+			if tt.name == "ident (評価不可)" {
+				entrypoint = "Exp" // 単一の識別子を Exp (ImmExp) として解析します
 			}
 
-			// Parse the input text
+			// 入力テキストを解析します
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint(entrypoint))
 			if !assert.NoError(t, err, "Parsing failed for input: %s", tt.text) {
 				t.FailNow()
 			}
 
-			// Ensure the parsed node is actually an Exp
+			// 解析されたノードが実際に Exp であることを確認します
 			startNode, ok := got.(ast.Exp)
 			if !ok {
 				t.Fatalf("Parsed node is not an ast.Exp, but %T", got)
 			}
 
-			// Setup Pass1 environment
+			// Pass1 環境をセットアップします
 			p := &Pass1{
 				SymTable: make(map[string]int32),
 				MacroMap: make(map[string]ast.Exp),
 			}
-			// Define MYLABEL macro for relevant tests
+			// 関連するテストのために MYLABEL マクロを定義します
 			if strings.Contains(tt.text, "MYLABEL") {
-				// Use DefineMacro method which handles storing as ast.Exp
+				// ast.Exp としての格納を処理する DefineMacro メソッドを使用します
 				p.DefineMacro("MYLABEL", newExpectedNumberExp(0x8000))
 			}
 
-			// Evaluate the node
-			evaluatedNode := TraverseAST(startNode, p) // Pass1 implements ast.Env
+			// ノードを評価します
+			evaluatedNode := TraverseAST(startNode, p) // Pass1 は ast.Env を実装します
 
-			// Compare the evaluated node with the expected node
+			// 評価されたノードを期待されるノードと比較します
 			switch expected := tt.expectedNode.(type) {
 			case *ast.NumberExp:
 				actual, ok := evaluatedNode.(*ast.NumberExp)
@@ -219,11 +219,11 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 				actual, ok := evaluatedNode.(*ast.AddExp)
 				assert.True(t, ok, "Expected *ast.AddExp, got %T", evaluatedNode)
 				if ok {
-					// Basic comparison using TokenLiteral for structure check
-					// More detailed comparison might be needed for complex cases
+					// 構造チェックのための TokenLiteral を使用した基本的な比較
+					// 複雑なケースでは、より詳細な比較が必要になる場合があります
 					assert.Equal(t, expected.TokenLiteral(), actual.TokenLiteral(), "Evaluated AddExp structure mismatch")
 				}
-			case *ast.ImmExp: // For cases like unresolved identifiers
+			case *ast.ImmExp: // 未解決の識別子のようなケースの場合
 				actual, ok := evaluatedNode.(*ast.ImmExp)
 				assert.True(t, ok, "Expected *ast.ImmExp, got %T", evaluatedNode)
 				if ok {
@@ -236,21 +236,21 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 	}
 }
 
-// TestEQUExpansionInExpression verifies that TraverseAST correctly evaluates
-// expressions containing constants defined by EQU statements, using the MacroMap.
+// TestEQUExpansionInExpression は、TraverseAST が MacroMap を使用して、
+// EQU ステートメントで定義された定数を含む式を正しく評価することを確認します。
 func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 	tests := []struct {
 		name           string
-		text           string      // Assembly code snippet including EQU
-		expressionText string      // The specific expression part to evaluate after EQU processing
-		expectedValue  int64       // Expected numerical value after evaluation
-		bitMode        cpu.BitMode // Bit mode for Pass1 context
+		text           string      // EQU を含むアセンブリコードスニペット
+		expressionText string      // EQU 処理後に評価する特定の式部分
+		expectedValue  int64       // 評価後の期待される数値
+		bitMode        cpu.BitMode // Pass1 コンテキストのビットモード
 	}{
 		{
 			name: "Simple EQU constant evaluation",
 			text: `
 				MY_EQU_CONST EQU 500
-				MOV AX, MY_EQU_CONST ; Evaluate MY_EQU_CONST
+				MOV AX, MY_EQU_CONST ; MY_EQU_CONST を評価
 			`,
 			expressionText: "MY_EQU_CONST",
 			expectedValue:  500,
@@ -260,7 +260,7 @@ func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 			name: "EQU constant + number evaluation",
 			text: `
 				MY_EQU_CONST2 EQU 100
-				ADD BX, MY_EQU_CONST2 + 20 ; Evaluate MY_EQU_CONST2 + 20
+				ADD BX, MY_EQU_CONST2 + 20 ; MY_EQU_CONST2 + 20 を評価
 			`,
 			expressionText: "MY_EQU_CONST2 + 20",
 			expectedValue:  120,
@@ -271,7 +271,7 @@ func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 			text: `
 				BASE_VAL EQU 1000
 				OFFSET_VAL EQU BASE_VAL + 50
-				MOV CX, OFFSET_VAL ; Evaluate OFFSET_VAL
+				MOV CX, OFFSET_VAL ; OFFSET_VAL を評価
 			`,
 			expressionText: "OFFSET_VAL",
 			expectedValue:  1050,
@@ -281,7 +281,7 @@ func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 			name: "EQU constant in multiplication",
 			text: `
 				FACTOR EQU 8
-				IMUL DX, FACTOR * 2 ; Evaluate FACTOR * 2
+				IMUL DX, FACTOR * 2 ; FACTOR * 2 を評価
 			`,
 			expressionText: "FACTOR * 2",
 			expectedValue:  16,
@@ -291,63 +291,63 @@ func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			// 1. Parse the whole snippet as Program to process EQU
+			// 1. EQU を処理するために、スニペット全体を Program として解析します
 			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
 			s.Require().NoError(err, "Parsing program snippet failed")
-			// Assert to the concrete type *ast.Program to access Statements field
+			// Statements フィールドにアクセスするために、具象型 *ast.Program にアサートします
 			program, ok := parseTree.(*ast.Program)
 			s.Require().True(ok, "Parsed result is not *ast.Program")
 
-			// 2. Setup Pass1 environment
+			// 2. Pass1 環境をセットアップします
 			p := &Pass1{
 				LOC:      0,
 				BitMode:  tt.bitMode,
 				SymTable: make(map[string]int32),
 				MacroMap: make(map[string]ast.Exp),
-				// Client and AsmDB are not needed for pure expression evaluation via TraverseAST
+				// TraverseAST による純粋な式評価には Client と AsmDB は不要です
 			}
 
-			// 3. Process EQU statements to populate MacroMap
-			// This simulates the part of Pass1.Eval that handles EQU.
-			// We need to evaluate the EQU expression itself first.
-			// Now we can directly access program.Statements
+			// 3. EQU ステートメントを処理して MacroMap を設定します
+			// これは、EQU を処理する Pass1.Eval の部分をシミュレートします。
+			// まず EQU 式自体を評価する必要があります。
+			// これで program.Statements に直接アクセスできます
 			for _, stmt := range program.Statements {
-				// Check if the statement is an EQU statement (represented by DeclareStmt)
+				// ステートメントが EQU ステートメント (DeclareStmt で表される) かどうかを確認します
 				if declareStmt, ok := stmt.(*ast.DeclareStmt); ok {
-					// Evaluate the expression assigned in EQU using the current environment (p)
-					// This handles cases where EQU depends on previous EQUs.
-					evaluatedEquNode := TraverseAST(declareStmt.Value, p)  // Use declareStmt.Value
-					evaluatedEquExpr, okExpr := evaluatedEquNode.(ast.Exp) // Assert to ast.Exp
+					// 現在の環境 (p) を使用して EQU で割り当てられた式を評価します
+					// これは、EQU が以前の EQU に依存する場合を処理します。
+					evaluatedEquNode := TraverseAST(declareStmt.Value, p)  // declareStmt.Value を使用
+					evaluatedEquExpr, okExpr := evaluatedEquNode.(ast.Exp) // ast.Exp にアサート
 					if !okExpr {
 						t.Fatalf("EQU expression evaluation did not return an ast.Exp: %T", evaluatedEquNode)
 					}
-					_, isEvaluable := evaluatedEquExpr.(*ast.NumberExp) // Check if it evaluated to a number
+					_, isEvaluable := evaluatedEquExpr.(*ast.NumberExp) // 数値に評価されたかどうかを確認します
 					if !isEvaluable {
-						// If EQU expression itself couldn't be fully evaluated (e.g., contains labels),
-						// store the partially evaluated expression. For these tests, we assume EQUs resolve to numbers.
-						t.Logf("Warning: EQU expression for %s did not evaluate to a number: %T", declareStmt.Id.Value, evaluatedEquExpr) // Use declareStmt.Id.Value
+						// EQU 式自体が完全に評価できなかった場合 (例: ラベルを含む)、
+						// 部分的に評価された式を格納します。これらのテストでは、EQU は数値に解決されると仮定します。
+						t.Logf("Warning: EQU expression for %s did not evaluate to a number: %T", declareStmt.Id.Value, evaluatedEquExpr) // declareStmt.Id.Value を使用
 					}
-					p.DefineMacro(declareStmt.Id.Value, evaluatedEquExpr) // Use declareStmt.Id.Value and pass the asserted ast.Exp
+					p.DefineMacro(declareStmt.Id.Value, evaluatedEquExpr) // declareStmt.Id.Value を使用し、アサートされた ast.Exp を渡します
 				}
 			}
 
-			// 4. Parse the target expression string separately
-			// We need to parse the specific expression we want to test evaluation for.
-			exprTree, err := gen.Parse("", []byte(tt.expressionText), gen.Entrypoint("Exp")) // Use "Exp" entrypoint
+			// 4. ターゲットの式文字列を個別に解析します
+			// 評価をテストしたい特定の式を解析する必要があります。
+			exprTree, err := gen.Parse("", []byte(tt.expressionText), gen.Entrypoint("Exp")) // "Exp" エントリポイントを使用
 			s.Require().NoError(err, "Parsing target expression failed: %s", tt.expressionText)
 			exprToEval, ok := exprTree.(ast.Exp)
 			s.Require().True(ok, "Parsed expression is not ast.Exp")
 
-			// 5. Evaluate the target expression using TraverseAST and the populated Pass1 env
-			evaluatedNode := TraverseAST(exprToEval, p)      // Returns ast.Node
-			evaluatedExpr, okExpr := evaluatedNode.(ast.Exp) // Assert to ast.Exp
+			// 5. TraverseAST と設定された Pass1 環境を使用してターゲットの式を評価します
+			evaluatedNode := TraverseAST(exprToEval, p)      // ast.Node を返します
+			evaluatedExpr, okExpr := evaluatedNode.(ast.Exp) // ast.Exp にアサート
 			if !okExpr {
 				t.Fatalf("Target expression evaluation did not return an ast.Exp: %T", evaluatedNode)
 			}
 
-			// 6. Assert the result is a NumberExp with the expected value
+			// 6. 結果が期待される値を持つ NumberExp であることをアサートします
 			expectedNode := newExpectedNumberExp(tt.expectedValue)
-			actualNode, ok := evaluatedExpr.(*ast.NumberExp) // Use the asserted evaluatedExpr
+			actualNode, ok := evaluatedExpr.(*ast.NumberExp) // アサートされた evaluatedExpr を使用
 			s.True(ok, "Expected evaluated node to be *ast.NumberExp, got %T for expression '%s'", evaluatedExpr, tt.expressionText)
 			if ok {
 				s.Equal(expectedNode.Value, actualNode.Value, "Evaluated value mismatch for expression '%s'", tt.expressionText)
@@ -356,13 +356,13 @@ func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
 	}
 }
 
-func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
+func (s *Pass1TraverseSuite) TestMultExp() { // 名前変更された構造体を使用
 	tests := []struct {
 		name         string
 		text         string
-		expectedNode ast.Exp // Expected evaluated node
+		expectedNode ast.Exp // 期待される評価済みノード
 	}{
-		// --- Cases that should evaluate to NumberExp ---
+		// --- NumberExp に評価されるべきケース ---
 		{
 			name:         "simple math 1",
 			text:         "1005*8",
@@ -378,53 +378,53 @@ func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
 			text:         "512*1024/4",
 			expectedNode: newExpectedNumberExp(131072),
 		},
-		// --- Cases that should NOT evaluate fully ---
+		// --- 完全に評価されるべきではないケース ---
 		{
-			name: "scale 1 (cannot evaluate fully)",
+			name: "scale 1 (評価不可)",
 			text: "EDX*4",
-			// Expected: MultExp{ ImmExp{EDX}, "*", ImmExp{4} }
+			// 期待値: MultExp{ ImmExp{EDX}, "*", ImmExp{4} }
 			expectedNode: newExpectedMultExp(
-				newExpectedIdentExp("EDX"), // ast.Exp compatible
+				newExpectedIdentExp("EDX"), // ast.Exp 互換
 				[]string{"*"},
-				[]ast.Exp{immExpFromNumStr("4")}, // Pass as []ast.Exp
+				[]ast.Exp{immExpFromNumStr("4")}, // []ast.Exp として渡す
 			),
 		},
 		{
-			name: "scale 2 (cannot evaluate fully)",
+			name: "scale 2 (評価不可)",
 			text: "ESI*8",
-			// Expected: MultExp{ ImmExp{ESI}, "*", ImmExp{8} }
+			// 期待値: MultExp{ ImmExp{ESI}, "*", ImmExp{8} }
 			expectedNode: newExpectedMultExp(
-				newExpectedIdentExp("ESI"), // ast.Exp compatible
+				newExpectedIdentExp("ESI"), // ast.Exp 互換
 				[]string{"*"},
-				[]ast.Exp{immExpFromNumStr("8")}, // Pass as []ast.Exp
+				[]ast.Exp{immExpFromNumStr("8")}, // []ast.Exp として渡す
 			),
 		},
 	}
 
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			// Parse the input text as a MultExp
+			// 入力テキストを MultExp として解析します
 			got, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("MultExp"))
 			if !assert.NoError(t, err, "Parsing failed for input: %s", tt.text) {
 				t.FailNow()
 			}
 
-			// Ensure the parsed node is actually an Exp
+			// 解析されたノードが実際に Exp であることを確認します
 			startNode, ok := got.(ast.Exp)
 			if !ok {
 				t.Fatalf("Parsed node is not an ast.Exp, but %T", got)
 			}
 
-			// Setup Pass1 environment
+			// Pass1 環境をセットアップします
 			p := &Pass1{
 				SymTable: make(map[string]int32),
 				MacroMap: make(map[string]ast.Exp),
 			}
 
-			// Evaluate the node
-			evaluatedNode := TraverseAST(startNode, p) // Pass1 implements ast.Env
+			// ノードを評価します
+			evaluatedNode := TraverseAST(startNode, p) // Pass1 は ast.Env を実装します
 
-			// Compare the evaluated node with the expected node
+			// 評価されたノードを期待されるノードと比較します
 			switch expected := tt.expectedNode.(type) {
 			case *ast.NumberExp:
 				actual, ok := evaluatedNode.(*ast.NumberExp)
@@ -436,7 +436,7 @@ func (s *Pass1TraverseSuite) TestMultExp() { // Use renamed struct
 				actual, ok := evaluatedNode.(*ast.MultExp)
 				assert.True(t, ok, "Expected *ast.MultExp, got %T", evaluatedNode)
 				if ok {
-					// Basic comparison using TokenLiteral for structure check
+					// 構造チェックのための TokenLiteral を使用した基本的な比較
 					assert.Equal(t, expected.TokenLiteral(), actual.TokenLiteral(), "Evaluated MultExp structure mismatch")
 				}
 			default:

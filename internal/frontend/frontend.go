@@ -13,13 +13,13 @@ import (
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
-	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
+	"github.com/HobbyOSs/gosk/pkg/cpu" // cpu インポートを1つ保持
 )
 
-// pass1, pass2を操作するモジュール
+// pass1, pass2 を操作するモジュール
 func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 
-	// 読み書き可能, 新規作成, ファイル内容あっても切り詰め
+	// 読み書き可能、新規作成、ファイル内容があっても切り詰め
 	dstFile, err := os.OpenFile(assemblyDst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		fmt.Printf("GOSK : can't open %s", assemblyDst)
@@ -27,25 +27,25 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 	defer dstFile.Close()
 
-	prog, ok := (parseTree).(ast.Prog) // Restored ast.Prog
+	prog, ok := (parseTree).(ast.Prog) // ast.Prog を復元
 	if !ok {
 		fmt.Printf("GOSK : failed to parse")
 		os.Exit(-1)
 	}
 
-	// pass1のEvalを実行
-	ctx := &codegen.CodeGenContext{BitMode: cpu.MODE_16BIT} // Keep cpu.MODE_16BIT
+	// pass1 の Eval を実行
+	ctx := &codegen.CodeGenContext{BitMode: cpu.MODE_16BIT} // cpu.MODE_16BIT を保持
 	client, _ := ocode_client.NewCodegenClient(ctx)
 
 	pass1 := &pass1.Pass1{
 		LOC:              0,
-		BitMode:          cpu.MODE_16BIT, // Keep cpu.MODE_16BIT
+		BitMode:          cpu.MODE_16BIT, // cpu.MODE_16BIT を保持
 		SymTable:         make(map[string]int32, 0),
 		GlobalSymbolList: []string{},
 		ExternSymbolList: []string{},
 		Client:           client,
 		AsmDB:            asmdb.NewInstructionDB(),
-		MacroMap:         make(map[string]ast.Exp), // Add MacroMap initialization based on activeContext.md
+		MacroMap:         make(map[string]ast.Exp), // activeContext.md に基づいて MacroMap の初期化を追加
 	}
 	pass1.Eval(prog)
 
@@ -73,11 +73,11 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 }
 
 // ParseFile は指定されたファイルを解析します。
-func ParseFile(filename string) (any, error) { // Added ParseFile function based on usage in main.go
+func ParseFile(filename string) (any, error) { // main.go での使用に基づいて ParseFile 関数を追加
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatalf("Failed to read file: %v", err)
 	}
-	// Use gen.Parse directly instead of creating a parser instance
+	// パーサーインスタンスを作成する代わりに gen.Parse を直接使用します
 	return gen.Parse(filepath.Base(filename), content)
 }
