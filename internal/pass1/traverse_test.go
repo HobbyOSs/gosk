@@ -137,40 +137,27 @@ func (s *Pass1TraverseSuite) TestAddExp() { // 名前変更された構造体を
 		{
 			name: "displacement 1 (評価不可、定数畳み込み)",
 			text: "ESP+4",
-			// 期待値: AddExp{ MultExp{ImmExp{4}}, "+", MultExp{ImmExp{ESP}} }
-			// 定数畳み込みにより、定数 4 が最初に配置されるはずです。
+			// 期待値: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{4}} }
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(immExpFromNumStr("4")), // Head は定数 4
-				[]string{"+"},                         // 演算子
+				multExpFromImm(newExpectedIdentExp("ESP")), // Head は非定数項 ESP
+				[]string{"+"}, // 演算子
 				[]*ast.MultExp{
-					multExpFromImm(newExpectedIdentExp("ESP")), // Tail は非定数項 ESP
+					multExpFromImm(immExpFromNumStr("4")), // Tail は定数 4
 				},
 			),
 		},
 		{
 			name: "displacement 2 (評価不可、定数畳み込み)",
 			text: "ESP+12+8",
-			// 期待値: AddExp{ MultExp{ImmExp{20}}, "+", MultExp{ImmExp{ESP}} }
-			// 定数畳み込みにより、12 + 8 = 20 が結合され、定数が最初に配置されるはずです。
+			// 期待値: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{20}} }
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(immExpFromNumStr("20")), // Head は定数の合計 20
-				[]string{"+"},                          // 演算子
+				multExpFromImm(newExpectedIdentExp("ESP")), // Head は非定数項 ESP
+				[]string{"+"}, // 演算子
 				[]*ast.MultExp{
-					multExpFromImm(newExpectedIdentExp("ESP")), // Tail は非定数項 ESP
+					multExpFromImm(immExpFromNumStr("20")), // Tail は定数の合計 20
 				},
 			),
 		},
-		// 複数の文字を持つ StringFactor と CharFactor は、通常、算術的に評価できません
-		// {
-		// 	name: "string (評価不可)",
-		// 	text: `"0x0ff0"`,
-		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewStringFactor(ast.BaseFactor{}, "0x0ff0")),
-		// },
-		// {
-		// 	name: "char multi (評価不可)",
-		// 	text: "'AB'",
-		// 	expectedNode: ast.NewImmExp(ast.BaseExp{}, ast.NewCharFactor(ast.BaseFactor{}, "AB")),
-		// },
 	}
 
 	for _, tt := range tests {

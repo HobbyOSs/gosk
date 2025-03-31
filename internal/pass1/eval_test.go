@@ -154,7 +154,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 				VAL2 EQU VAL1 * 2
 				ADD CX, VAL2
 			`,
-			expectedLOC: 4, // ADD CX, imm16 (VAL2 = 20)
+			expectedLOC: 3, // 0x83 /0 ib | ADD r/m16, imm8 (VAL2 = 20)
 		},
 	}
 

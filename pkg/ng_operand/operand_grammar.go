@@ -2074,7 +2074,6 @@ func (p *parser) callonOperandString1() (any, error) {
 }
 
 func (c *current) onMemoryAddress1(ptrQualifier, dt, jt, seg, body any) (any, error) {
-	// Removed _ after '['
 	var memInfo *MemoryInfo
 	// Check the type of body and extract *MemoryInfo
 	switch b := body.(type) {
@@ -2180,7 +2179,6 @@ func (p *parser) callonSegmentedNonMemOperand1() (any, error) {
 }
 
 func (c *current) onBaseIndexScaleDisp1(base, op1, index, scale, op2, disp any) (any, error) {
-	// Removed internal _
 	baseReg := string(base.([]byte))
 	indexReg := string(index.([]byte))
 	scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
@@ -2202,7 +2200,6 @@ func (p *parser) callonBaseIndexScaleDisp1() (any, error) {
 }
 
 func (c *current) onBaseIndexDisp1(base, op1, index, op2, disp any) (any, error) {
-	// Removed internal _
 	baseReg := string(base.([]byte))
 	indexReg := string(index.([]byte))
 	dispVal := toInt(string(disp.([]byte)))
@@ -2223,7 +2220,6 @@ func (p *parser) callonBaseIndexDisp1() (any, error) {
 }
 
 func (c *current) onBaseScaleDisp1(base, op1, index, scale any) (any, error) {
-	// Dispなしのパターン (例: [EAX+EBX*4]) - op1 is AddOp // Removed internal _
 	baseReg := string(base.([]byte))
 	indexReg := string(index.([]byte))
 	scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
@@ -2238,7 +2234,6 @@ func (p *parser) callonBaseScaleDisp1() (any, error) {
 }
 
 func (c *current) onIndexScaleDisp1(index, scale, op1, disp any) (any, error) {
-	// op1 is AddOp // Removed internal _
 	indexReg := string(index.([]byte))
 	scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
 	dispVal := toInt(string(disp.([]byte)))
@@ -2257,7 +2252,6 @@ func (p *parser) callonIndexScaleDisp1() (any, error) {
 }
 
 func (c *current) onBaseDisp1(base, op1, disp any) (any, error) {
-	// op1 is AddOp // Removed internal _
 	baseReg := string(base.([]byte))
 	dispVal := toInt(string(disp.([]byte)))
 	isHex := isHex(string(disp.([]byte)))
@@ -2275,7 +2269,6 @@ func (p *parser) callonBaseDisp1() (any, error) {
 }
 
 func (c *current) onIndexDisp1(index, op1, disp any) (any, error) {
-	// Baseなし、Indexあり、Dispあり - op1 is AddOp // Removed internal _
 	indexReg := string(index.([]byte))
 	dispVal := toInt(string(disp.([]byte)))
 	isHex := isHex(string(disp.([]byte)))
@@ -2293,7 +2286,6 @@ func (p *parser) callonIndexDisp1() (any, error) {
 }
 
 func (c *current) onBaseIndex1(base, op1, index any) (any, error) {
-	// op1 is AddOp // Removed internal _
 	baseReg := string(base.([]byte))
 	indexReg := string(index.([]byte))
 	// op1 は通常 '+'
@@ -2307,7 +2299,6 @@ func (p *parser) callonBaseIndex1() (any, error) {
 }
 
 func (c *current) onBaseOnly1(base any) (any, error) {
-	// Removed internal _
 	// base is []byte
 	return &MemoryInfo{BaseReg: string(base.([]byte))}, nil
 }
@@ -2319,7 +2310,6 @@ func (p *parser) callonBaseOnly1() (any, error) {
 }
 
 func (c *current) onIndexOnly1(index, scale any) (any, error) {
-	// Indexのみ、Scaleはオプショナル // Removed internal _
 	// index is []byte
 	indexReg := string(index.([]byte))
 	scaleVal := 1
@@ -2337,7 +2327,6 @@ func (p *parser) callonIndexOnly1() (any, error) {
 }
 
 func (c *current) onDispOnly1(disp any) (any, error) {
-	// Allow Label as displacement // Removed internal _
 	// disp can be []byte (ImmediateValue) or *ParsedOperandPeg (Label)
 	var dispVal int64
 	var isHexValue bool // Renamed local variable to avoid shadowing helper function
