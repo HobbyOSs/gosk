@@ -19,10 +19,12 @@
     - `Pass1` 構造体から古い `EquMap` フィールドと関連コードを削除。
 - **`Client.Emit` の修正:**
     - 各ハンドラ内の `Emit` 呼び出しからデバッグ用のコメント (` ; (size: ...)` など) を削除。
+- **`AddExp.Eval` の定数畳み込み実装 (2025/03/31):**
+    - `internal/ast/ast_exp_impl.go` の `AddExp.Eval` を更新し、数値定数項を畳み込むようにした。
+    - `internal/pass1/traverse_test.go` の関連テストケースを修正・成功確認。
 
 ## まだ必要な実装
 - **テストの修正と実行:**
-    - `internal/pass1/traverse_test.go` (`TestAddExp`, `TestMultExp`) の比較ロジックを、スタックベース (`want`) から評価済み `ast.Exp` ノード (`evaluatedNode`) を比較するように修正する。
     - `internal/pass1/eval_test.go` (`TestEvalProgramLOC`) の `INT 0x10` ケースが失敗する原因 (`*ast.SegmentExp` 問題) を調査・修正する。
         - パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。
     - すべての `internal/pass1` テストが成功することを確認する。

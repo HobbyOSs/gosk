@@ -134,25 +134,28 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			),
 		},
 		{
-			name: "displacement 1 (cannot evaluate fully)",
+			name: "displacement 1 (cannot evaluate fully, constant folded)",
 			text: "ESP+4",
-			// Expected: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{4}} }
+			// Expected: AddExp{ MultExp{ImmExp{4}}, "+", MultExp{ImmExp{ESP}} }
+			// Constant folding should place the constant 4 first.
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(newExpectedIdentExp("ESP")),
-				[]string{"+"},
-				[]*ast.MultExp{multExpFromImm(immExpFromNumStr("4"))},
+				multExpFromImm(immExpFromNumStr("4")), // Head is the constant 4
+				[]string{"+"},                         // Operator
+				[]*ast.MultExp{
+					multExpFromImm(newExpectedIdentExp("ESP")), // Tail is the non-constant term ESP
+				},
 			),
 		},
 		{
-			name: "displacement 2 (cannot evaluate fully)",
+			name: "displacement 2 (cannot evaluate fully, constant folded)",
 			text: "ESP+12+8",
-			// Expected: AddExp{ MultExp{ImmExp{ESP}}, "+", MultExp{ImmExp{12}}, "+", MultExp{ImmExp{8}} }
+			// Expected: AddExp{ MultExp{ImmExp{20}}, "+", MultExp{ImmExp{ESP}} }
+			// Constant folding should combine 12 + 8 = 20 and place the constant first.
 			expectedNode: newExpectedAddExp(
-				multExpFromImm(newExpectedIdentExp("ESP")),
-				[]string{"+", "+"},
+				multExpFromImm(immExpFromNumStr("20")), // Head is the constant sum 20
+				[]string{"+"},                         // Operator
 				[]*ast.MultExp{
-					multExpFromImm(immExpFromNumStr("12")),
-					multExpFromImm(immExpFromNumStr("8")),
+					multExpFromImm(newExpectedIdentExp("ESP")), // Tail is the non-constant term ESP
 				},
 			),
 		},

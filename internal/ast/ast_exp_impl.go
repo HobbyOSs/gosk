@@ -120,81 +120,137 @@ type AddExp struct {
 }
 
 func (a *AddExp) expressionNode() {}
+
+// Eval performs constant folding for AddExp.
+// It sums up all constant number terms and keeps non-constant terms.
 func (a *AddExp) Eval(env Env) (Exp, bool) {
-	// Evaluate head expression
-	evalHeadExp, headReduced := a.HeadExp.Eval(env)
-	_, headIsNum := evalHeadExp.(*NumberExp) // Check if head is number
+	// Evaluate head expression first
+	evalHead, headReduced := a.HeadExp.Eval(env)
 
-	// Evaluate tail expressions
-	evalTailExps := make([]Exp, len(a.TailExps))       // Store evaluated tail expressions (Exp interface)
-	evalTailNodes := make([]*MultExp, len(a.TailExps)) // Store as *MultExp if possible (for reconstruction)
-	anyTailReduced := false
-	allTailsAreNumbers := true
+	// Keep track of the sum of constant terms and the list of non-constant terms/operators
+	constSum := 0
+	newTerms := []Exp{} // Use Exp interface to hold evaluated terms
+	newOps := []string{}
+	reduced := headReduced // Start with head reduction status
 
-	for i, tail := range a.TailExps {
-		evalTailExp, tailReduced := tail.Eval(env)
-		evalTailExps[i] = evalTailExp // Store the evaluated result
+	// Process the evaluated head
+	if v, ok := env.GetConstValue(evalHead); ok {
+		constSum += v
+	} else {
+		newTerms = append(newTerms, evalHead)
+	}
+
+	// Process tail expressions
+	for i, op := range a.Operators {
+		tail := a.TailExps[i]
+		evalTail, tailReduced := tail.Eval(env)
 		if tailReduced {
-			anyTailReduced = true
+			reduced = true
 		}
 
-		// Check if the evaluated tail is a number
-		_, tailIsNum := evalTailExp.(*NumberExp)
-		if !tailIsNum {
-			allTailsAreNumbers = false
-		}
-
-		// Try to keep the *MultExp structure if possible for reconstruction
-		if me, ok := evalTailExp.(*MultExp); ok {
-			evalTailNodes[i] = me
-		} else if num, ok := evalTailExp.(*NumberExp); ok {
-			// Wrap NumberExp back into MultExp for reconstruction consistency
-			evalTailNodes[i] = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
-		} else {
-			// If it's neither MultExp nor NumberExp, we can't reconstruct easily
-			// Keep the original tail for reconstruction (or handle error)
-			evalTailNodes[i] = tail
-		}
-	}
-
-	// If head and all tails evaluated to numbers, calculate the result
-	if headIsNum && allTailsAreNumbers {
-		currentValue := evalHeadExp.(*NumberExp).Value // Head is NumberExp
-		for i, op := range a.Operators {
-			numTail := evalTailExps[i].(*NumberExp) // Tails are NumberExp
-			switch op {
-			case "+":
-				currentValue += numTail.Value
-			case "-":
-				currentValue -= numTail.Value
-			default:
-				// Unsupported operator
-				return a, false
+		if v, ok := env.GetConstValue(evalTail); ok {
+			// If it's a constant, add/subtract it to the sum
+			if op == "+" {
+				constSum += v
+			} else if op == "-" {
+				constSum -= v
+			} else {
+				// Should not happen based on grammar, but handle defensively
+				// If an unsupported operator appears with a constant, treat as non-reducible
+				newOps = append(newOps, op)
+				newTerms = append(newTerms, evalTail)
 			}
-		}
-		// Return a new NumberExp
-		return NewNumberExp(ImmExp{BaseExp: a.BaseExp}, currentValue), true
-	}
-
-	// If not all parts evaluated to numbers, but some reduction occurred, return updated AddExp
-	// Need to get the potentially updated HeadExp as *MultExp
-	evalHeadNode, ok := evalHeadExp.(*MultExp)
-	if !ok {
-		if num, ok := evalHeadExp.(*NumberExp); ok {
-			evalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
 		} else {
-			// This case should ideally not be reached if headReduced is true
-			// but the result wasn't MultExp or NumberExp. Return original.
-			return a, false
+			// If it's not a constant, add it to the list of terms
+			// Only add operator if there was a preceding term
+			if len(newTerms) > 0 || constSum != 0 { // Add operator if it's not the very first term
+				newOps = append(newOps, op)
+			}
+			newTerms = append(newTerms, evalTail)
 		}
 	}
-	if headReduced || anyTailReduced {
-		return NewAddExp(a.BaseExp, evalHeadNode, a.Operators, evalTailNodes), true
+
+	// --- Construct the result ---
+
+	// Case 1: All terms evaluated to constants
+	if len(newTerms) == 0 {
+		// Return a single NumberExp with the final sum
+		return NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum)), true
 	}
 
-	// No reduction possible, return original node
-	return a, false
+	// Case 2: Mixed constants and non-constants
+
+	// Create the new head expression
+	var finalHead Exp
+	if constSum != 0 {
+		// If there's a non-zero constant sum, make it the head
+		finalHead = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
+		// If there were also non-constant terms, prepend "+" operator
+		if len(newTerms) > 0 {
+			// Prepend the constant sum and '+' operator to the non-constant terms
+			newTerms = append([]Exp{finalHead}, newTerms...)
+			newOps = append([]string{"+"}, newOps...)
+			finalHead = newTerms[0] // The actual head is the first term now
+		}
+		// If only constSum exists (len(newTerms) == 0 was false, but constSum != 0), finalHead is just the NumberExp
+	} else {
+		// If constSum is zero, the first non-constant term becomes the head
+		finalHead = newTerms[0]
+	}
+
+	// Convert remaining evaluated terms back to *MultExp for the AddExp structure
+	// This part is tricky because Eval returns Exp. We need *MultExp for NewAddExp.
+	finalTailNodes := make([]*MultExp, 0, len(newTerms)-1)
+	for _, term := range newTerms[1:] {
+		if me, ok := term.(*MultExp); ok {
+			finalTailNodes = append(finalTailNodes, me)
+		} else if num, ok := term.(*NumberExp); ok {
+			// Wrap NumberExp back into MultExp
+			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp})
+		} else if imm, ok := term.(*ImmExp); ok {
+			// Wrap ImmExp (like identifiers) into MultExp
+			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: imm})
+		} else {
+			// If it's some other Exp type that can't be easily put into MultExp,
+			// we might not be able to simplify perfectly. Return original or error.
+			// For now, let's assume terms are MultExp, NumberExp, or ImmExp.
+			// Returning original if we hit an unexpected type.
+			// log.Printf("Warning: Cannot reconstruct AddExp tail from type %T", term)
+			return a, false // Cannot simplify if unexpected type found
+		}
+	}
+
+	// Convert the finalHead (which is Exp) back to *MultExp
+	finalHeadNode, ok := finalHead.(*MultExp)
+	if !ok {
+		if num, ok := finalHead.(*NumberExp); ok {
+			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
+		} else if imm, ok := finalHead.(*ImmExp); ok {
+			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: imm}
+		} else {
+			// log.Printf("Warning: Cannot reconstruct AddExp head from type %T", finalHead)
+			return a, false // Cannot simplify if unexpected head type
+		}
+	}
+
+	// If only one term remains (either the constSum or the single non-const term),
+	// construct an AddExp with only the head.
+	if len(newOps) == 0 {
+		// Case 1 already handled the all-constant case returning NumberExp.
+		// This handles the case where one non-constant term remains, possibly with constSum=0.
+		// We need to return an AddExp containing this single term as HeadExp.
+		simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, nil, nil)
+		// Return true if any reduction happened (e.g., head was reduced, or tails were folded away)
+		return simplifiedAddExp, reduced
+	}
+
+	// Construct the simplified AddExp with multiple terms
+	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, newOps, finalTailNodes)
+
+	// Return the simplified expression if any reduction happened
+	return simplifiedAddExp, reduced
 }
+
 func (a *AddExp) TokenLiteral() string {
 	head := ExpToString(a.HeadExp)
 	var buf strings.Builder

@@ -112,13 +112,11 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 		return nil // Opcode statement processed, return nil
 
 	// --- Expression Evaluation ---
-	case *ast.AddExp, *ast.MultExp, *ast.ImmExp, *ast.SegmentExp, *ast.MemoryAddrExp:
-		if exp, ok := n.(ast.Exp); ok {
-			evalExp, _ := exp.Eval(evalEnv) // Use evalEnv which is ast.Env type
-			return evalExp                  // Return the evaluated expression node
-		}
-		log.Printf("error: Node %T claims to be Exp but type assertion failed.", n)
-		return n // Return original node on error
+	// AddExp and MultExp have specific Eval logic implemented in ast_exp_impl.go
+	// ImmExp, SegmentExp, MemoryAddrExp also have Eval methods
+	case ast.Exp: // Catch all expression types
+		evalExp, _ := n.Eval(evalEnv) // Use evalEnv which is ast.Env type
+		return evalExp                // Return the evaluated expression node
 
 	// --- Factor Handling ---
 	case *ast.NumberFactor, *ast.StringFactor, *ast.HexFactor, *ast.IdentFactor, *ast.CharFactor:
@@ -198,4 +196,36 @@ func (p *Pass1) LookupMacro(name string) (ast.Exp, bool) {
 // It returns the current location counter.
 func (p *Pass1) GetLOC() int32 {
 	return p.LOC
+}
+
+// GetConstValue implements the ast.Env interface for Pass1.
+// It wraps the local getConstValue helper function.
+func (p *Pass1) GetConstValue(exp ast.Exp) (int, bool) {
+	return getConstValue(exp)
+}
+
+// getConstValue extracts the integer value from an expression if it's a constant number.
+func getConstValue(exp ast.Exp) (int, bool) {
+	// First, check if it's already a NumberExp (result of previous evaluation)
+	if numExp, ok := exp.(*ast.NumberExp); ok {
+		return int(numExp.Value), true
+	}
+	// If not, check if it's an ImmExp containing a NumberFactor
+	if imm, ok := exp.(*ast.ImmExp); ok {
+		if num, ok := imm.Factor.(*ast.NumberFactor); ok {
+			return num.Value, true
+		}
+		// Potentially handle HexFactor here if needed, assuming it evaluates to a number
+		// Use blank identifier for now as ImmExp.Eval should handle HexFactor evaluation first.
+		if _, ok := imm.Factor.(*ast.HexFactor); ok {
+			// Assuming HexFactor has a Value field or method
+			// val, err := strconv.ParseInt(strings.TrimPrefix(hex.Value, "0x"), 16, 64)
+			// if err == nil {
+			// 	return int(val), true
+			// }
+			// For simplicity, let ImmExp.Eval handle HexFactor evaluation first
+			// If ImmExp.Eval returns NumberExp, the first check will catch it.
+		}
+	}
+	return 0, false
 }

@@ -6,6 +6,9 @@ type Env interface {
 	LookupMacro(name string) (Exp, bool)
 	// GetLOC returns the current location counter value needed for '$' evaluation.
 	GetLOC() int32
+	// GetConstValue extracts the integer value from an expression if it's a constant number.
+	// This is typically implemented by the environment (e.g., Pass1).
+	GetConstValue(exp Exp) (int, bool)
 	// Add other methods needed for evaluation if necessary
 }
 
