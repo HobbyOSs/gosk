@@ -27,6 +27,7 @@ func (s *Pass1EvalSuite) SetupSuite() {
 }
 
 type EvalTestParam struct {
+	name        string      // Add name field for easier identification
 	bitMode     cpu.BitMode // Change cpu.BitMode to cpu.BitMode
 	text        string
 	expectedLOC int32
@@ -40,103 +41,116 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 		// * アセンブラ文の一部
 		// * 期待される機械語サイズ
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "ADD_mem_reg",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "ADD [BX], AX",
 			expectedLOC: 2,
 		},
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "INT_imm",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "INT 0x10",
 			expectedLOC: 2,
 		},
 		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+		// 	name:        "CALL_label",
+		// 	bitMode:     cpu.MODE_16BIT,
 		// 	text:        "CALL waitkbdout",
 		// 	expectedLOC: 5,
 		// },
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_reg_mem",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV AL, [SI]",
 			expectedLOC: 2,
 		},
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_reg_imm",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV AX, 0",
 			expectedLOC: 3,
 		},
 		{
-			// 0xc6, 0x06, 0xf2, 0x0f, 0x08
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_imm8",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV BYTE [ 0x0ff2 ], 8",
 			expectedLOC: 5,
 		},
 		{
-			// 0xc7, 0x06, 0xf4, 0x0f, 0x40, 0x01
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_imm16",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV WORD [ 0x0ff4 ], 320",
 			expectedLOC: 6,
 		},
 		{
-			// MOV DWORD [VRAM],0x000a0000  ; VRAM=0x0ff8
-			// 0x66, 0xc7, 0x06, 0xf8, 0x0f, 0x00, 0x00, 0x0a, 0x00
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_imm32",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV DWORD [ 0x0ff8 ], 0x000a0000",
 			expectedLOC: 9,
 		},
 		{
-			// MOV [0x0ff0],CH
-			// 0x88,0x2e,0xf0,0x0f
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_reg8",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV [0x0ff0],CH",
 			expectedLOC: 4,
 		},
 		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+		// 	name:        "MOV_reg_imm16_high",
+		// 	bitMode:     cpu.MODE_16BIT,
 		// 	text:        "MOV CL, 0x0ff0",
 		// 	expectedLOC: 4,
 		// },
 		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+		// 	name:        "OR_reg_imm32",
+		// 	bitMode:     cpu.MODE_16BIT,
 		// 	text:        "OR EAX, 0x00000001",
 		// 	expectedLOC: 4,
 		// },
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "IMUL_reg_imm16",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "IMUL ECX, 4608",
 			expectedLOC: 7, // Master data indicates 7 bytes (66 69 c9 00 12 00 00)
 		},
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_reg8_byte",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV BYTE [ 0x0ff0 ], CH",
 			expectedLOC: 4,
 		},
 		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+		// 	name:        "SUB_reg_imm32",
+		// 	bitMode:     cpu.MODE_16BIT,
 		// 	text:        "SUB ECX, 128",
 		// 	expectedLOC: 7,
 		// },
 		// {
-		// 	bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+		// 	name:        "MOV_reg_mem_disp",
+		// 	bitMode:     cpu.MODE_16BIT,
 		// 	text:        "MOV ECX, [EBX+16]",
 		// 	expectedLOC: 5,
 		// },
 		{
-			bitMode:     cpu.MODE_32BIT, // Change cpu.MODE_32BIT to cpu.MODE_32BIT
+			name:        "MOV_reg_seg",
+			bitMode:     cpu.MODE_32BIT,
 			text:        "MOV AX, SS",
 			expectedLOC: 3,
 		},
 		{
-			bitMode:     cpu.MODE_16BIT, // Change cpu.MODE_16BIT to cpu.MODE_16BIT
+			name:        "MOV_mem_reg8_addr",
+			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV [ 0x0ff1 ], AL",
 			expectedLOC: 3,
 		},
 		{
+			name:        "MOV_reg_mem_disp_16bit",
 			bitMode:     cpu.MODE_16BIT,
 			text:        "MOV ECX, [EBX+16]",
 			expectedLOC: 5, // Master data indicates 5 bytes (67 66 8b 4b 10)
 		},
 		// --- EQU Test Cases ---
 		{
+			name:    "EQU_simple_mov",
 			bitMode: cpu.MODE_16BIT,
 			text: `
 				MY_CONST EQU 1234
@@ -145,6 +159,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			expectedLOC: 3, // MOV AX, imm16
 		},
 		{
+			name:    "EQU_addr_mov",
 			bitMode: cpu.MODE_16BIT,
 			text: `
 				ADDR EQU 0x100
@@ -153,6 +168,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			expectedLOC: 4, // MOV BX, [imm16]
 		},
 		{
+			name:    "EQU_offset_mov",
 			bitMode: cpu.MODE_16BIT,
 			text: `
 				OFFSET EQU 8
@@ -161,6 +177,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			expectedLOC: 3, // MOV AL, [BP+imm8]
 		},
 		{
+			name:    "EQU_calc_add",
 			bitMode: cpu.MODE_16BIT,
 			text: `
 				VAL1 EQU 10
@@ -172,7 +189,12 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 	}
 
 	for _, tt := range tests {
-		s.T().Run(tt.text, func(t *testing.T) {
+		// Use tt.name if provided, otherwise fallback to tt.text
+		testName := tt.name
+		if testName == "" {
+			testName = tt.text
+		}
+		s.T().Run(testName, func(t *testing.T) {
 			ctx := &codegen.CodeGenContext{BitMode: tt.bitMode}
 			client, err := ocode_client.NewCodegenClient(ctx)
 			if !assert.NoError(t, err) {

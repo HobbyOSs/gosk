@@ -80,6 +80,40 @@ func (s *SegmentExp) TokenLiteral() string {
 	}
 }
 
+// wrapExpInAddExp wraps a simple Exp (NumberExp, ImmExp) into the structure needed for AddExp fields.
+func wrapExpInAddExp(exp Exp) *AddExp {
+	if exp == nil {
+		return nil
+	}
+	if addExp, ok := exp.(*AddExp); ok {
+		// If it's already an AddExp, return it
+		return addExp
+	}
+
+	var immExp *ImmExp
+	if numExp, ok := exp.(*NumberExp); ok {
+		// Ensure the NumberExp has a valid ImmExp embedded
+		if numExp.ImmExp.Factor == nil {
+			// If Factor is missing (shouldn't happen with NewNumberExp), create it
+			numExp.ImmExp.Factor = NewNumberFactor(BaseFactor{}, int(numExp.Value))
+		}
+		immExp = &numExp.ImmExp
+	} else if ie, ok := exp.(*ImmExp); ok {
+		immExp = ie
+	} else {
+		// Cannot easily wrap other types like MultExp directly here.
+		// This helper is primarily for NumberExp/ImmExp results from Eval.
+		// log.Printf("wrapExpInAddExp: Cannot wrap type %T", exp)
+		return nil // Return nil if wrapping is not straightforward
+	}
+
+	// Create MultExp -> AddExp structure
+	// Ensure BaseExp is initialized for NewMultExp and NewAddExp
+	multExp := NewMultExp(BaseExp{}, immExp, nil, nil) // Head is the ImmExp
+	addExp := NewAddExp(BaseExp{}, multExp, nil, nil)  // AddExp with only head
+	return addExp
+}
+
 //go:generate newc
 type MemoryAddrExp struct {
 	BaseExp
@@ -91,21 +125,59 @@ type MemoryAddrExp struct {
 
 func (m *MemoryAddrExp) expressionNode() {}
 func (m *MemoryAddrExp) Eval(env Env) (Exp, bool) {
-	// TODO: Implement MemoryAddrExp evaluation logic
-	// For now, just return the node itself, indicating no reduction.
-	return m, false
+	// Evaluate the internal expression(s)
+	evalLeftNode, leftReduced := m.Left.Eval(env) // Returns Exp
+	evalRightNode := Exp(nil)                     // Initialize evalRightNode
+	rightReduced := false
+	if m.Right != nil {
+		evalRightNode, rightReduced = m.Right.Eval(env) // Returns Exp
+	}
+
+	// Wrap the evaluated nodes back into AddExp structure if possible
+	evalLeftExp := wrapExpInAddExp(evalLeftNode)
+	if evalLeftExp == nil && leftReduced {
+		// If wrapping failed but reduction happened, we can't represent the state.
+		// Return original to avoid losing information or creating invalid structure.
+		// log.Printf("Warning: MemoryAddrExp Left expression evaluated to unwrappable type %T", evalLeftNode)
+		return m, false
+	} else if evalLeftExp == nil {
+		evalLeftExp = m.Left // Keep original if no reduction and no wrapping possible
+	}
+
+	evalRightExp := (*AddExp)(nil)
+	if m.Right != nil {
+		evalRightExp = wrapExpInAddExp(evalRightNode)
+		if evalRightExp == nil && rightReduced {
+			// log.Printf("Warning: MemoryAddrExp Right expression evaluated to unwrappable type %T", evalRightNode)
+			return m, false
+		} else if evalRightExp == nil {
+			evalRightExp = m.Right // Keep original
+		}
+	}
+
+	// If neither internal expression was reduced, return the original node
+	if !leftReduced && !rightReduced {
+		return m, false
+	}
+
+	// Construct a new MemoryAddrExp with the potentially wrapped internal expressions
+	newMemExp := NewMemoryAddrExp(m.BaseExp, m.DataType, m.JumpType, evalLeftExp, evalRightExp)
+	return newMemExp, true // Return the new node and indicate reduction occurred
 }
 func (m *MemoryAddrExp) TokenLiteral() string {
+	// Use existing ExpToString from ast_exp_string.go
 	var str = ""
 	if m.DataType != None {
 		str += string(m.DataType)
 		str += " "
 	}
 	str += "[ "
-	str += m.Left.TokenLiteral()
+	// Use ExpToString to handle potentially evaluated Left expression
+	str += ExpToString(m.Left) // m.Left might point to the original if Eval didn't replace it
 	if m.Right != nil {
 		str += " : "
-		str += m.Right.TokenLiteral()
+		// Use ExpToString for Right as well
+		str += ExpToString(m.Right)
 	}
 	str += " ]"
 	return str
@@ -123,13 +195,14 @@ func (a *AddExp) expressionNode() {}
 
 // Eval performs constant folding for AddExp.
 // It sums up all constant number terms and keeps non-constant terms.
+// Modified to keep non-constant terms first.
 func (a *AddExp) Eval(env Env) (Exp, bool) {
 	// Evaluate head expression first
 	evalHead, headReduced := a.HeadExp.Eval(env)
 
 	// Keep track of the sum of constant terms and the list of non-constant terms/operators
 	constSum := 0
-	newTerms := []Exp{} // Use Exp interface to hold evaluated terms
+	newTerms := []Exp{} // Use Exp interface to hold evaluated non-constant terms
 	newOps := []string{}
 	reduced := headReduced // Start with head reduction status
 
@@ -157,13 +230,16 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 			} else {
 				// Should not happen based on grammar, but handle defensively
 				// If an unsupported operator appears with a constant, treat as non-reducible
-				newOps = append(newOps, op)
-				newTerms = append(newTerms, evalTail)
+				// Keep the operator and the constant term
+				if len(newTerms) > 0 { // Only add operator if there's a preceding term
+					newOps = append(newOps, op)
+				}
+				newTerms = append(newTerms, evalTail) // Add the constant term back
 			}
 		} else {
 			// If it's not a constant, add it to the list of terms
 			// Only add operator if there was a preceding term
-			if len(newTerms) > 0 || constSum != 0 { // Add operator if it's not the very first term
+			if len(newTerms) > 0 { // Add operator if it's not the very first term
 				newOps = append(newOps, op)
 			}
 			newTerms = append(newTerms, evalTail)
@@ -180,33 +256,72 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 
 	// Case 2: Mixed constants and non-constants
 
-	// Create the new head expression
-	var finalHead Exp
-	if constSum != 0 {
-		// If there's a non-zero constant sum, make it the head
-		finalHead = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
-		// If there were also non-constant terms, prepend "+" operator
-		if len(newTerms) > 0 {
-			// Prepend the constant sum and '+' operator to the non-constant terms
-			newTerms = append([]Exp{finalHead}, newTerms...)
-			newOps = append([]string{"+"}, newOps...)
-			finalHead = newTerms[0] // The actual head is the first term now
-		}
-		// If only constSum exists (len(newTerms) == 0 was false, but constSum != 0), finalHead is just the NumberExp
-	} else {
-		// If constSum is zero, the first non-constant term becomes the head
-		finalHead = newTerms[0]
+	// Reorder terms: non-constants first, then the constant sum (if non-zero)
+	finalTerms := []Exp{}
+	finalOps := []string{}
+
+	// Add non-constant terms first
+	if len(newTerms) > 0 {
+		finalTerms = append(finalTerms, newTerms...)
+		finalOps = append(finalOps, newOps...) // Keep original operators between non-const terms
 	}
 
+	// Add the constant sum at the end if it's non-zero
+	if constSum != 0 {
+		constTerm := NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
+		if len(finalTerms) > 0 {
+			// Add '+' or '-' operator before the constant term if other terms exist
+			if constSum > 0 {
+				finalOps = append(finalOps, "+")
+			} else {
+				finalOps = append(finalOps, "-")
+				// Use the absolute value for the NumberExp if operator is '-'
+				constTerm = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(-constSum))
+			}
+		} else {
+			// If only the constant term exists, make it the only term
+			// Handle negative constant as head if it's the only term
+			if constSum < 0 {
+				// This case should ideally be handled by Case 1 returning NumberExp,
+				// but let's ensure the NumberExp value is correct if we reach here.
+				constTerm = NewNumberExp(ImmExp{BaseExp: a.BaseExp}, int64(constSum))
+			}
+		}
+		finalTerms = append(finalTerms, constTerm)
+	}
+
+	// If after reordering, only one term remains (could be non-constant or constSum), return it directly if possible
+	if len(finalTerms) == 1 && len(finalOps) == 0 {
+		// If it's a NumberExp, return it (already handled by Case 1 ideally)
+		if numExp, ok := finalTerms[0].(*NumberExp); ok {
+			return numExp, true
+		}
+		// If it's a single non-constant term, we still need to wrap it in AddExp structure below
+	}
+
+	// If no terms remain (e.g., "LABEL - LABEL"), result is 0
+	if len(finalTerms) == 0 {
+		return NewNumberExp(ImmExp{BaseExp: a.BaseExp}, 0), true
+	}
+
+	// --- Reconstruct AddExp with the new order ---
+
+	// The first term in finalTerms is the new head
+	finalHead := finalTerms[0]
+
 	// Convert remaining evaluated terms back to *MultExp for the AddExp structure
-	// This part is tricky because Eval returns Exp. We need *MultExp for NewAddExp.
-	finalTailNodes := make([]*MultExp, 0, len(newTerms)-1)
-	for _, term := range newTerms[1:] {
+	finalTailNodes := make([]*MultExp, 0, len(finalTerms)-1)
+	for _, term := range finalTerms[1:] { // Iterate over reordered finalTerms
 		if me, ok := term.(*MultExp); ok {
 			finalTailNodes = append(finalTailNodes, me)
 		} else if num, ok := term.(*NumberExp); ok {
 			// Wrap NumberExp back into MultExp
-			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp})
+			// Ensure the embedded ImmExp has the correct Factor
+			numImmExp := num.ImmExp
+			if numImmExp.Factor == nil {
+				numImmExp.Factor = NewNumberFactor(BaseFactor{}, int(num.Value))
+			}
+			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: &numImmExp})
 		} else if imm, ok := term.(*ImmExp); ok {
 			// Wrap ImmExp (like identifiers) into MultExp
 			finalTailNodes = append(finalTailNodes, &MultExp{BaseExp: BaseExp{}, HeadExp: imm})
@@ -224,7 +339,12 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 	finalHeadNode, ok := finalHead.(*MultExp)
 	if !ok {
 		if num, ok := finalHead.(*NumberExp); ok {
-			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &num.ImmExp}
+			// Ensure the embedded ImmExp has the correct Factor
+			numImmExp := num.ImmExp
+			if numImmExp.Factor == nil {
+				numImmExp.Factor = NewNumberFactor(BaseFactor{}, int(num.Value))
+			}
+			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: &numImmExp}
 		} else if imm, ok := finalHead.(*ImmExp); ok {
 			finalHeadNode = &MultExp{BaseExp: BaseExp{}, HeadExp: imm}
 		} else {
@@ -233,21 +353,18 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 		}
 	}
 
-	// If only one term remains (either the constSum or the single non-const term),
-	// construct an AddExp with only the head.
-	if len(newOps) == 0 {
-		// Case 1 already handled the all-constant case returning NumberExp.
-		// This handles the case where one non-constant term remains, possibly with constSum=0.
-		// We need to return an AddExp containing this single term as HeadExp.
+	// If only one term remains after reordering, construct AddExp with only the head.
+	if len(finalOps) == 0 {
+		// This handles the case where one non-constant term remains,
+		// or only the constSum remained (which should have been handled earlier).
 		simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, nil, nil)
-		// Return true if any reduction happened (e.g., head was reduced, or tails were folded away)
-		return simplifiedAddExp, reduced
+		return simplifiedAddExp, reduced // Return true if any reduction happened
 	}
 
-	// Construct the simplified AddExp with multiple terms
-	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, newOps, finalTailNodes)
+	// Construct the simplified AddExp with multiple terms in the new order
+	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, finalOps, finalTailNodes)
 
-	// Return the simplified expression if any reduction happened
+	// Return the simplified expression, indicating reduction occurred
 	return simplifiedAddExp, reduced
 }
 

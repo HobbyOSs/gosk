@@ -20,6 +20,9 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 	op1Str := operands[0].TokenLiteral()
 	op2Str := operands[1].TokenLiteral()
 	operandString := op1Str + "," + op2Str
+	log.Printf("debug: processMOV: op1 type=%T, literal='%s'", operands[0], op1Str)
+	log.Printf("debug: processMOV: op2 type=%T, literal='%s'", operands[1], op2Str)
+	log.Printf("debug: processMOV: operandString='%s'", operandString)
 
 	// Create ng_operand.Operands from the combined string
 	ngOperands, err := ng_operand.FromString(operandString)
@@ -27,6 +30,7 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 		log.Printf("Error creating operands from string '%s' in MOV: %v", operandString, err)
 		return // エラーが発生したら処理を中断
 	}
+	log.Printf("debug: processMOV: ngOperands after FromString: %s", ngOperands.Serialize())
 
 	// Set BitMode and ForceRelAsImm
 	ngOperands = ngOperands.WithBitMode(env.BitMode).
@@ -40,6 +44,7 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 		// Fallback or default size? For now, just log and don't update LOC.
 		return
 	}
+	log.Printf("debug: processMOV: Calculated size=%d", size)
 	env.LOC += int32(size)
 
 	// Emit the command

@@ -7,6 +7,7 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Import ast package
 	"github.com/HobbyOSs/gosk/internal/gen"
+	"github.com/HobbyOSs/gosk/pkg/cpu" // Add cpu import
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -153,7 +154,7 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 			// Constant folding should combine 12 + 8 = 20 and place the constant first.
 			expectedNode: newExpectedAddExp(
 				multExpFromImm(immExpFromNumStr("20")), // Head is the constant sum 20
-				[]string{"+"},                         // Operator
+				[]string{"+"},                          // Operator
 				[]*ast.MultExp{
 					multExpFromImm(newExpectedIdentExp("ESP")), // Tail is the non-constant term ESP
 				},
@@ -230,6 +231,126 @@ func (s *Pass1TraverseSuite) TestAddExp() { // Use renamed struct
 				}
 			default:
 				t.Fatalf("Unhandled expected node type: %T", tt.expectedNode)
+			}
+		})
+	}
+}
+
+// TestEQUExpansionInExpression verifies that TraverseAST correctly evaluates
+// expressions containing constants defined by EQU statements, using the MacroMap.
+func (s *Pass1TraverseSuite) TestEQUExpansionInExpression() {
+	tests := []struct {
+		name           string
+		text           string      // Assembly code snippet including EQU
+		expressionText string      // The specific expression part to evaluate after EQU processing
+		expectedValue  int64       // Expected numerical value after evaluation
+		bitMode        cpu.BitMode // Bit mode for Pass1 context
+	}{
+		{
+			name: "Simple EQU constant evaluation",
+			text: `
+				MY_EQU_CONST EQU 500
+				MOV AX, MY_EQU_CONST ; Evaluate MY_EQU_CONST
+			`,
+			expressionText: "MY_EQU_CONST",
+			expectedValue:  500,
+			bitMode:        cpu.MODE_16BIT,
+		},
+		{
+			name: "EQU constant + number evaluation",
+			text: `
+				MY_EQU_CONST2 EQU 100
+				ADD BX, MY_EQU_CONST2 + 20 ; Evaluate MY_EQU_CONST2 + 20
+			`,
+			expressionText: "MY_EQU_CONST2 + 20",
+			expectedValue:  120,
+			bitMode:        cpu.MODE_16BIT,
+		},
+		{
+			name: "EQU constant used in another EQU",
+			text: `
+				BASE_VAL EQU 1000
+				OFFSET_VAL EQU BASE_VAL + 50
+				MOV CX, OFFSET_VAL ; Evaluate OFFSET_VAL
+			`,
+			expressionText: "OFFSET_VAL",
+			expectedValue:  1050,
+			bitMode:        cpu.MODE_16BIT,
+		},
+		{
+			name: "EQU constant in multiplication",
+			text: `
+				FACTOR EQU 8
+				IMUL DX, FACTOR * 2 ; Evaluate FACTOR * 2
+			`,
+			expressionText: "FACTOR * 2",
+			expectedValue:  16,
+			bitMode:        cpu.MODE_16BIT,
+		},
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			// 1. Parse the whole snippet as Program to process EQU
+			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
+			s.Require().NoError(err, "Parsing program snippet failed")
+			// Assert to the concrete type *ast.Program to access Statements field
+			program, ok := parseTree.(*ast.Program)
+			s.Require().True(ok, "Parsed result is not *ast.Program")
+
+			// 2. Setup Pass1 environment
+			p := &Pass1{
+				LOC:      0,
+				BitMode:  tt.bitMode,
+				SymTable: make(map[string]int32),
+				MacroMap: make(map[string]ast.Exp),
+				// Client and AsmDB are not needed for pure expression evaluation via TraverseAST
+			}
+
+			// 3. Process EQU statements to populate MacroMap
+			// This simulates the part of Pass1.Eval that handles EQU.
+			// We need to evaluate the EQU expression itself first.
+			// Now we can directly access program.Statements
+			for _, stmt := range program.Statements {
+				// Check if the statement is an EQU statement (represented by DeclareStmt)
+				if declareStmt, ok := stmt.(*ast.DeclareStmt); ok {
+					// Evaluate the expression assigned in EQU using the current environment (p)
+					// This handles cases where EQU depends on previous EQUs.
+					evaluatedEquNode := TraverseAST(declareStmt.Value, p)  // Use declareStmt.Value
+					evaluatedEquExpr, okExpr := evaluatedEquNode.(ast.Exp) // Assert to ast.Exp
+					if !okExpr {
+						t.Fatalf("EQU expression evaluation did not return an ast.Exp: %T", evaluatedEquNode)
+					}
+					_, isEvaluable := evaluatedEquExpr.(*ast.NumberExp) // Check if it evaluated to a number
+					if !isEvaluable {
+						// If EQU expression itself couldn't be fully evaluated (e.g., contains labels),
+						// store the partially evaluated expression. For these tests, we assume EQUs resolve to numbers.
+						t.Logf("Warning: EQU expression for %s did not evaluate to a number: %T", declareStmt.Id.Value, evaluatedEquExpr) // Use declareStmt.Id.Value
+					}
+					p.DefineMacro(declareStmt.Id.Value, evaluatedEquExpr) // Use declareStmt.Id.Value and pass the asserted ast.Exp
+				}
+			}
+
+			// 4. Parse the target expression string separately
+			// We need to parse the specific expression we want to test evaluation for.
+			exprTree, err := gen.Parse("", []byte(tt.expressionText), gen.Entrypoint("Exp")) // Use "Exp" entrypoint
+			s.Require().NoError(err, "Parsing target expression failed: %s", tt.expressionText)
+			exprToEval, ok := exprTree.(ast.Exp)
+			s.Require().True(ok, "Parsed expression is not ast.Exp")
+
+			// 5. Evaluate the target expression using TraverseAST and the populated Pass1 env
+			evaluatedNode := TraverseAST(exprToEval, p)      // Returns ast.Node
+			evaluatedExpr, okExpr := evaluatedNode.(ast.Exp) // Assert to ast.Exp
+			if !okExpr {
+				t.Fatalf("Target expression evaluation did not return an ast.Exp: %T", evaluatedNode)
+			}
+
+			// 6. Assert the result is a NumberExp with the expected value
+			expectedNode := newExpectedNumberExp(tt.expectedValue)
+			actualNode, ok := evaluatedExpr.(*ast.NumberExp) // Use the asserted evaluatedExpr
+			s.True(ok, "Expected evaluated node to be *ast.NumberExp, got %T for expression '%s'", evaluatedExpr, tt.expressionText)
+			if ok {
+				s.Equal(expectedNode.Value, actualNode.Value, "Evaluated value mismatch for expression '%s'", tt.expressionText)
 			}
 		})
 	}
