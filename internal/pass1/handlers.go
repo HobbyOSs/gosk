@@ -61,9 +61,12 @@ func init() {
 		"SYSENTER", "SYSEXIT", "SYSRET", "TAKEN", "UD2", "VMCALL", "VMLAUNCH", "VMRESUME",
 		"VMXOFF", "WAIT", "WBINVD", "WRMSR", "XGETBV", "XRSTOR", "XSETBV",
 	}
-	// パラメータなし命令に processNoParam を割り当てます
+	// パラメータなし命令に processNoParam を呼び出すクロージャを割り当てます
 	for _, op := range noParamOps {
-		opcodeEvalFns[op] = processNoParam // 実際のハンドラを割り当てます
+		localOp := op // ループ変数をキャプチャ
+		opcodeEvalFns[localOp] = func(env *Pass1, operands []ast.Exp) {
+			processNoParam(env, operands, localOp) // 命令名を渡してハンドラを呼び出す
+		}
 	}
 
 	// 残りの命令にリファクタリングされたハンドラを割り当てます
