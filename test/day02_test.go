@@ -92,7 +92,7 @@ msg:
 
 	pt, err := gen.Parse("", []byte(code), gen.Entrypoint("Program"))
 	s.Require().NoError(err)
-	_, _ = frontend.Exec(pt, temp.Name())
+	pass1, _ := frontend.Exec(pt, temp.Name()) // pass1 を変数で受け取る
 
 	actual, err := ReadFileAsBytes(temp.Name())
 	s.Require().NoError(err)
@@ -150,8 +150,7 @@ msg:
 	})
 
 	s.Assert().Equal(len(expected), len(actual))
-	// TODO: そういえばpass1でRESBのLOC設定してない
-	//s.Assert().Equal(len(expected), pass1.LOC)
+	s.Assert().Equal(int32(len(expected)), pass1.LOC) // コメントアウトを解除し、型をint32にキャスト
 
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))

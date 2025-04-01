@@ -36,6 +36,10 @@
     - 原因は Pass 1 での16ビットモード JMP/Jcc 命令のサイズ推定がテストの期待値 (short jump: 2バイト) と異なっていたため。
     - `internal/pass1/pass1_inst_jmp.go` の `estimateJumpSize` を修正し、16ビットモードでは short jump を推定するように変更。
     - デバッグ用に `internal/pass1/traverse.go` に LOC ログを追加 (レベルは trace に変更)。
+- **テストファイルの LOC アサーション修正:**
+    - `test/day01_test.go` (`TestHelloos2`): LOC 期待値を `RESB expression` の正しい評価結果 (`1474560`) に修正。
+    - `test/day02_test.go` (`TestHelloos3`): コメントアウトされていた LOC アサーションを有効化し、`pass1` 変数を正しく受け取るように修正。
+    - `test/day03_harib..._test.go` ファイル群を確認し、LOC アサーションが含まれていないことを確認。
 
 ## 新しい評価戦略 (変更なし)
 (内容は前回と同じため省略)
