@@ -178,12 +178,16 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("invalid opcode kind for generateJMPCode: %v", params.OCode.Kind)
 	}
 
-	switch getOffsetSize(destAddr - currentAddr) {
-	case 1:
-		offset := destAddr - currentAddr - 2 // rel8: Opcode (1) + Offset (1) = 2 bytes
-		machineCode = []byte{opcode, byte(offset)}
+	relativeOffset := destAddr - currentAddr // ジャンプ先までの相対距離を先に計算
+	switch getOffsetSize(relativeOffset) {
+	case 1: // rel8
+		// rel8: Opcode (1) + Offset (1) = 2 bytes
+		// オフセットはジャンプ命令の *次の* 命令のアドレスからの相対距離
+		machineCode = []byte{opcode, byte(relativeOffset - 2)} // 命令サイズ(2)を引くのは正しい
 	case 2: // rel16
-		offset := destAddr - currentAddr - 4 // rel16: Opcode (2) + Offset (2) = 4 bytes
+		// rel16: Opcode (2) + Offset (2) = 4 bytes
+		// Jcc rel16/32 のオペコードは 0F 8x
+		offset := relativeOffset - 4 // 命令サイズ(4)を引く
 		machineCode = []byte{0x0f, opcode + 0x10, byte(offset), byte(offset >> 8)}
 	default: // rel32
 		offset := destAddr - currentAddr - 6 // rel32: Opcode (2) + Offset (4) = 6 bytes
