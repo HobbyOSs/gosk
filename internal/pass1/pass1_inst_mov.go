@@ -3,9 +3,11 @@ package pass1
 import (
 	"fmt"
 	"log" // Add log import
+	"strings"
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand"
+	"github.com/samber/lo"
 )
 
 // processMOV handles the MOV instruction using string representation of operands.
@@ -15,19 +17,14 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 		return
 	}
 
-	// Get string representation of operands
-	// Assuming TokenLiteral() provides the correct representation for ng_operand.FromString
-	op1Str := operands[0].TokenLiteral()
-	op2Str := operands[1].TokenLiteral()
-	operandString := op1Str + "," + op2Str
-	log.Printf("debug: processMOV: op1 type=%T, literal='%s'", operands[0], op1Str)
-	log.Printf("debug: processMOV: op2 type=%T, literal='%s'", operands[1], op2Str)
-	log.Printf("debug: processMOV: operandString='%s'", operandString)
+	args := lo.Map(operands, func(op ast.Exp, _ int) string {
+		return op.TokenLiteral()
+	})
 
 	// Create ng_operand.Operands from the combined string
-	ngOperands, err := ng_operand.FromString(operandString)
+	ngOperands, err := ng_operand.FromString(strings.Join(args, ","))
 	if err != nil {
-		log.Printf("Error creating operands from string '%s' in MOV: %v", operandString, err)
+		log.Printf("Error creating operands from string '%s' in MOV: %v", strings.Join(args, ","), err)
 		return // エラーが発生したら処理を中断
 	}
 	log.Printf("debug: processMOV: ngOperands after FromString: %s", ngOperands.Serialize())
@@ -40,7 +37,7 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 	size, err := env.AsmDB.FindMinOutputSize("MOV", ngOperands)
 	if err != nil {
 		// Log operands separately for clarity
-		log.Printf("Error finding min output size for MOV (op1: '%s', op2: '%s'): %v", op1Str, op2Str, err)
+		log.Printf("Error finding min output size for MOV (op1: '%s', op2: '%s'): %v", args[0], args[1], err)
 		// Fallback or default size? For now, just log and don't update LOC.
 		return
 	}
@@ -49,5 +46,5 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 
 	// Emit the command
 	// Use the original strings or the serialized version from ngOperands
-	env.Client.Emit(fmt.Sprintf("MOV %s", ngOperands.Serialize()))
+	env.Client.Emit(fmt.Sprintf("MOV %s", strings.Join(args, ",")))
 }

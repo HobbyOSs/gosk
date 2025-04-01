@@ -22,9 +22,10 @@ func handleINT(ocode ocode.Ocode) []byte {
 	if len(intNum) > 2 && intNum[:2] == "0x" {
 		intNum = intNum[2:]
 	}
-	num, err := strconv.ParseInt(intNum, 16, 8)
+	// Parse as decimal (base 10)
+	num, err := strconv.ParseInt(intNum, 10, 8) // Change base to 10
 	if err != nil {
-		panic("Failed to parse INT number: " + err.Error())
+		panic("Failed to parse INT number (decimal): " + err.Error()) // Update panic message
 	}
 
 	// 割り込み番号を追加
