@@ -11,7 +11,24 @@ import (
 	"github.com/comail/colog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/HobbyOSs/gosk/internal/client" // Import client for mock
 )
+
+// --- Mock CodegenClient for testing ---
+type mockCodegenClient struct {
+	client.CodegenClient // Embed the interface to avoid implementing all methods
+	emittedLines         []string
+}
+
+func (m *mockCodegenClient) Emit(line string) error {
+	m.emittedLines = append(m.emittedLines, line)
+	return nil
+}
+func (m *mockCodegenClient) SetBitMode(mode cpu.BitMode) {} // No-op for this test
+// Implement other methods as needed, or leave them unimplemented if embedding works
+
+// --- End Mock CodegenClient ---
 
 // ヘルパー関数: 単純な NumberExp (完全に評価済み) を作成します
 func newExpectedNumberExp(val int64) *ast.NumberExp {
@@ -219,6 +236,65 @@ func (s *Pass1TraverseSuite) TestAddExp() { // 名前変更された構造体を
 			default:
 				t.Fatalf("Unhandled expected node type: %T", tt.expectedNode)
 			}
+		})
+	}
+}
+
+// TestResbExpression は、'$' を含む RESB 式が正しく評価され、LOC が更新されることをテストします。
+func (s *Pass1TraverseSuite) TestResbExpression() {
+	tests := []struct {
+		name        string
+		text        string      // RESB を含むアセンブリコードスニペット
+		initialLOC  int32       // テスト開始時の LOC
+		expectedLOC int32       // 処理後の期待される LOC
+		bitMode     cpu.BitMode // Pass1 コンテキストのビットモード
+	}{
+		{
+			name:        "RESB with $",
+			text:        "RESB 0x7dfe - $",
+			initialLOC:  0x7000, // $ がこの値に評価されると仮定
+			expectedLOC: 0x7dfe, // 0x7000 + (0x7dfe - 0x7000) = 0x7dfe
+			bitMode:     cpu.MODE_16BIT,
+		},
+		{
+			name:        "RESB with simple number", // 既存の RESB の動作も確認
+			text:        "RESB 100",
+			initialLOC:  0x100,
+			expectedLOC: 0x100 + 100,
+			bitMode:     cpu.MODE_16BIT,
+		},
+		{
+			name:        "RESB with label + $", // ラベルと $ を含むケース
+			text:        "MY_LABEL EQU 0x8000\nRESB MY_LABEL - $",
+			initialLOC:  0x7F00, // $ がこの値に評価されると仮定
+			expectedLOC: 0x8000, // 0x7F00 + (0x8000 - 0x7F00) = 0x8000
+			bitMode:     cpu.MODE_16BIT,
+		},
+	}
+
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			// 1. スニペット全体を Program として解析します
+			parseTree, err := gen.Parse("", []byte(tt.text), gen.Entrypoint("Program"))
+			s.Require().NoError(err, "Parsing program snippet failed")
+			program, ok := parseTree.(*ast.Program)
+			s.Require().True(ok, "Parsed result is not *ast.Program")
+
+			// 2. Pass1 環境をセットアップします
+			p := &Pass1{
+				LOC:      tt.initialLOC, // 初期 LOC を設定
+				BitMode:  tt.bitMode,
+				SymTable: make(map[string]int32),
+				MacroMap: make(map[string]ast.Exp),
+				Client:   &mockCodegenClient{}, // Initialize Client with the mock
+				// AsmDB は LOC 計算には不要
+			}
+
+			// 3. プログラム全体を TraverseAST で処理します
+			TraverseAST(program, p)
+
+			// 4. 最終的な LOC が期待値と一致するかアサートします
+			assert.Equal(t, tt.expectedLOC, p.LOC, "Final LOC mismatch after processing RESB")
 		})
 	}
 }

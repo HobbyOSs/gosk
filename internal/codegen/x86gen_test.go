@@ -49,6 +49,22 @@ func TestGenerateX86(t *testing.T) {
 			expected: []byte{0x00, 0x00, 0x00},
 		},
 		{
+			name:    "RESB_large", // 大きなサイズのテスト
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpRESB, Operands: []string{"256"}},
+			},
+			expected: make([]byte, 256), // 256 バイトの 0 スライス
+		},
+		{
+			name:    "RESB_zero", // サイズ 0 のテスト
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpRESB, Operands: []string{"0"}},
+			},
+			expected: []byte{}, // 空のスライス
+		},
+		{
 			name:    "INT",
 			bitMode: cpu.MODE_16BIT,
 			ocodes: []ocode.Ocode{
@@ -334,7 +350,13 @@ func TestGenerateX86(t *testing.T) {
 				SymTable:       map[string]int32{},
 			}
 			result := GenerateX86(tt.ocodes, ctx)
-			assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
+			// Use more specific assertions for RESB_zero
+			if tt.name == "RESB_zero" {
+				assert.NotNil(t, result, "Test %s failed: result should not be nil", tt.name)
+				assert.Empty(t, result, "Test %s failed: result should be empty", tt.name)
+			} else {
+				assert.Equal(t, tt.expected, result, "Test %s failed", tt.name)
+			}
 		})
 	}
 }

@@ -18,7 +18,8 @@ type x86genParams struct {
 
 func GenerateX86(ocodes []ocode.Ocode, ctx *CodeGenContext) []byte {
 	ctx.VS = variantstack.NewVariantStack()
-	var machineCode []byte
+	// machineCode を非 nil の空スライスで初期化
+	machineCode := make([]byte, 0)
 
 	log.Printf("debug: [codegen] === ocode processing start ===\n")
 	for _, oc := range ocodes {

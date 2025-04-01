@@ -22,6 +22,10 @@
 - **`AddExp.Eval` の定数畳み込み実装 (2025/03/31):**
     - `internal/ast/ast_exp_impl.go` の `AddExp.Eval` を更新し、数値定数項を畳み込むようにした。
     - `internal/pass1/traverse_test.go` の関連テストケースを修正・成功確認。
+- **`RESB expression` の実装とテスト (2025/04/01):**
+    - `RESB` 命令のオペランドとして `$` やラベルを含む式を Pass1 で評価し、LOC を更新する機能を確認。
+    - Codegen で評価済みサイズに基づき 0 バイトを生成するように修正・確認。
+    - Pass1 および Codegen の単体テストを追加・修正。
 
 ## まだ必要な実装
 - **`ast.SegmentExp.Eval` の実装:** 現在は未実装であり、評価ロジックを追加する必要がある。
@@ -36,7 +40,6 @@
     - パーサー: NEAR/FAR PTR, `ParseOperands` での各種フラグ考慮, 文字列リテラル内カンマ対応。
     - 実装: QWORD サポート, `CalcOffsetByteSize` / `DetectImmediateSize` の複数オペランド対応。
     - テスト: 複数オペランド, 未対応ケース, FAR/NEAR PTR, `ParseOperands` 拡充。
-- (保留) RESBの計算処理の実装
 - (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
 - (保留) `internal/codegen` パッケージの不要パラメータ削除
 

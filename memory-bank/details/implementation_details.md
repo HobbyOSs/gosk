@@ -301,3 +301,18 @@ func processMOV(env *Pass1, operands []ast.Exp) {
 -   JE命令の実装 (2025/03/14)
 -   OUT命令の実装 (2025/03/26)
 -   [過去の作業履歴はこちら](./archives/implementation_details_archive_20250313.md)
+
+### RESB 命令の処理 (2025/04/01)
+
+`RESB` 命令は、指定されたバイト数だけ領域を予約する擬似命令です。オペランドには式 (例: `0x7dfe - $`) を指定できます。
+
+- **Pass1 (`internal/pass1`)**:
+    - `TraverseAST` は `RESB` 命令 (`ast.MnemonicStmt`) のオペランド式を `Eval` メソッドで評価します。
+    - オペランド内の `$` シンボルは `ast.IdentFactor.Eval` によって現在の `LOC` (ロケーションカウンタ) の値 (`env.GetLOC()`) に解決されます。
+    - 式全体 (例: `0x7dfe - $`) が評価され、予約すべきバイト数 (size) が `ast.NumberExp` として計算されます。
+    - `processRESB` ハンドラ (`pass1_inst_pseudo.go`) は、この評価済みの `size` を受け取り、`env.LOC += size` を実行して LOC を更新します。
+    - 最後に `env.Client.Emit(fmt.Sprintf("RESB %d", size))` を呼び出し、計算されたサイズを Ocode として Codegen に渡します。
+- **Codegen (`internal/codegen`)**:
+    - `handleRESB` 関数 (`x86gen_pseudo.go`) は、Pass1 から渡された Ocode (`RESB <size>`) を受け取ります。
+    - オペランド (`<size>`) を数値としてパースします。
+    - `make([]byte, size)` を実行し、指定されたバイト数分の 0x00 で埋められたバイトスライスを生成して返します。

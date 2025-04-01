@@ -3,9 +3,6 @@ package codegen
 import (
 	"log"
 	"strconv"
-	"strings"
-
-	"github.com/morikuni/failure"
 )
 
 // 配列型で渡される文字列はすべて数値型を想定する
@@ -37,27 +34,26 @@ func handleDD(args []string) []byte {
 	return binary
 }
 
+// handleRESB は RESB 疑似命令を処理します。
+// Pass1 から渡される評価済みのサイズに基づいて、指定されたバイト数の 0 を生成します。
 func handleRESB(args []string, params x86genParams, ctx *CodeGenContext) []byte {
-	var binary []byte
-
-	if strings.Contains(args[0], `-$`) {
-		rangeOfResb := args[0][:len(args[0])-len(`-$`)]
-		reserveSize, err := strconv.ParseInt(rangeOfResb, 0, 32)
-		if err != nil {
-			log.Fatal(failure.Wrap(err))
-		}
-
-		needToAppendSize := reserveSize - int64(ctx.DollarPosition) - int64(params.MachineCodeLen)
-		binary = append(binary, make([]byte, needToAppendSize)...)
-		return binary
+	if len(args) != 1 {
+		log.Printf("Error: handleRESB expects exactly one argument (the size), got %d", len(args))
+		return nil // またはエラーを返す
 	}
 
-	reserveSize, err := strconv.ParseInt(args[0], 0, 32)
+	// Pass1 からは評価済みのサイズが文字列として渡されるはず
+	reserveSize, err := strconv.ParseInt(args[0], 10, 64) // 10進数としてパース
 	if err != nil {
-		log.Fatal(failure.Wrap(err))
+		log.Printf("Error parsing RESB size '%s': %v", args[0], err)
+		return nil // またはエラーを返す
 	}
 
-	needToAppendSize := reserveSize
-	binary = append(binary, make([]byte, needToAppendSize)...)
-	return binary
+	if reserveSize < 0 {
+		log.Printf("Error: RESB size cannot be negative (%d).", reserveSize)
+		return nil // またはエラーを返す
+	}
+
+	// 指定されたサイズの 0 バイトスライスを作成して返します
+	return make([]byte, reserveSize)
 }
