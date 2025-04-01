@@ -78,10 +78,10 @@ func (s *Day01Suite) TestHelloos1() {
 		"FILL 1469432",
 	})
 
-	s.Assert().Equal(len(expected), len(actual))
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))
 	}
+	s.Assert().Equal(len(expected), len(actual))
 }
 
 func (s *Day01Suite) TestHelloos2() {
@@ -190,10 +190,10 @@ func (s *Day01Suite) TestHelloos2() {
 		"FILL 1469432",
 	})
 
-	s.Assert().Equal(len(expected), len(actual))
 	if diff := cmp.Diff(expected, actual); diff != "" {
 		log.Printf("error: result mismatch:\n%s", DumpDiff(expected, actual, false))
 	}
+	s.Assert().Equal(len(expected), len(actual))
 }
 
 func TestDay01Suite(t *testing.T) {
