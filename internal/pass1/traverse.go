@@ -56,6 +56,7 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 	case *ast.LabelStmt:
 		label := strings.TrimSuffix(n.Label.Value, ":")
 		env.SymTable[label] = env.LOC
+		log.Printf("debug: [LabelStmt] Defined label '%s' at LOC 0x%x (%d)", label, env.LOC, env.LOC) // ラベル定義時のログ追加
 		// ラベルステートメント自体は処理後に出力ノードを生成しません。
 		return nil // または、pass2 でラベルを AST に残す場合は n を返します
 

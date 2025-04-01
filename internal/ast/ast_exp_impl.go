@@ -301,6 +301,14 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 
 	// --- 新しい順序で AddExp を再構築 ---
 
+	// 順序変更後、1 つの項のみが残る場合、その項を直接返します
+	if len(finalTerms) == 1 && len(finalOps) == 0 {
+		// NumberExp の場合はそれを返します (理想的にはケース 1 で処理済み)
+		// それ以外 (ImmExp, MultExp など) の場合も直接返します
+		return finalTerms[0], reduced // Return the single term directly
+	}
+
+	// --- 複数の項が残る場合、新しい AddExp を構築 ---
 	// finalTerms の最初の項が新しい head です
 	finalHead := finalTerms[0]
 
@@ -346,16 +354,8 @@ func (a *AddExp) Eval(env Env) (Exp, bool) {
 		}
 	}
 
-	// 順序変更後、1 つの項のみが残る場合は、head のみを持つ AddExp を構築します。
-	if len(finalOps) == 0 {
-		// これは、1 つの非定数項が残る場合、
-		// または constSum のみが残った場合 (これは以前に処理されているはずです) を処理します。
-		simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, nil, nil)
-		return simplifiedAddExp, reduced // 簡約が発生した場合は true を返します
-	}
-
 	// 新しい順序で複数の項を持つ簡約された AddExp を構築します
-	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, finalOps, finalTailNodes)
+	simplifiedAddExp := NewAddExp(a.BaseExp, finalHeadNode, finalOps, finalTailNodes) // finalHeadNode を使用
 
 	// 簡約された式を返し、簡約が発生したことを示します
 	return simplifiedAddExp, reduced
@@ -391,9 +391,14 @@ func (m *MultExp) expressionNode() {}
 func (m *MultExp) Eval(env Env) (Exp, bool) {
 	// head 式を評価します
 	evalHeadExp, headReduced := m.HeadExp.Eval(env) // HeadExp は Exp です
-	_, headIsNum := evalHeadExp.(*NumberExp)
 
-	// tail 式を評価します
+	// tail がない場合、評価された head を直接返します
+	if len(m.Operators) == 0 {
+		return evalHeadExp, headReduced // Return evaluated head and its reduction status
+	}
+
+	// --- Tails が存在する場合 ---
+	_, headIsNum := evalHeadExp.(*NumberExp)
 	evalTailExps := make([]Exp, len(m.TailExps)) // 評価された tails (Exp) を格納します
 	anyTailReduced := false
 	allTailsAreNumbers := true
@@ -417,7 +422,7 @@ func (m *MultExp) Eval(env Env) (Exp, bool) {
 	if headIsNum && allTailsAreNumbers {
 		currentValue := evalHeadExp.(*NumberExp).Value // Head は NumberExp です
 		for i, op := range m.Operators {
-			numTail := evalTailExps[i].(*NumberExp) // Tails は NumberExp です
+			numTail := evalTailExps[i].(*NumberExp) // Tails は NumberExp です // ここで panic する可能性: evalTailExps[i] が *NumberExp でない場合
 			tailValue := numTail.Value
 			switch op {
 			case "*":
@@ -442,7 +447,7 @@ func (m *MultExp) Eval(env Env) (Exp, bool) {
 
 	// すべての部分が数値に評価されなかったが、何らかの簡約が発生した場合は、更新された MultExp を返します
 	if headReduced || anyTailReduced {
-		// 評価された式 (Exp インターフェース) を直接コンストラクタに渡します
+		// Rebuild MultExp only if tails exist (tails の存在は上でチェック済み)
 		return NewMultExp(m.BaseExp, evalHeadExp, m.Operators, evalTailExps), true
 	}
 

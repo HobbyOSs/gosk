@@ -80,8 +80,11 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 		if factor, ok := op.Factor.(*ast.IdentFactor); ok { // 未解決のラベル
 			label := factor.Value
 			log.Printf("[pass1] Processing label '%s' for %s", label, instName)
-			// ラベルが存在しない場合は登録します
-			if _, exists := env.SymTable[label]; !exists {
+			// ラベルが存在するか、およびその値を確認します
+			if addr, exists := env.SymTable[label]; exists {
+				log.Printf("debug: [processCalcJcc] Label '%s' found in SymTable with address 0x%x (%d)", label, addr, addr)
+			} else {
+				log.Printf("debug: [processCalcJcc] Label '%s' not found in SymTable yet. Adding placeholder.", label)
 				env.SymTable[label] = 0 // プレースホルダーアドレス
 			}
 			estimatedSize = estimateJumpSize(instName, env.BitMode)
