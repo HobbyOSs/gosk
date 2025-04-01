@@ -31,6 +31,11 @@
 - **`.clinerules` の更新:**
     - テストケース名の規約（英語表記、`()` `,` 不使用）を追加。
     - コマンド実行時の注意（XMLエスケープ文字不使用）を追加。
+- **`test/pass1_test.go` の修正:**
+    - `integration test for pass1` テストケースが失敗する問題を修正。
+    - 原因は Pass 1 での16ビットモード JMP/Jcc 命令のサイズ推定がテストの期待値 (short jump: 2バイト) と異なっていたため。
+    - `internal/pass1/pass1_inst_jmp.go` の `estimateJumpSize` を修正し、16ビットモードでは short jump を推定するように変更。
+    - デバッグ用に `internal/pass1/traverse.go` に LOC ログを追加 (レベルは trace に変更)。
 
 ## 新しい評価戦略 (変更なし)
 (内容は前回と同じため省略)

@@ -55,8 +55,9 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 
 	case *ast.LabelStmt:
 		label := strings.TrimSuffix(n.Label.Value, ":")
+		log.Printf("trace: [LOC Before Label] LOC: 0x%x (%d) before processing label '%s'", env.LOC, env.LOC, label) // ラベル処理前のLOC (traceレベルに変更)
 		env.SymTable[label] = env.LOC
-		log.Printf("debug: [LabelStmt] Defined label '%s' at LOC 0x%x (%d)", label, env.LOC, env.LOC) // ラベル定義時のログ追加
+		log.Printf("trace: [LabelStmt] Defined label '%s' at LOC 0x%x (%d)", label, env.LOC, env.LOC) // ラベル定義時のログ追加 (traceレベルに変更)
 		// ラベルステートメント自体は処理後に出力ノードを生成しません。
 		return nil // または、pass2 でラベルを AST に残す場合は n を返します
 
@@ -92,7 +93,8 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 		}
 
 		// LOC と Emit は特定のハンドラ関数内で処理されるようになりました。
-		return nil // Mnemonic ステートメントが処理されたため、nil を返します
+		log.Printf("trace: [LOC After Mnemonic] LOC: 0x%x (%d) after processing '%s'", env.LOC, env.LOC, opcode) // 命令処理後のLOC (traceレベルに変更)
+		return nil                                                                                               // Mnemonic ステートメントが処理されたため、nil を返します
 
 	case *ast.OpcodeStmt: // オペランドのない命令
 		opcode := n.Opcode.Value
@@ -105,7 +107,8 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 		}
 
 		// LOC と Emit は特定のハンドラ関数内で処理されるようになりました。
-		return nil // Opcode ステートメントが処理されたため、nil を返します
+		log.Printf("trace: [LOC After Opcode] LOC: 0x%x (%d) after processing '%s'", env.LOC, env.LOC, opcode) // 命令処理後のLOC (traceレベルに変更)
+		return nil                                                                                             // Opcode ステートメントが処理されたため、nil を返します
 
 	// --- 式の評価 ---
 	// AddExp と MultExp には ast_exp_impl.go で実装された特定の Eval ロジックがあります

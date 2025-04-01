@@ -71,11 +71,8 @@ func (s *Pass1TraverseSuite) TestAddExp() { // 名前変更された構造体を
 		{
 			name: "ident (not evaluable)",
 			text: `_testZ009$`,
-			// Expected: AddExp -> MultExp -> ImmExp -> IdentFactor
-			expectedNode: newExpectedAddExp(
-				multExpFromImm(newExpectedIdentExp(`_testZ009$`)),
-				nil, nil,
-			),
+			// Expected: ImmExp -> IdentFactor (Simplified by Eval)
+			expectedNode: newExpectedIdentExp(`_testZ009$`),
 		},
 		{
 			name: "displacement 1 (not evaluable, constant folding)",

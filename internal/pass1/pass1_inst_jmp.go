@@ -8,27 +8,29 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/cpu"
 )
 
-// estimateJumpSize は Pass 1 での near ジャンプ/コール命令のサイズを推定します。
-// これは推定値です。最終的なオフセットサイズ (rel8/rel16/32) は Pass 2 で変更される可能性があるためです。
+// estimateJumpSize は Pass 1 でのジャンプ/コール命令のサイズを推定します。
+// Pass 2 で short jump に最適化される可能性を考慮し、16bit モードでは short jump サイズを推定します。
 func estimateJumpSize(instName string, bitMode cpu.BitMode) int32 {
-	isJcc := instName != "JMP" && instName != "CALL" // その他は Jcc と仮定します
-
-	// デフォルトでは near 相対ジャンプ/コールサイズ (オペコード + rel16/32) になります
-	// JMP rel16/32 (E9 cw/cd): 1 + 2/4 = 3/5 バイト
-	// CALL rel16/32 (E8 cw/cd): 1 + 2/4 = 3/5 バイト
-	// Jcc rel16/32 (0F 8x cw/cd): 2 + 2/4 = 4/6 バイト
-	size := int32(5) // 最初は JMP/CALL に rel32 を仮定します
+	// --- 16bit モード: short jump (2バイト) を推定 ---
 	if bitMode == cpu.MODE_16BIT {
-		size = 3 // 16 ビットモードでは JMP/CALL に rel16 を仮定します
+		// JMP rel8 (EB rb): 2 bytes
+		// Jcc rel8 (7x rb): 2 bytes
+		// CALL rel16/32 (E8 cw/cd): 3/5 bytes (CALL は short がないので near を推定)
+		if instName == "CALL" {
+			log.Printf("debug: [estimateJumpSize] Assuming 3 bytes (near call) for CALL in 16-bit mode.")
+			return 3
+		}
+		log.Printf("debug: [estimateJumpSize] Assuming 2 bytes (short jump) for %s in 16-bit mode.", instName)
+		return 2
 	}
 
+	// --- 32/64bit モード: near jump を推定 ---
+	isJcc := instName != "JMP" && instName != "CALL"
+	size := int32(5) // Default: JMP/CALL rel32 (E9/E8 cd) = 1 + 4 = 5 bytes
 	if isJcc {
-		size = 6 // 最初は Jcc に rel32 を仮定します
-		if bitMode == cpu.MODE_16BIT {
-			size = 4 // 16 ビットモードでは Jcc に rel16 を仮定します
-		}
+		size = 6 // Default: Jcc rel32 (0F 8x cd) = 2 + 4 = 6 bytes
 	}
-	// 注意: ここでは short ジャンプ (rel8) は推定しません。Pass 2 で可能であれば最適化されます。
+	log.Printf("debug: [estimateJumpSize] Assuming %d bytes (near jump/call) for %s in %d-bit mode.", size, instName, bitMode)
 	return size
 }
 

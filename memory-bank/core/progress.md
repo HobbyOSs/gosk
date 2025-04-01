@@ -11,6 +11,11 @@
 - **`.clinerules` の更新:**
     - テストケース名の規約（英語表記、`()` `,` 不使用）を追加。
     - コマンド実行時の注意（XMLエスケープ文字不使用）を追加。
+- **`test/pass1_test.go` の修正:**
+    - `integration test for pass1` テストケースが失敗する問題を修正。
+    - Pass 1 での16ビットモード JMP/Jcc 命令のサイズ推定を修正 (short jump を推定)。
+    - `internal/pass1/pass1_inst_jmp.go` の `estimateJumpSize` を更新。
+    - デバッグ用 LOC ログを `internal/pass1/traverse.go` に追加 (trace レベル)。
 
 ## まだ必要な実装
 - **`ast.SegmentExp.Eval` の実装:** 現在は未実装であり、評価ロジックを追加する必要がある。
