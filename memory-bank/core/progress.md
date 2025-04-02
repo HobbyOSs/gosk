@@ -1,5 +1,9 @@
 # Progress
 
+## 実装済み (2025/04/03)
+- **`test/day03_harib00g_test.go` の修正:**
+    - Pass1 での 16bit モード `JMP immediate` のサイズ推定誤りを修正。
+
 ## 実装済み (2025/04/01)
 - **`RESB expression` の実装とテスト:**
     - `RESB` 命令のオペランドとして `$` やラベルを含む式を Pass1 で評価し、LOC を更新する機能を確認。

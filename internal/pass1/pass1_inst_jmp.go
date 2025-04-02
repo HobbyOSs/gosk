@@ -103,7 +103,20 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 		log.Printf("[pass1] Processing immediate address %d (0x%x) for %s", targetAddr, targetAddr, instName)
 		// Pass 1 でアドレスが解決したので、数値を直接オペランドとして渡します。
 		// Pass 2 のテンプレート解決は不要です。
-		estimatedSize = estimateJumpSize(instName, env.BitMode)
+
+		// 16bit モードで即値アドレスへの JMP/CALL は near (3/5 バイト) と推定
+		if env.BitMode == cpu.MODE_16BIT {
+			if instName == "CALL" {
+				estimatedSize = 3 // CALL rel16
+			} else {
+				estimatedSize = 3 // JMP rel16
+			}
+			log.Printf("debug: [processCalcJcc] Assuming %d bytes (near jump/call to immediate) for %s in 16-bit mode.", estimatedSize, instName)
+		} else {
+			// 32/64bit モードでは estimateJumpSize を使用 (near jump/call を推定)
+			estimatedSize = estimateJumpSize(instName, env.BitMode)
+		}
+
 		ocode = fmt.Sprintf("%s %d", instName, targetAddr) // 数値文字列を直接設定
 
 	case *ast.AddExp, *ast.MultExp: // 部分的に評価された式 (例: label + offset)

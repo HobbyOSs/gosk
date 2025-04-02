@@ -1,6 +1,9 @@
 package ast
 
-import "strings"
+import (
+	"strconv" // strconv をインポート
+	"strings"
+)
 
 func ExpToString(e Exp) string {
 	switch v := e.(type) {
@@ -69,9 +72,15 @@ func ExpToString(e Exp) string {
 		}
 		return buf.String()
 
+	case *NumberExp: // NumberExp のケースを追加
+		// int64 の値を 10 進数文字列に変換
+		return strconv.FormatInt(v.Value, 10)
+
 	// 他のExp型があれば適宜
 
 	default:
-		return "" // or panic("unhandled Exp type")
+		// 不明な型の場合は空文字列を返す (またはエラー処理)
+		// panic(fmt.Sprintf("unhandled Exp type: %T", e))
+		return ""
 	}
 }

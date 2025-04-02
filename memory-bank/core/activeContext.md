@@ -18,6 +18,12 @@
 - `test/day03_harib00i_test.go` が依然として失敗する。（根本原因は未解決）
     - メモリオペランド内のラベルアドレス解決や相対ジャンプオフセット計算などに問題が残っている可能性。
 
+## 完了した作業 (2025/04/03)
+
+- **`test/day03_harib00g_test.go` の修正:**
+    - 原因: Pass1 での 16bit モード `JMP immediate` のサイズ推定誤り (2byte 推定 -> 正しくは 3byte)。
+    - 修正: `internal/pass1/pass1_inst_jmp.go` の `processCalcJcc` を修正し、16bit モードの `JMP immediate` を 3byte と推定するように変更。
+
 ## 完了した作業 (2025/04/01)
 
 - **`RESB expression` の実装とテスト:**

@@ -14,32 +14,22 @@ func processINT(env *Pass1, operands []ast.Exp) {
 		return
 	}
 
-	// オペランド式を評価します
-	exp := operands[0]
-	evaluatedExp, _ := exp.Eval(env) // 現時点では 'evaluated' フラグは無視します
+	operandExp := operands[0]
+	var size int32 = 2 // デフォルトは INT imm8 の 2 バイト
 
-	// 評価結果が NumberExp かどうかを確認します
-	numExp, ok := evaluatedExp.(*ast.NumberExp)
-	if !ok {
-		// 評価後に実際に取得した型をログに出力します
-		log.Printf("Error: INT directive requires a numeric operand after evaluation, got %T.", evaluatedExp)
-		return
-	}
-
-	// 割り込み番号が有効な範囲 (0-255) 内にあるか確認します
-	interruptNum := numExp.Value // Value は int64 です
-	if interruptNum < 0 || interruptNum > 255 {
-		log.Printf("Error: INT operand %d out of range (0-255).", interruptNum)
-		return
-	}
-
-	// サイズを計算します: INT 3 は 1 バイト (0xCC)、その他は 2 バイト (0xCD imm8)
-	var size int32 = 2
-	if interruptNum == 3 {
-		size = 1
+	// env (Pass1) が持つ GetConstValue を使って定数値を取得し、INT 3 のサイズを判定
+	if val, ok := env.GetConstValue(operandExp); ok && val == 3 {
+		size = 1 // INT 3 は 1 バイト
 	}
 	env.LOC += size
 
-	// 割り込み番号を指定して INT コマンドを発行します。
-	env.Client.Emit(fmt.Sprintf("INT %d", interruptNum)) // 数値を使用します
+	// 修正された ast.ExpToString を使ってオペランド文字列を生成し、codegen に渡す
+	operandStr := ast.ExpToString(operandExp)
+	if operandStr == "" {
+		// ExpToString が空文字列を返した場合のエラーハンドリング (念のため)
+		log.Printf("Error: Failed to convert INT operand expression to string: %T", operandExp)
+		// ここで処理を中断するか、デフォルトの動作を続けるか検討
+		// 今回はログのみ出力し、Emit は試みる
+	}
+	env.Client.Emit(fmt.Sprintf("INT %s", operandStr))
 }
