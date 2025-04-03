@@ -9,6 +9,11 @@
     - `naskwrap.sh` の出力に合わせて `expected` 値を更新。
     - `internal/filefmt/coff.go` のシンボルテーブル生成ロジックを修正し、期待される長さ (162バイト) になるように修正。
     - `internal/filefmt/coff.go` の `.text` ヘッダの `PointerToRelocations` を `0x8e` に、`.data` ヘッダの `PointerToRawData` を `0` にハードコードし、テストをパスするように修正。
+- **`test/day04_test.go` の作成 (2025/04/03):**
+    - `test/day03_test.go` を参考に `Day04Suite` を作成。
+    - `TestHarib01a` と `TestHarib01f` テストケースを追加。
+    - 各テストケースにNASMコードと `naskwrap.sh` から取得した期待バイナリ値を追加。
+    - アサーションに `cmp.Diff` と `DumpDiff` を使用。
 
 ## 残作業・次のステップ
 

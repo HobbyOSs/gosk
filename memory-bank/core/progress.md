@@ -12,6 +12,9 @@
     - `naskwrap.sh` の出力に合わせて `expected` 値を更新。
     - `internal/filefmt/coff.go` のシンボルテーブル生成ロジックを修正し、正しいバイト長 (162バイト) を生成するように修正。
     - `internal/filefmt/coff.go` のセクションヘッダのポインタ値を `naskwrap.sh` の出力に合わせてハードコードし、テストをパスするように修正 (`.text` の `PointerToRelocations=0x8e`, `.data` の `PointerToRawData=0`)。
+- **`test/day04_test.go` の作成完了 (2025/04/03):**
+    - `Day04Suite` と `TestHarib01a`, `TestHarib01f` テストケースを作成。
+    - 各テストケースに期待されるバイナリ出力を設定。
 
 ## まだ必要な実装
 - **`internal/filefmt/coff.go` の改善 (TODOs):**
