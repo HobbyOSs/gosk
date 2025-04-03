@@ -49,89 +49,92 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 	var ocode string
 
 	switch op := evaluatedOperand.(type) {
-	case *ast.SegmentExp: // FAR ジャンプを処理します (例: JMP FAR label, JMP seg:off)
-		log.Printf("[pass1] Processing evaluated SegmentExp for %s: %s", instName, op.TokenLiteral())
-		// セグメントとオフセット部分を *再度* 評価します (SegmentExp 自体の Eval では完全には解決されない場合があります)
-		segEval, segOk := op.Left.Eval(env)
-		offEval, offOk := op.Right.Eval(env)
-
-		if !segOk || !offOk {
-			log.Printf("Error: Could not fully evaluate segment or offset for FAR %s.", instName)
-			// 評価に失敗した場合は、元のオペランド文字列に基づいてプレースホルダーを発行します
-			estimatedSize = 7 // ptr16:32 を仮定します
-			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
-		} else {
-			// 数値の場合は値を取得し、それ以外の場合はプレースホルダーを使用します
-			var segStr, offStr string
-			if segNum, ok := segEval.(*ast.NumberExp); ok {
-				segStr = fmt.Sprintf("%d", segNum.Value)
-			} else {
-				segStr = fmt.Sprintf("{{expr:%s}}", op.Left.TokenLiteral()) // セグメントのプレースホルダー
-			}
-			if offNum, ok := offEval.(*ast.NumberExp); ok {
-				offStr = fmt.Sprintf("%d", offNum.Value)
-			} else {
-				offStr = fmt.Sprintf("{{expr:%s}}", op.Right.TokenLiteral()) // オフセットのプレースホルダー
-			}
-
-			estimatedSize = 7 // JMP ptr16:32 (EA + ptr16:32)
-			ocode = fmt.Sprintf("%s_FAR %s:%s", instName, segStr, offStr)
-		}
-
-	case *ast.ImmExp:
-		if factor, ok := op.Factor.(*ast.IdentFactor); ok { // 未解決のラベル
-			label := factor.Value
-			log.Printf("[pass1] Processing label '%s' for %s", label, instName)
-			// ラベルが存在するか、およびその値を確認します
-			if addr, exists := env.SymTable[label]; exists {
-				log.Printf("debug: [processCalcJcc] Label '%s' found in SymTable with address 0x%x (%d)", label, addr, addr)
-			} else {
-				log.Printf("debug: [processCalcJcc] Label '%s' not found in SymTable yet. Adding placeholder.", label)
-				env.SymTable[label] = 0 // プレースホルダーアドレス
-			}
-			estimatedSize = estimateJumpSize(instName, env.BitMode)
-			ocode = fmt.Sprintf("%s {{.%s}}", instName, label) // ラベルプレースホルダー付きの Ocode
-		} else {
-			// ImmExp.Eval が正しく機能すれば発生しないはずですが、防御的に処理します
-			log.Printf("Error: Unexpected factor type %T within evaluated ImmExp for %s.", op.Factor, instName)
-			estimatedSize = estimateJumpSize(instName, env.BitMode)                 // とにかくサイズを推定します
-			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral()) // 元の式を持つプレースホルダー
-		}
-
-	case *ast.NumberExp: // 解決された即値アドレス
+	case *ast.NumberExp: // ケース 1: 解決された即値アドレス
 		targetAddr := op.Value
-		log.Printf("[pass1] Processing immediate address %d (0x%x) for %s", targetAddr, targetAddr, instName)
-		// Pass 1 でアドレスが解決したので、数値を直接オペランドとして渡します。
+		log.Printf("[pass1] Case 1: Processing immediate address %d (0x%x) for %s", targetAddr, targetAddr, instName)
+		// 数値を直接オペランドとして渡します。
 		// Pass 2 のテンプレート解決は不要です。
 
-		// 16bit モードで即値アドレスへの JMP/CALL は near (3/5 バイト) と推定
+		// 16bit モードで即値アドレスへの JMP/CALL は near (3 バイト) と推定
 		if env.BitMode == cpu.MODE_16BIT {
-			if instName == "CALL" {
-				estimatedSize = 3 // CALL rel16
-			} else {
-				estimatedSize = 3 // JMP rel16
-			}
+			// JMP/CALL rel16 (E9/E8 cw) は 1 + 2 = 3 バイト
+			estimatedSize = 3
 			log.Printf("debug: [processCalcJcc] Assuming %d bytes (near jump/call to immediate) for %s in 16-bit mode.", estimatedSize, instName)
 		} else {
 			// 32/64bit モードでは estimateJumpSize を使用 (near jump/call を推定)
 			estimatedSize = estimateJumpSize(instName, env.BitMode)
 		}
-
 		ocode = fmt.Sprintf("%s %d", instName, targetAddr) // 数値文字列を直接設定
 
-	case *ast.AddExp, *ast.MultExp: // 部分的に評価された式 (例: label + offset)
-		log.Printf("[pass1] Processing partially evaluated expression for %s: %s", instName, op.TokenLiteral())
-		// Pass 1 では完全に解決できません。Pass 2 用にプレースホルダーを使用します。
-		estimatedSize = estimateJumpSize(instName, env.BitMode)
-		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, op.TokenLiteral()) // 式文字列を持つプレースホルダー
+	case *ast.SegmentExp: // FAR ジャンプ (seg:off)
+		log.Printf("[pass1] Processing evaluated SegmentExp for %s: %s", instName, op.TokenLiteral())
+		// op.Left と op.Right は SegmentExp.Eval によって既に評価されている可能性があります。
+		// それらが定数に評価されるかどうかを確認します。
+		segVal, segIsConst := env.GetConstValue(op.Left) // op.Left は評価済みの可能性がある *ast.AddExp
+		offVal, offIsConst := 0, false
+		if op.Right != nil {
+			offVal, offIsConst = env.GetConstValue(op.Right) // op.Right は評価済みの可能性がある *ast.AddExp
+		} else {
+			// op.Right が nil の場合、オフセットがありません。FAR ジャンプには必須です。
+			log.Printf("Error: FAR jump/call operand %s is missing offset.", op.TokenLiteral())
+			estimatedSize = 7                                                       // ptr16:32 を仮定
+			ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral()) // 元のオペランドを使用
+			break                                                                   // switch case から抜ける
+		}
+
+		// セグメントとオフセットの両方が定数に解決された場合のみ _FAR 形式を使用
+		if segIsConst && offIsConst {
+			segStr := fmt.Sprintf("%d", segVal)
+			offStr := fmt.Sprintf("%d", offVal)
+			estimatedSize = 7 // JMP ptr16:32 (EA + ptr16:32)
+			ocode = fmt.Sprintf("%s_FAR %s:%s", instName, segStr, offStr)
+			log.Printf("[pass1] Case 2a: Processing fully resolved FAR address %s:%s for %s", segStr, offStr, instName)
+		} else {
+			// セグメントかオフセットのどちらか、または両方が定数でない場合
+			log.Printf("[pass1] Case 2b: FAR jump/call operand %s requires Pass 2 resolution for %s.", op.TokenLiteral(), instName)
+			estimatedSize = 7 // ptr16:32 を仮定
+			// _FAR サフィックスは付けず、評価されたオペランドの文字列表現をそのまま使用
+			ocode = fmt.Sprintf("%s %s", instName, op.TokenLiteral())
+		}
+
+	case *ast.ImmExp: // ケース 3: 即値式 (ラベルまたは '$' など)
+		// ケース 3a: 単純なラベル (IdentFactor であり '$' でない)
+		if factor, ok := op.Factor.(*ast.IdentFactor); ok && factor.Value != "$" {
+			label := factor.Value
+			log.Printf("[pass1] Case 3a: Processing label '%s' for %s", label, instName)
+			// ラベルが存在しない場合はプレースホルダーを追加します
+			if _, exists := env.SymTable[label]; !exists {
+				log.Printf("debug: [processCalcJcc] Label '%s' not found in SymTable yet. Adding placeholder.", label)
+				env.SymTable[label] = 0 // プレースホルダーアドレス
+			}
+			estimatedSize = estimateJumpSize(instName, env.BitMode)
+			ocode = fmt.Sprintf("%s {{.%s}}", instName, label) // ラベルプレースホルダー
+		} else {
+			// ケース 3b: ラベルでない ImmExp (例: '$' が NumberExp に評価された場合や予期しない Factor)
+			// デフォルトの処理にフォールスルーします (ocode は default で設定)
+			log.Printf("[pass1] Case 3b: Evaluated ImmExp is not a simple label for %s: %s. Falling through to default.", instName, op.TokenLiteral())
+			// default ケースで処理するため、ここでは ocode と estimatedSize を設定しません
+		}
 
 	// MemoryAddrExp の処理が必要な場合 (例: JMP DWORD PTR [EAX])
+	// TODO: JMP/CALL [memory] の処理を追加
 
+	// デフォルトケース: AddExp, MultExp, ラベル以外の ImmExp, MemoryAddrExp, その他の未解決の式、または予期しない型
 	default:
-		log.Printf("Error: Invalid evaluated operand type %T for %s instruction.", evaluatedOperand, instName)
-		// フォールバックプレースホルダーとして元のオペランド文字列を使用しようとします
-		estimatedSize = estimateJumpSize(instName, env.BitMode) // サイズを推定します
-		ocode = fmt.Sprintf("%s {{expr:%s}}", instName, operand.TokenLiteral())
+		// ImmExp のケース 3b からフォールスルーしてきた場合もここで処理
+		// default ケースに来た場合、ocode と estimatedSize が未設定の可能性があるため、ここで設定する
+		if ocode == "" { // ImmExp ケース 3b から来た場合など、まだ設定されていない場合
+			if _, ok := op.(*ast.ImmExp); ok {
+				// ImmExp のログは上で出力済みなので、ここでは一般的なログを出力
+				log.Printf("[pass1] Case 4 (from ImmExp): Processing non-label ImmExp %s for %s", op.TokenLiteral(), instName)
+			} else {
+				log.Printf("[pass1] Case 4: Processing expression requiring Pass 2 resolution for %s: %s (Type: %T)", instName, evaluatedOperand.TokenLiteral(), evaluatedOperand)
+			}
+			estimatedSize = estimateJumpSize(instName, env.BitMode)
+			// 評価されたオペランドの文字列表現をそのまま使用します (プレースホルダーなし)
+			ocode = fmt.Sprintf("%s %s", instName, evaluatedOperand.TokenLiteral())
+		}
+		// すでに他のケース (例: ImmExp 3a) で ocode が設定されている場合は、ここでは何もしません
 	}
 
 	// LOC を更新し、Ocode を発行します
@@ -141,16 +144,4 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 	}
 	env.LOC += estimatedSize
 	env.Client.Emit(ocode)
-}
-
-// getOffsetSize は相対オフセットのサイズ (バイト数) を返す (Pass 2 で使用)
-func getOffsetSize(imm int32) int32 {
-	if imm >= -128 && imm <= 127 {
-		return 1 // rel8
-	}
-	// rel16の判定を追加
-	if imm >= -32768 && imm <= 32767 {
-		return 2 // rel16
-	}
-	return 4 // rel32
 }

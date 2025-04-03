@@ -57,12 +57,46 @@ type SegmentExp struct {
 
 func (s *SegmentExp) expressionNode() {}
 func (s *SegmentExp) Eval(env Env) (Exp, bool) {
-	// TODO: SegmentExp の評価ロジックを実装する
-	// 現時点では、ノード自体を返し、簡約がないことを示します。
-	return s, false
+	// 内部の式を評価します
+	evalLeftNode, leftReduced := s.Left.Eval(env) // Exp を返します
+	evalRightNode := Exp(nil)                     // evalRightNode を初期化します
+	rightReduced := false
+	if s.Right != nil {
+		evalRightNode, rightReduced = s.Right.Eval(env) // Exp を返します
+	}
+
+	// 可能であれば、評価されたノードを AddExp 構造にラップし直します
+	evalLeftExp := wrapExpInAddExp(evalLeftNode)
+	if evalLeftExp == nil && leftReduced {
+		// ラップに失敗したが簡約が発生した場合、状態を表すことができません。
+		// 情報の損失や無効な構造の作成を避けるために、オリジナルを返します。
+		return s, false
+	} else if evalLeftExp == nil {
+		evalLeftExp = s.Left // 簡約がなく、ラップも不可能な場合はオリジナルを保持します
+	}
+
+	evalRightExp := (*AddExp)(nil)
+	if s.Right != nil {
+		evalRightExp = wrapExpInAddExp(evalRightNode)
+		if evalRightExp == nil && rightReduced {
+			return s, false
+		} else if evalRightExp == nil {
+			evalRightExp = s.Right // オリジナルを保持します
+		}
+	}
+
+	// どちらの内部式も簡約されなかった場合は、元のノードを返します
+	if !leftReduced && !rightReduced {
+		return s, false
+	}
+
+	// ラップされる可能性のある内部式を持つ新しい SegmentExp を構築します
+	newSegExp := NewSegmentExp(s.BaseExp, s.DataType, evalLeftExp, evalRightExp)
+	return newSegExp, true // 新しいノードを返し、簡約が発生したことを示します
 }
 func (s *SegmentExp) TokenLiteral() string {
-	leftStr := ExpToString(s.Left)
+	// ast_exp_string.go の既存の ExpToString を使用します
+	leftStr := ExpToString(s.Left) // Eval が置き換えなかった場合、オリジナルを指す可能性があります
 	rightStr := ""
 	if s.Right != nil {
 		rightStr = ExpToString(s.Right)

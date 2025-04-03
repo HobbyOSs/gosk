@@ -3,6 +3,10 @@
 ## 実装済み (2025/04/03)
 - **`test/day03_harib00g_test.go` の修正:**
     - Pass1 での 16bit モード `JMP immediate` のサイズ推定誤りを修正。
+- **`internal/pass1/pass1_inst_jmp.go` のリファクタリング:**
+    - `processCalcJcc` 関数内の `case *ast.SegmentExp:` における冗長な `Eval` 呼び出しを削除。
+    - `ast.SegmentExp.Eval` を実装。
+    - `{{expr:%s}}` プレースホルダーを削除し、Pass 1 で解決できない式はその文字列表現を直接 Ocode に含めるように修正。
 
 ## 実装済み (2025/04/01)
 - **`RESB expression` の実装とテスト:**
