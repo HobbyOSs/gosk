@@ -294,3 +294,40 @@ func processGLOBAL(env *Pass1, operands []ast.Exp) {
 	}
 	// GLOBAL does not emit ocode
 }
+
+// processEXTERN handles the EXTERN pseudo-instruction.
+// It expects one or more identifier operands.
+func processEXTERN(env *Pass1, operands []ast.Exp) {
+	if len(operands) == 0 {
+		log.Printf("Error: EXTERN directive requires at least one identifier operand.")
+		return
+	}
+
+	for _, operand := range operands {
+		// EXTERN のオペランドは評価されない識別子であるべき
+		immExp, ok := operand.(*ast.ImmExp)
+		if !ok {
+			log.Printf("Error: EXTERN operand must be an identifier, got %T.", operand)
+			continue
+		}
+		identFactor, ok := immExp.Factor.(*ast.IdentFactor)
+		if !ok {
+			log.Printf("Error: EXTERN operand must be an identifier factor, got %T.", immExp.Factor)
+			continue
+		}
+
+		symbolName := identFactor.Value
+		// Check if already added to avoid duplicates (optional but good practice)
+		alreadyExists := false
+		for _, existingSymbol := range env.ExternSymbolList {
+			if existingSymbol == symbolName {
+				alreadyExists = true
+				break
+			}
+		}
+		if !alreadyExists {
+			env.ExternSymbolList = append(env.ExternSymbolList, symbolName)
+		}
+	}
+	// EXTERN does not affect LOC and does not emit ocode
+}

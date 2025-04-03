@@ -22,6 +22,7 @@ type CodeGenContext struct {
 	DollarPosition   uint64
 	MachineCode      []byte
 	GlobalSymbolList []string // GlobalSymbolList フィールドを追加
+	ExternSymbolList []string // ExternSymbolList フィールドを追加
 	SourceFileName   string   // SourceFileName フィールドを追加
 	VS               *variantstack.VariantStack
 	BitMode          cpu.BitMode

@@ -3,6 +3,7 @@ package pass1
 import (
 	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
 	"github.com/HobbyOSs/gosk/internal/client"
+	"github.com/HobbyOSs/gosk/internal/codegen" // Import codegen package
 	"github.com/HobbyOSs/gosk/pkg/asmdb"
 	"github.com/HobbyOSs/gosk/pkg/cpu" // Keep one cpu import
 )
@@ -24,8 +25,12 @@ type Pass1 struct {
 }
 
 // Eval は AST を走査し、pass1 の処理を実行します。
-// 処理後の GlobalSymbolList を返します。
-func (p *Pass1) Eval(program ast.Prog) []string { // Restored ast.Prog, changed return type
+// 処理中に CodeGenContext の GlobalSymbolList と ExternSymbolList を更新します。
+func (p *Pass1) Eval(program ast.Prog, ctx *codegen.CodeGenContext) { // Add ctx argument, remove return type
 	TraverseAST(program, p)
-	return p.GlobalSymbolList // Return the potentially modified list
+	// Update the context directly instead of returning
+	ctx.GlobalSymbolList = p.GlobalSymbolList
+	ctx.ExternSymbolList = p.ExternSymbolList
+	// SourceFileName もここで ctx に設定するのが一貫性があるかもしれません
+	ctx.SourceFileName = p.SourceFileName
 }

@@ -237,7 +237,7 @@ func (s *Pass1Suite) TestStatementToMachineCodeSize() {
 				Client:           client,
 				AsmDB:            asmdb.NewInstructionDB(), // Initialize AsmDB
 			}
-			pass1.Eval(prog)
+			pass1.Eval(prog, ctx) // Pass ctx to Eval
 
 			// Use IgnoreFields defined at the top
 			if diff := cmp.Diff(*tt.want, *pass1, cmpopts.IgnoreFields(*pass1, IgnoreFields...)); diff != "" {

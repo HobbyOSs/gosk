@@ -54,11 +54,8 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 		AsmDB:            asmdb.NewInstructionDB(),
 		MacroMap:         make(map[string]ast.Exp), // activeContext.md に基づいて MacroMap の初期化を追加
 	}
-	// pass1.Eval を呼び出し、返された GlobalSymbolList で ctx を更新
-	updatedGlobalSymbolList := pass1.Eval(prog)
-	ctx.GlobalSymbolList = updatedGlobalSymbolList // ctx のリストを更新
-	// pass1 で設定された SourceFileName を ctx にコピー
-	ctx.SourceFileName = pass1.SourceFileName
+	// pass1.Eval を呼び出し、ctx を直接更新
+	pass1.Eval(prog, ctx) // Pass ctx, no return value assignment needed
 
 	// pass2 の初期化に GlobalSymbolList を追加 (更新された ctx のリストを使用)
 	pass2 := &pass2.Pass2{

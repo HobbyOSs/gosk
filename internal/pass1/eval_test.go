@@ -187,7 +187,7 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			if !ok {
 				t.FailNow()
 			}
-			pass1.Eval(program)
+			pass1.Eval(program, ctx) // Pass ctx to Eval
 			assert.Equal(t, tt.expectedLOC, pass1.LOC, "LOC should match expected value")
 		})
 	}

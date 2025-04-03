@@ -356,6 +356,22 @@ func (c *CoffFormat) generateSymbolEntries(ctx *codegen.CodeGenContext, textData
 		}
 	}
 
+	// 4. EXTERN シンボル (EXTERN 宣言されたもの)
+	for _, externName := range ctx.ExternSymbolList {
+		// シンボル名を8バイトに変換 (文字列テーブル使用)
+		nameBytes := c.convertNameToBytes(externName, stringTable, stringTableOffsetMap)
+
+		symbol := CoffSymbol{
+			Name:               nameBytes,
+			Value:              0,    // 外部シンボルの値は0
+			SectionNumber:      0,    // IMAGE_SYM_UNDEFINED
+			Type:               0x00, // Type NULL (0x00)
+			StorageClass:       2,    // IMAGE_SYM_CLASS_EXTERNAL
+			NumberOfAuxSymbols: 0,    // 補助シンボルなし
+		}
+		allEntries = append(allEntries, SymbolEntry{Main: symbol, Aux: nil}) // Aux は nil
+	}
+
 	return allEntries, stringTable.Bytes()
 }
 
