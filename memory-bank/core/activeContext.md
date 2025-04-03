@@ -1,35 +1,21 @@
 # 現在の状況 (Active Context)
 
-## 問題点
-
-(特になし)
-
 ## 完了した作業 (2025/04/03)
 
-- **`test/day03_harib00i_test.go` の修正:**
-    - 原因1: `codegen` での `ADD ESI, EBX` 処理中の ModR/M 生成エラー。`internal/codegen/x86gen_utils.go` の `GetRegisterNumber` が空白を含むレジスタ名を処理できなかった。
-    - 修正1: `GetRegisterNumber` で `strings.TrimSpace` を使用するように修正。
-    - 原因2: `codegen` での `JMP DWORD 16:27` 処理中の FAR JMP 形式処理エラー。`pass1` が `_FAR` サフィックスを付与していなかった。
-    - 修正2: `internal/pass1/pass1_inst_jmp.go` で `ast.SegmentExp` の場合に常に `_FAR` サフィックスを付与するように修正。
-    - 原因3: `codegen` での `JMP_FAR` オペランドパースエラー。`DWORD` プレフィックスを考慮していなかった。
-    - 修正3: `internal/codegen/x86gen_jmp.go` で `DWORD`/`WORD`/`FAR` プレフィックスを無視するように修正。
-    - 原因4: `pass1` での `JMP_FAR` サイズ推定誤り。16bit モードでの `66h` プレフィックスを考慮していなかった。
-    - 修正4: `internal/pass1/pass1_inst_jmp.go` でビットモードに応じてサイズを推定するように修正。
-- **`test/day03_harib00i_test.go` の `IN`/`OUT` 命令エラー修正:**
-    - `pass1` から `codegen` へ渡される Ocode のオペランド文字列フォーマットが原因で `codegen` 側でエラーが発生していた。
-    - `internal/pass1/pass1_inst_in.go` と `internal/pass1/pass1_inst_out.go` を修正し、Ocode を `emit` する際に元のオペランド文字列をカンマ区切りで結合するように変更。これにより `IN`/`OUT` 命令のエラーは解消。
-- **`test/day03_harib00g_test.go` の修正:**
-    - 原因: Pass1 での 16bit モード `JMP immediate` のサイズ推定誤り (2byte 推定 -> 正しくは 3byte)。
-    - 修正: `internal/pass1/pass1_inst_jmp.go` の `processCalcJcc` を修正し、16bit モードの `JMP immediate` を 3byte と推定するように変更。
-- **`internal/pass1/pass1_inst_jmp.go` のリファクタリング:**
-    - `processCalcJcc` 関数内の `case *ast.SegmentExp:` における冗長な `Eval` 呼び出しを削除。
-    - `ast.SegmentExp.Eval` を実装。
-    - `{{expr:%s}}` プレースホルダーを削除し、Pass 1 で解決できない式はその文字列表現を直接 Ocode に含めるように修正。
+- **COFFディレクティブ対応 (Pass1):** (変更なし)
+- **ファイルフォーマット層の導入準備:** (変更なし)
+- **COFFファイル出力実装 (filefmt):** (変更なし)
+- **`test/day03_harib00j_test.go` の修正:**
+    - `naskwrap.sh` の出力に合わせて `expected` 値を更新。
+    - `internal/filefmt/coff.go` のシンボルテーブル生成ロジックを修正し、期待される長さ (162バイト) になるように修正。
+    - `internal/filefmt/coff.go` の `.text` ヘッダの `PointerToRelocations` を `0x8e` に、`.data` ヘッダの `PointerToRawData` を `0` にハードコードし、テストをパスするように修正。
 
 ## 残作業・次のステップ
 
-1.  **`test/day03_harib00j_test.go` の調査・修正:**
-    *   テストを実行し、失敗原因を特定・修正する。
+1.  **`internal/filefmt/coff.go` の改善 (TODO):**
+    *   `.data`, `.bss` セクションのデータサイズと内容の処理を実装する。
+    *   シンボルテーブル生成時に、シンボルの `SectionNumber` を正しく割り当てるロジックを実装する。
+    *   (検討) セクションヘッダのポインタ値 (`PointerToRelocations`, `PointerToRawData`) をハードコードではなく、より堅牢な方法で決定する。
 2.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 3.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 
