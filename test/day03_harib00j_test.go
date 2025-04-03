@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Day03Suite) TestHarib00j() {
-	s.T().Skip("未実装の命令があるためスキップ")
+	// s.T().Skip("未実装の命令があるためスキップ") // スキップを解除
 	code := `; naskfunc
 ; TAB=4
 

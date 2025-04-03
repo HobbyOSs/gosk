@@ -10,6 +10,9 @@ import (
 type Pass1 struct {
 	LOC              int32              // LOC(ロケーションカウンタ)
 	BitMode          cpu.BitMode        // cpu.BitMode を保持
+	OutputFormat     string             // [FORMAT "WCOFF"] の値を保持
+	SourceFileName   string             // [FILE "naskfunc.nas"] の値を保持
+	CurrentSection   string             // [SECTION .text] の値を保持
 	MacroMap         map[string]ast.Exp // 評価されたマクロ式を格納する新しいマップ
 	SymTable         map[string]int32   // Pass1のシンボルテーブル
 	NextImmJumpID    int                // 即値用のカウンタ

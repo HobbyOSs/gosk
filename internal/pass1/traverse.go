@@ -124,29 +124,36 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 		return ast.NewImmExp(ast.BaseExp{}, n.(ast.Factor))
 
 	// --- その他のステートメントタイプ ---
-	case *ast.ExportSymStmt:
-		// TODO: 必要に応じてロジックを実装します (例: env.GlobalSymbolList に追加)
-		return nil // または n を返します
+	case *ast.ExportSymStmt: // GLOBAL ディレクティブ
+		// フィールド名を Symbols に修正
+		for _, factor := range n.Symbols {
+			env.GlobalSymbolList = append(env.GlobalSymbolList, factor.Value)
+			log.Printf("debug: Added global symbol '%s'", factor.Value)
+		}
+		return nil // GLOBAL ステートメントは出力ノードを生成しません
 	case *ast.ExternSymStmt:
 		// TODO: 必要に応じてロジックを実装します (例: env.ExternSymbolList に追加)
 		return nil // または n を返します
 	case *ast.ConfigStmt:
-		if n.ConfigType == ast.Bits {
-			// ファクターを評価してビットモード値を取得します
-			factorNode := TraverseAST(n.Factor, env)
-			// ファクターは上記の Factor ケースで ImmExp でラップされている必要があります
-			immExp, ok := factorNode.(*ast.ImmExp)
-			if !ok {
-				log.Printf("error: BITS directive requires a constant value, got %T", factorNode)
-				return nil
-			}
-			evalExp, _ := immExp.Eval(evalEnv) // evalEnv を使用します
+		// ファクターを評価して値を取得します
+		factorNode := TraverseAST(n.Factor, env)
+		// ファクターは上記の Factor ケースで ImmExp でラップされている必要があります
+		immExp, ok := factorNode.(*ast.ImmExp)
+		if !ok {
+			log.Printf("error: Config directive '%s' requires a constant value, got %T", n.ConfigType, factorNode)
+			return nil
+		}
+		evalExp, _ := immExp.Eval(evalEnv) // evalEnv を使用します
+
+		switch n.ConfigType {
+		case ast.Bits:
+			// BITS の処理 (既存)
+			// 重複した immExp の宣言を削除
 			numExp, ok := evalExp.(*ast.NumberExp)
 			if !ok {
 				log.Printf("error: BITS directive value did not evaluate to a number: %s", evalExp.TokenLiteral())
 				return nil
 			}
-
 			bitModeVal := int(numExp.Value)
 			bitMode, ok := cpu.NewBitMode(bitModeVal)
 			if !ok {
@@ -156,6 +163,61 @@ func TraverseAST(node ast.Node, env *Pass1) ast.Node {
 			env.BitMode = bitMode
 			env.Client.SetBitMode(bitMode)
 			log.Printf("debug: Set bit mode to %d", bitModeVal)
+
+		case ast.Format:
+			// FORMAT の処理: evalExp が ImmExp で、その Factor が StringFactor であることを期待
+			immExp, ok := evalExp.(*ast.ImmExp)
+			if !ok {
+				log.Printf("error: FORMAT directive value did not evaluate to an ImmExp: %T", evalExp)
+				return nil
+			}
+			strFactor, ok := immExp.Factor.(*ast.StringFactor)
+			if !ok {
+				log.Printf("error: FORMAT directive value is not a string literal: %T", immExp.Factor)
+				return nil
+			}
+			env.OutputFormat = strFactor.Value
+			log.Printf("debug: Set output format to '%s'", env.OutputFormat)
+
+		case ast.File:
+			// FILE の処理: evalExp が ImmExp で、その Factor が StringFactor であることを期待
+			immExp, ok := evalExp.(*ast.ImmExp)
+			if !ok {
+				log.Printf("error: FILE directive value did not evaluate to an ImmExp: %T", evalExp)
+				return nil
+			}
+			strFactor, ok := immExp.Factor.(*ast.StringFactor)
+			if !ok {
+				log.Printf("error: FILE directive value is not a string literal: %T", immExp.Factor)
+				return nil
+			}
+			env.SourceFileName = strFactor.Value
+			log.Printf("debug: Set source file name to '%s'", env.SourceFileName)
+
+		case ast.Section:
+			// SECTION の処理: evalExp が ImmExp で、その Factor が IdentFactor であることを期待
+			immExp, ok := evalExp.(*ast.ImmExp)
+			if !ok {
+				log.Printf("error: SECTION directive value did not evaluate to an ImmExp: %T", evalExp)
+				return nil
+			}
+			identFactor, ok := immExp.Factor.(*ast.IdentFactor)
+			if !ok {
+				// 文字列リテラルも許容する場合 (例: [SECTION ".text"])
+				strFactor, okStr := immExp.Factor.(*ast.StringFactor)
+				if !okStr {
+					log.Printf("error: SECTION directive value is neither identifier nor string: %T", immExp.Factor)
+					return nil
+				}
+				env.CurrentSection = strFactor.Value
+			} else {
+				env.CurrentSection = identFactor.Value
+			}
+			log.Printf("debug: Set current section to '%s'", env.CurrentSection)
+			// TODO: 必要に応じて Client にセクション変更を通知する (例: env.Client.SetSection(env.CurrentSection))
+
+		default:
+			log.Printf("warning: Unhandled ConfigStmt type: %s", n.ConfigType)
 		}
 		return nil // Config ステートメントは出力ノードを生成しません
 

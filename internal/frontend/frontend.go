@@ -8,7 +8,8 @@ import (
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Restored ast import
 	"github.com/HobbyOSs/gosk/internal/codegen"
-	"github.com/HobbyOSs/gosk/internal/gen" // Added missing import
+	"github.com/HobbyOSs/gosk/internal/filefmt" // filefmt をインポート
+	"github.com/HobbyOSs/gosk/internal/gen"     // Added missing import
 	ocode_client "github.com/HobbyOSs/gosk/internal/ocode_client"
 	"github.com/HobbyOSs/gosk/internal/pass1"
 	"github.com/HobbyOSs/gosk/internal/pass2"
@@ -34,38 +35,71 @@ func Exec(parseTree any, assemblyDst string) (*pass1.Pass1, *pass2.Pass2) {
 	}
 
 	// pass1 の Eval を実行
-	ctx := &codegen.CodeGenContext{BitMode: cpu.MODE_16BIT} // cpu.MODE_16BIT を保持
+	// CodeGenContext の初期化に GlobalSymbolList を追加
+	ctx := &codegen.CodeGenContext{
+		BitMode:          cpu.MODE_16BIT, // cpu.MODE_16BIT を保持
+		SymTable:         make(map[string]int32),
+		GlobalSymbolList: []string{},
+		MachineCode:      []byte{},
+	}
 	client, _ := ocode_client.NewCodegenClient(ctx)
 
 	pass1 := &pass1.Pass1{
 		LOC:              0,
-		BitMode:          cpu.MODE_16BIT, // cpu.MODE_16BIT を保持
-		SymTable:         make(map[string]int32, 0),
-		GlobalSymbolList: []string{},
+		BitMode:          cpu.MODE_16BIT,       // cpu.MODE_16BIT を保持
+		SymTable:         ctx.SymTable,         // CodeGenContext の SymTable を共有
+		GlobalSymbolList: ctx.GlobalSymbolList, // CodeGenContext の GlobalSymbolList を共有
 		ExternSymbolList: []string{},
 		Client:           client,
 		AsmDB:            asmdb.NewInstructionDB(),
 		MacroMap:         make(map[string]ast.Exp), // activeContext.md に基づいて MacroMap の初期化を追加
 	}
 	pass1.Eval(prog)
+	// pass1 で設定された SourceFileName を ctx にコピー
+	ctx.SourceFileName = pass1.SourceFileName
 
+	// pass2 の初期化に GlobalSymbolList を追加
 	pass2 := &pass2.Pass2{
 		BitMode:          pass1.BitMode,
-		SymTable:         pass1.SymTable,
-		GlobalSymbolList: pass1.GlobalSymbolList,
+		OutputFormat:     pass1.OutputFormat,
+		SourceFileName:   pass1.SourceFileName,
+		CurrentSection:   pass1.CurrentSection,
+		SymTable:         pass1.SymTable,         // pass1 と共有
+		GlobalSymbolList: pass1.GlobalSymbolList, // pass1 と共有
 		ExternSymbolList: pass1.ExternSymbolList,
 		Client:           pass1.Client,
 		DollarPos:        pass1.DollarPosition,
 	}
-	code, err := pass2.Eval(prog)
+	// pass2.Eval はエラーのみを返すように変更 (機械語は Client/CodeGenContext に格納)
+	err = pass2.Eval(prog)
 	if err != nil {
-		fmt.Printf("GOSK : failed to generate %s", err)
+		fmt.Printf("GOSK : failed in pass2 %s", err)
 		os.Exit(-1)
 	}
 
-	_, err = dstFile.Write(code)
+	// ファイルフォーマットを選択して書き出し
+	var format filefmt.FileFormat
+	switch pass2.OutputFormat {
+	case "WCOFF":
+		format = &filefmt.CoffFormat{}
+	// case "ELF": // 将来的に ELF もサポートする場合
+	// 	format = &filefmt.ElfFormat{}
+	default:
+		// デフォルトはバイナリ直接書き出し (既存の動作)
+		// ただし、pass2.Eval が []byte を返さなくなったため、CodeGenContext から取得
+		_, err = dstFile.Write(ctx.MachineCode) // ctx.MachineCode を使用
+		if err != nil {
+			fmt.Printf("GOSK : can't write raw binary %s", assemblyDst)
+			os.Exit(-1)
+		}
+		log.Printf("info: Output format '%s' not explicitly handled, writing raw binary.", pass2.OutputFormat)
+		return pass1, pass2 // Raw バイナリ書き出しの場合はここで終了
+	}
+
+	// 選択されたフォーマットでファイルに書き出す
+	err = format.Write(ctx, assemblyDst) // CodeGenContext を渡す
 	if err != nil {
-		fmt.Printf("GOSK : can't write %s", assemblyDst)
+		fmt.Printf("GOSK : failed to write %s format file: %s", pass2.OutputFormat, err)
 		os.Exit(-1)
 	}
 

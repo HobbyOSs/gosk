@@ -1,7 +1,9 @@
 package codegen
 
-import "github.com/HobbyOSs/gosk/pkg/cpu"
-import "github.com/HobbyOSs/gosk/pkg/variantstack"
+import (
+	"github.com/HobbyOSs/gosk/pkg/cpu"
+	"github.com/HobbyOSs/gosk/pkg/variantstack"
+)
 
 type Byte uint8
 type Word uint16
@@ -16,9 +18,11 @@ func ConvertToWord(value DWord) Word {
 }
 
 type CodeGenContext struct {
-	SymTable       map[string]int32
-	DollarPosition uint64
-	MachineCode    []byte
-	VS             *variantstack.VariantStack
-	BitMode        cpu.BitMode
+	SymTable         map[string]int32
+	DollarPosition   uint64
+	MachineCode      []byte
+	GlobalSymbolList []string // GlobalSymbolList フィールドを追加
+	SourceFileName   string   // SourceFileName フィールドを追加
+	VS               *variantstack.VariantStack
+	BitMode          cpu.BitMode
 }
