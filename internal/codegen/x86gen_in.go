@@ -26,8 +26,8 @@ func handleIN(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		switch dst {
 		case "AL":
 			opcodeByte = 0xEC
-		case "AX":
-			opcodeByte = 0xED
+		case "AX", "EAX": // Add EAX case
+			opcodeByte = 0xED // Same opcode for AX and EAX
 		default:
 			return nil, fmt.Errorf("invalid destination register '%s' for IN DX", dst)
 		}
@@ -42,8 +42,8 @@ func handleIN(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		switch dst {
 		case "AL":
 			opcodeByte = 0xE4
-		case "AX":
-			opcodeByte = 0xE5
+		case "AX", "EAX": // Add EAX case
+			opcodeByte = 0xE5 // Same opcode for AX and EAX
 		default:
 			return nil, fmt.Errorf("invalid destination register '%s' for IN imm8", dst)
 		}

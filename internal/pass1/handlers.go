@@ -96,4 +96,6 @@ func init() {
 	opcodeEvalFns["OUT"] = processOUT
 	opcodeEvalFns["CALL"] = processCALL
 	opcodeEvalFns["LGDT"] = processLGDT
+	opcodeEvalFns["PUSH"] = processPUSH // Add PUSH handler
+	opcodeEvalFns["POP"] = processPOP   // Add POP handler
 }
