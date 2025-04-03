@@ -23,6 +23,9 @@ type Pass1 struct {
 	AsmDB            *asmdb.InstructionDB
 }
 
-func (p *Pass1) Eval(program ast.Prog) { // Restored ast.Prog
+// Eval は AST を走査し、pass1 の処理を実行します。
+// 処理後の GlobalSymbolList を返します。
+func (p *Pass1) Eval(program ast.Prog) []string { // Restored ast.Prog, changed return type
 	TraverseAST(program, p)
+	return p.GlobalSymbolList // Return the potentially modified list
 }

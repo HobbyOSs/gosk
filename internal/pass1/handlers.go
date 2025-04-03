@@ -24,6 +24,7 @@ func init() {
 	opcodeEvalFns["DW"] = processDW
 	opcodeEvalFns["ORG"] = processORG
 	opcodeEvalFns["RESB"] = processRESB
+	opcodeEvalFns["GLOBAL"] = processGLOBAL // Add GLOBAL handler
 
 	// Jump命令
 	jmpOps := []string{

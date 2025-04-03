@@ -257,3 +257,40 @@ func processRESB(env *Pass1, operands []ast.Exp) {
 	// The original source might have been 'X-$', but we emit the final size.
 	env.Client.Emit(fmt.Sprintf("RESB %d", size)) // No comment needed here
 }
+
+// processGLOBAL handles the GLOBAL pseudo-instruction.
+// It expects one or more identifier operands.
+func processGLOBAL(env *Pass1, operands []ast.Exp) {
+	if len(operands) == 0 {
+		log.Printf("Error: GLOBAL directive requires at least one identifier operand.")
+		return
+	}
+
+	for _, operand := range operands {
+		// GLOBAL のオペランドは評価されない識別子であるべき
+		immExp, ok := operand.(*ast.ImmExp)
+		if !ok {
+			log.Printf("Error: GLOBAL operand must be an identifier, got %T.", operand)
+			continue
+		}
+		identFactor, ok := immExp.Factor.(*ast.IdentFactor)
+		if !ok {
+			log.Printf("Error: GLOBAL operand must be an identifier factor, got %T.", immExp.Factor)
+			continue
+		}
+
+		symbolName := identFactor.Value
+		// Check if already added to avoid duplicates (optional but good practice)
+		alreadyExists := false
+		for _, existingSymbol := range env.GlobalSymbolList {
+			if existingSymbol == symbolName {
+				alreadyExists = true
+				break
+			}
+		}
+		if !alreadyExists {
+			env.GlobalSymbolList = append(env.GlobalSymbolList, symbolName)
+		}
+	}
+	// GLOBAL does not emit ocode
+}
