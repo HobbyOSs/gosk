@@ -29,6 +29,17 @@ func handlePUSH(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 	opType := opTypes[0]
 
+	// Assemble the code buffer
+	code := []byte{}
+
+	// Add prefixes if required
+	if opsInterface.Require66h() { // Check for operand size prefix
+		code = append(code, 0x66)
+	}
+	if opsInterface.Require67h() { // Check for address size prefix
+		code = append(code, 0x67)
+	}
+
 	// Determine opcode based on operand type using interface methods and correct constants
 	switch opType {
 	// --- Register Operands ---
@@ -49,23 +60,30 @@ func handlePUSH(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 			// Handle segment registers separately if needed (e.g., PUSH CS is 0x0E)
 			switch strings.ToUpper(opStr) {
 			case "ES":
-				return []byte{0x06}, nil
+				code = append(code, 0x06)
+				return code, nil
 			case "CS":
-				return []byte{0x0E}, nil
+				code = append(code, 0x0E)
+				return code, nil
 			case "SS":
-				return []byte{0x16}, nil
+				code = append(code, 0x16)
+				return code, nil
 			case "DS":
-				return []byte{0x1E}, nil
+				code = append(code, 0x1E)
+				return code, nil
 			case "FS":
-				return []byte{0x0F, 0xA0}, nil // 0F A0
+				code = append(code, 0x0F, 0xA0)
+				return code, nil // 0F A0
 			case "GS":
-				return []byte{0x0F, 0xA8}, nil // 0F A8
+				code = append(code, 0x0F, 0xA8)
+				return code, nil // 0F A8
 			default:
 				return nil, fmt.Errorf("unsupported register for PUSH: %s", opStr)
 			}
 		}
 		// PUSH r16/r32/r64: 50+rd
-		return []byte{0x50 + regCode}, nil
+		code = append(code, 0x50+regCode)
+		return code, nil
 
 	// --- Memory Operands ---
 	case ng_operand.CodeMEM, // Generic memory types
@@ -80,7 +98,7 @@ func handlePUSH(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate ModRM/SIB/Disp for PUSH %s: %w", opStr, err)
 		}
-		code := []byte{0xFF}
+		code = append(code, 0xFF) // Append opcode after prefixes
 		code = append(code, modrmByte)
 		if sibByte != 0 {
 			code = append(code, sibByte)
@@ -104,13 +122,14 @@ func handlePUSH(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		}
 
 		if immVal >= -128 && immVal <= 127 { // Check if imm8 fits
-			return []byte{0x6A, byte(immVal)}, nil
+			code = append(code, 0x6A, byte(immVal)) // Append opcode and immediate
+			return code, nil
 		} else if ctx.BitMode == cpu.MODE_16BIT { // Use cpu constant
-			code := []byte{0x68}
+			code = append(code, 0x68) // Append opcode
 			code = append(code, byte(immVal&0xFF), byte((immVal>>8)&0xFF))
 			return code, nil
 		} else { // 32 or 64 bit mode (PUSH imm64 is not directly supported, uses PUSH imm32)
-			code := []byte{0x68}
+			code = append(code, 0x68) // Append opcode
 			code = append(code, byte(immVal&0xFF), byte((immVal>>8)&0xFF), byte((immVal>>16)&0xFF), byte((immVal>>24)&0xFF))
 			return code, nil
 		}
@@ -140,6 +159,17 @@ func handlePOP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	}
 	opType := opTypes[0]
 
+	// Assemble the code buffer
+	code := []byte{}
+
+	// Add prefixes if required
+	if opsInterface.Require66h() { // Check for operand size prefix
+		code = append(code, 0x66)
+	}
+	if opsInterface.Require67h() { // Check for address size prefix
+		code = append(code, 0x67)
+	}
+
 	// Determine opcode based on operand type using interface methods and correct constants
 	switch opType {
 	// --- Register Operands ---
@@ -160,22 +190,28 @@ func handlePOP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 			// Handle segment registers separately if needed (e.g., POP ES is 0x07)
 			switch strings.ToUpper(opStr) {
 			case "ES":
-				return []byte{0x07}, nil
+				code = append(code, 0x07)
+				return code, nil
 			// case "CS": // POP CS is invalid
 			case "SS":
-				return []byte{0x17}, nil
+				code = append(code, 0x17)
+				return code, nil
 			case "DS":
-				return []byte{0x1F}, nil
+				code = append(code, 0x1F)
+				return code, nil
 			case "FS":
-				return []byte{0x0F, 0xA1}, nil // 0F A1
+				code = append(code, 0x0F, 0xA1)
+				return code, nil // 0F A1
 			case "GS":
-				return []byte{0x0F, 0xA9}, nil // 0F A9
+				code = append(code, 0x0F, 0xA9)
+				return code, nil // 0F A9
 			default:
 				return nil, fmt.Errorf("unsupported register for POP: %s", opStr)
 			}
 		}
 		// POP r16/r32/r64: 58+rd
-		return []byte{0x58 + regCode}, nil
+		code = append(code, 0x58+regCode)
+		return code, nil
 
 	// --- Memory Operands ---
 	case ng_operand.CodeMEM, // Generic memory types
@@ -190,7 +226,7 @@ func handlePOP(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to calculate ModRM/SIB/Disp for POP %s: %w", opStr, err)
 		}
-		code := []byte{0x8F}
+		code = append(code, 0x8F) // Append opcode after prefixes
 		code = append(code, modrmByte)
 		if sibByte != 0 {
 			code = append(code, sibByte)

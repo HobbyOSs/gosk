@@ -124,13 +124,13 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 	// --- シンボルテーブル書き込み ---
 	symbolTableOffset := uint32(buf.Len()) // シンボルテーブルの開始オフセットを記録
 	symbolTableResultBytes := new(bytes.Buffer)
-	numSymbols := uint32(0) // シンボルの総数 (補助シンボル含む)
+	numSymbolsCounted := uint32(0) // シンボルの総数 (補助シンボル含む) - 正確にカウントする
 	for _, entry := range allSymbolEntries {
 		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main); err != nil {
 			log.Printf("Error writing main symbol %s: %v", entry.Main.Name, err)
 			return fmt.Errorf("failed to write main symbol %s: %w", entry.Main.Name, err)
 		}
-		numSymbols++ // メインシンボルをカウント
+		numSymbolsCounted++ // メインシンボルをカウント
 		if entry.Aux != nil {
 			if len(entry.Aux) != coffSymbolSize {
 				log.Printf("Error: Aux symbol for %s has incorrect size %d, expected %d", entry.Main.Name, len(entry.Aux), coffSymbolSize)
@@ -140,14 +140,15 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 				log.Printf("Error writing aux symbol for %s: %v", entry.Main.Name, err)
 				return fmt.Errorf("failed to write aux symbol for %s: %w", entry.Main.Name, err)
 			}
-			numSymbols += uint32(entry.Main.NumberOfAuxSymbols) // 補助シンボルの数を加算
+			// 補助シンボル自体もシンボルテーブルのエントリとしてカウントする
+			numSymbolsCounted += uint32(entry.Main.NumberOfAuxSymbols)
 		}
 	}
 	// デバッグログ追加
-	log.Printf("[ debug ] Generated symbol table bytes length: %d (expected %d)", symbolTableResultBytes.Len(), numSymbols*coffSymbolSize)
-	if symbolTableResultBytes.Len() != int(numSymbols*coffSymbolSize) { // Correct comparison type
+	log.Printf("[ debug ] Generated symbol table bytes length: %d (expected %d)", symbolTableResultBytes.Len(), numSymbolsCounted*coffSymbolSize)
+	if symbolTableResultBytes.Len() != int(numSymbolsCounted*coffSymbolSize) { // Use counted symbols
 		log.Printf("[ error ] Symbol table length mismatch!")
-		log.Printf("[ warn ] Symbol table length mismatch: actual %d, expected %d", symbolTableResultBytes.Len(), numSymbols*coffSymbolSize)
+		log.Printf("[ warn ] Symbol table length mismatch: actual %d, expected %d", symbolTableResultBytes.Len(), numSymbolsCounted*coffSymbolSize)
 	}
 
 	if _, err := buf.Write(symbolTableResultBytes.Bytes()); err != nil {
@@ -167,12 +168,12 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 		}
 	} else {
 		// 文字列テーブルが空の場合、サイズフィールドも書き込まない
-		stringTableSize = 0
+		stringTableSize = 0 // ヘッダ用にサイズを0にする
 	}
 
 	// --- ヘッダとセクションヘッダの生成 (オフセット情報を含む) ---
-	header := c.generateHeader(ctx, numSections, symbolTableOffset, numSymbols) // Use calculated numSymbols
-	sectionHeaders := c.generateSectionHeaders(ctx, textDataOffset, textDataSize, dataDataOffset, dataDataSize, bssDataSize)
+	header := c.generateHeader(ctx, numSections, symbolTableOffset, numSymbolsCounted)                                                          // Use counted symbols
+	sectionHeaders := c.generateSectionHeaders(ctx, textDataOffset, textDataSize, dataDataOffset, dataDataSize, bssDataSize, symbolTableOffset) // Pass symbolTableOffset
 
 	// --- 最終的なファイル内容を構築 (プレースホルダーを上書き) ---
 	finalBytes := buf.Bytes() // 現在のバッファ内容を取得
@@ -203,8 +204,8 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 
 // generateHeader は COFF ファイルヘッダを生成します。
 func (c *CoffFormat) generateHeader(ctx *codegen.CodeGenContext, numSections uint16, symbolTableOffset uint32, numSymbols uint32) CoffHeader {
-	// Characteristics: IMAGE_FILE_EXECUTABLE_IMAGE は通常不要, IMAGE_FILE_32BIT_MACHINE は Machine フィールドで示す
-	characteristics := uint16(0x0002 | 0x0004) // IMAGE_FILE_RELOCS_STRIPPED | IMAGE_FILE_LINE_NUMS_STRIPPED (naskに合わせる)
+	// Characteristics: nask の出力に合わせる (0x0000)
+	characteristics := uint16(0x0000)
 
 	return CoffHeader{
 		Machine:              0x014c, // IMAGE_FILE_MACHINE_I386
@@ -218,31 +219,30 @@ func (c *CoffFormat) generateHeader(ctx *codegen.CodeGenContext, numSections uin
 }
 
 // generateSectionHeaders は COFF セクションヘッダのスライスを生成します。
-func (c *CoffFormat) generateSectionHeaders(ctx *codegen.CodeGenContext, textDataOffset, textDataSize, dataDataOffset, dataDataSize, bssDataSize uint32) []CoffSectionHeader {
+func (c *CoffFormat) generateSectionHeaders(ctx *codegen.CodeGenContext, textDataOffset, textDataSize, dataDataOffset, dataDataSize, bssDataSize, symbolTableOffset uint32) []CoffSectionHeader {
 	sections := make([]CoffSectionHeader, 0, 3)
-	// symbolTableOffset := textDataOffset + textDataSize + dataDataSize // Calculate symbol table offset
 
 	// .text セクション
 	sections = append(sections, CoffSectionHeader{
 		Name:                 [8]byte{'.', 't', 'e', 'x', 't'},
 		SizeOfRawData:        textDataSize,
 		PointerToRawData:     textDataOffset,
-		PointerToRelocations: 0, // Relocations not handled yet, set to 0
-		PointerToLinenumbers: 0, // Line numbers not handled yet, set to 0
+		PointerToRelocations: symbolTableOffset, // nask出力に合わせてシンボルテーブルオフセットを設定 (TestHarib01a: 0x99, TestHarib01f: 0xDB)
+		PointerToLinenumbers: 0,                 // Line numbers not handled yet, set to 0
 		NumberOfRelocations:  0,
 		NumberOfLinenumbers:  0,
-		Characteristics:      0x60500020, // IMAGE_SCN_CNT_CODE | IMAGE_SCN_ALIGN_16BYTES | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ
+		Characteristics:      0x60100020, // nask出力に合わせる (IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ)
 	})
 	// .data セクション
 	sections = append(sections, CoffSectionHeader{
 		Name:                 [8]byte{'.', 'd', 'a', 't', 'a'},
 		SizeOfRawData:        dataDataSize,
-		PointerToRawData:     dataDataOffset, // Use calculated data offset
+		PointerToRawData:     dataDataOffset, // nask出力に合わせて0を設定 (TestHarib01a, TestHarib01f)
 		PointerToRelocations: 0,
 		PointerToLinenumbers: 0,
 		NumberOfRelocations:  0,
 		NumberOfLinenumbers:  0,
-		Characteristics:      0xC0300040, // IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE
+		Characteristics:      0xC0100040, // nask出力に合わせる (IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE)
 	})
 	// .bss セクション
 	sections = append(sections, CoffSectionHeader{
@@ -253,7 +253,7 @@ func (c *CoffFormat) generateSectionHeaders(ctx *codegen.CodeGenContext, textDat
 		PointerToLinenumbers: 0,
 		NumberOfRelocations:  0,
 		NumberOfLinenumbers:  0,
-		Characteristics:      0xC0300080, // IMAGE_SCN_CNT_UNINITIALIZED_DATA | IMAGE_SCN_ALIGN_4BYTES | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE
+		Characteristics:      0xC0100080, // nask出力に合わせる (IMAGE_SCN_CNT_UNINITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE)
 	})
 	return sections
 }
@@ -331,7 +331,7 @@ func (c *CoffFormat) generateSymbolEntries(ctx *codegen.CodeGenContext, textData
 				Name:               nameBytes,
 				Value:              uint32(addr),
 				SectionNumber:      sectionNum, // 仮: .text セクション
-				Type:               0x20,       // Function type (仮, より正確な型情報が必要)
+				Type:               0x20,       // Function type (nask出力に合わせる)
 				StorageClass:       2,          // IMAGE_SYM_CLASS_EXTERNAL
 				NumberOfAuxSymbols: 0,          // 補助シンボルなし (通常)
 			}
@@ -378,3 +378,11 @@ func (c *CoffFormat) convertNameToBytes(name string, stringTable *bytes.Buffer, 
 	}
 	return result
 }
+
+// addStringToStringTable は文字列を文字列テーブルに追加し、そのオフセットを返します。
+// この関数は convertNameToBytes に統合されたため、削除または未使用としてマークできます。
+/* // Add missing asterisk for block comment
+func (c *CoffFormat) addStringToStringTable(s string, stringTable *bytes.Buffer) uint32 {
+	// ... (実装は convertNameToBytes に移動) ...
+}
+*/
