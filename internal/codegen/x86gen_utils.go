@@ -429,6 +429,7 @@ calculate_32bit_addressing: // Label for the 32-bit logic start
 
 // GetRegisterNumber はレジスタ名からレジスタ番号（0-7）を取得する
 func GetRegisterNumber(regName string) (int, error) {
+	regName = strings.TrimSpace(regName) // Trim whitespace
 	switch regName {
 	case "AL", "AX", "EAX", "RAX", "ES", "CR0":
 		return 0, nil

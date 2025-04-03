@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Day03Suite) TestHarib00i() {
-	s.T().Skip("未実装命令があるのでskip")
+	//s.T().Skip("未実装命令があるのでskip")
 	code := `; haribote-os boot asm
 ; TAB=4
 

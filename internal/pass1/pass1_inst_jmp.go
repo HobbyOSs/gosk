@@ -82,19 +82,26 @@ func processCalcJcc(env *Pass1, operands []ast.Exp, instName string) {
 			break                                                                   // switch case から抜ける
 		}
 
+		// ビットモードに応じてサイズを推定
+		if env.BitMode == cpu.MODE_16BIT {
+			estimatedSize = 8 // 66h + EA + ptr16:32
+		} else {
+			estimatedSize = 7 // EA + ptr16:32
+		}
+
 		// セグメントとオフセットの両方が定数に解決された場合のみ _FAR 形式を使用
 		if segIsConst && offIsConst {
 			segStr := fmt.Sprintf("%d", segVal)
 			offStr := fmt.Sprintf("%d", offVal)
-			estimatedSize = 7 // JMP ptr16:32 (EA + ptr16:32)
+			// estimatedSize は上で設定済み
 			ocode = fmt.Sprintf("%s_FAR %s:%s", instName, segStr, offStr)
-			log.Printf("[pass1] Case 2a: Processing fully resolved FAR address %s:%s for %s", segStr, offStr, instName)
+			log.Printf("[pass1] Case 2a: Processing fully resolved FAR address %s:%s for %s (estimated size: %d)", segStr, offStr, instName, estimatedSize)
 		} else {
 			// セグメントかオフセットのどちらか、または両方が定数でない場合
-			log.Printf("[pass1] Case 2b: FAR jump/call operand %s requires Pass 2 resolution for %s.", op.TokenLiteral(), instName)
-			estimatedSize = 7 // ptr16:32 を仮定
-			// _FAR サフィックスは付けず、評価されたオペランドの文字列表現をそのまま使用
-			ocode = fmt.Sprintf("%s %s", instName, op.TokenLiteral())
+			log.Printf("[pass1] Case 2b: FAR jump/call operand %s requires Pass 2 resolution for %s (estimated size: %d).", op.TokenLiteral(), instName, estimatedSize)
+			// estimatedSize は上で設定済み
+			// 定数解決できない場合でも _FAR サフィックスを付与し、オペランドはそのまま渡す
+			ocode = fmt.Sprintf("%s_FAR %s", instName, op.TokenLiteral())
 		}
 
 	case *ast.ImmExp: // ケース 3: 即値式 (ラベルまたは '$' など)

@@ -48,16 +48,31 @@ func handleJcc(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid operand format for JMP_FAR, expected 'segment:offset', got %s", operand)
 		}
-		segmentStr := parts[0]
-		offsetStr := parts[1]
+
+		segmentPart := parts[0] // 例: "DWORD 16"
+		offsetStr := parts[1]   // 例: "27"
+
+		// セグメント部分からプレフィックスを除去
+		segmentFields := strings.Fields(segmentPart) // スペースで分割 ["DWORD", "16"] or ["16"]
+		segmentStr := ""
+		if len(segmentFields) > 1 && (segmentFields[0] == "DWORD" || segmentFields[0] == "WORD" || segmentFields[0] == "FAR") {
+			// プレフィックスがある場合 (例: "DWORD 16")、2番目の要素をセグメント値とする
+			segmentStr = segmentFields[1]
+		} else if len(segmentFields) == 1 {
+			// プレフィックスがない場合 (例: "16")、最初の要素をセグメント値とする
+			segmentStr = segmentFields[0]
+		} else {
+			// 予期しない形式 (空文字列やスペースのみなど)
+			return nil, fmt.Errorf("invalid segment format in JMP_FAR operand: '%s'", segmentPart)
+		}
 
 		segment, err := strconv.ParseInt(segmentStr, 10, 16) // セグメントは16ビット
 		if err != nil {
-			return nil, fmt.Errorf("invalid segment value for JMP_FAR: %v", err)
+			return nil, fmt.Errorf("invalid segment value '%s' for JMP_FAR: %v", segmentStr, err)
 		}
 		offset, err := strconv.ParseInt(offsetStr, 10, 32) // オフセットは32ビット
 		if err != nil {
-			return nil, fmt.Errorf("invalid offset value for JMP_FAR: %v", err)
+			return nil, fmt.Errorf("invalid offset value '%s' for JMP_FAR: %v", offsetStr, err)
 		}
 
 		machineCode = []byte{

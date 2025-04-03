@@ -1,23 +1,20 @@
 # 現在の状況 (Active Context)
 
-## 進行中の作業
-
-- tokenベースからASTベースの評価構造へ設計変更
-    - AST構造を純粋に保持したまま評価可能な形へ変換する
-    - tokenベースの手法は単項式的ノードの解析には有利だったが、多項式的構造の解析には不向き
-    - TraverseAST は副作用を持たず node -> node の構造変換とする
-    - Eval() メソッドを各 Expression ノードに実装し、再帰的評価を行う
-    - これを実行するのは `[ LABEL + 30 ]` （LABELは還元できないために多項式的な構造となる）のようなマクロ入りオペランドのパースに苦戦したため、根本的に設計を見直していくこととした
-
 ## 問題点
 
-- `test/day03_harib00i_test.go` が依然として失敗する。（根本原因は未解決）
-    - `codegen` での `ADD ESI, EBX` 処理中に ModR/M 生成エラー (`unknown register: EBX`) が発生。
-    - `codegen` での `JMP DWORD 16:27` 処理中に FAR JMP 形式の処理エラーが発生。
-    - テストは依然としてバイナリ長の不一致 (`expected length 293 actual length 282`) で失敗。
+(特になし)
 
 ## 完了した作業 (2025/04/03)
 
+- **`test/day03_harib00i_test.go` の修正:**
+    - 原因1: `codegen` での `ADD ESI, EBX` 処理中の ModR/M 生成エラー。`internal/codegen/x86gen_utils.go` の `GetRegisterNumber` が空白を含むレジスタ名を処理できなかった。
+    - 修正1: `GetRegisterNumber` で `strings.TrimSpace` を使用するように修正。
+    - 原因2: `codegen` での `JMP DWORD 16:27` 処理中の FAR JMP 形式処理エラー。`pass1` が `_FAR` サフィックスを付与していなかった。
+    - 修正2: `internal/pass1/pass1_inst_jmp.go` で `ast.SegmentExp` の場合に常に `_FAR` サフィックスを付与するように修正。
+    - 原因3: `codegen` での `JMP_FAR` オペランドパースエラー。`DWORD` プレフィックスを考慮していなかった。
+    - 修正3: `internal/codegen/x86gen_jmp.go` で `DWORD`/`WORD`/`FAR` プレフィックスを無視するように修正。
+    - 原因4: `pass1` での `JMP_FAR` サイズ推定誤り。16bit モードでの `66h` プレフィックスを考慮していなかった。
+    - 修正4: `internal/pass1/pass1_inst_jmp.go` でビットモードに応じてサイズを推定するように修正。
 - **`test/day03_harib00i_test.go` の `IN`/`OUT` 命令エラー修正:**
     - `pass1` から `codegen` へ渡される Ocode のオペランド文字列フォーマットが原因で `codegen` 側でエラーが発生していた。
     - `internal/pass1/pass1_inst_in.go` と `internal/pass1/pass1_inst_out.go` を修正し、Ocode を `emit` する際に元のオペランド文字列をカンマ区切りで結合するように変更。これにより `IN`/`OUT` 命令のエラーは解消。
@@ -31,11 +28,8 @@
 
 ## 残作業・次のステップ
 
-1.  **`test/day03_harib00i_test.go` の修正:**
-    *   失敗原因を調査し、修正する。
-        *   `codegen` での `ADD ESI, EBX` 処理中の ModR/M 生成エラー (`unknown register: EBX`) を調査・修正する。(`internal/codegen/x86gen_utils.go` のレジスタ名解決ロジックを確認)
-        *   `codegen` での `JMP DWORD 16:27` 処理中の FAR JMP 形式処理エラーを調査・修正する。(`internal/codegen/x86gen_jmp.go` を確認)
-        *   バイナリ長の不一致 (`expected 293 actual 282`) の原因を特定・修正する。
+1.  **`test/day03_harib00j_test.go` の調査・修正:**
+    *   テストを実行し、失敗原因を特定・修正する。
 2.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 3.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 
