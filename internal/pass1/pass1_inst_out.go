@@ -40,5 +40,6 @@ func processOUT(env *Pass1, operands []ast.Exp) {
 	env.LOC += int32(size)
 
 	// Emit the command
-	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
+	// Emit the command using comma-separated original operand strings
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, strings.Join(operandStrings, ",")))
 }

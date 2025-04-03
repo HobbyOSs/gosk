@@ -39,6 +39,6 @@ func processIN(env *Pass1, operands []ast.Exp) {
 	}
 	env.LOC += int32(size)
 
-	// コマンドを発行します
-	env.Client.Emit(fmt.Sprintf("%s %s", instName, ngOperands.Serialize()))
+	// コマンドを発行します (元のオペランド文字列をカンマ区切りで使用)
+	env.Client.Emit(fmt.Sprintf("%s %s", instName, strings.Join(operandStrings, ",")))
 }

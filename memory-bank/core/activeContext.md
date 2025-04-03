@@ -16,10 +16,15 @@
 - `internal/pass1` のテスト (`TestEvalProgramLOC`) で `ADD CX, VAL2` ケース (`EQU_calc_add`) が失敗する。
     - 原因: `ADD` 命令ハンドラの即値 (`imm16`) に対するサイズ計算ロジックに問題がある可能性。
 - `test/day03_harib00i_test.go` が依然として失敗する。（根本原因は未解決）
-    - メモリオペランド内のラベルアドレス解決や相対ジャンプオフセット計算などに問題が残っている可能性。
+    - `codegen` での `ADD ESI, EBX` 処理中に ModR/M 生成エラー (`unknown register: EBX`) が発生。
+    - `codegen` での `JMP DWORD 16:27` 処理中に FAR JMP 形式の処理エラーが発生。
+    - テストは依然としてバイナリ長の不一致 (`expected length 293 actual length 282`) で失敗。
 
 ## 完了した作業 (2025/04/03)
 
+- **`test/day03_harib00i_test.go` の `IN`/`OUT` 命令エラー修正:**
+    - `pass1` から `codegen` へ渡される Ocode のオペランド文字列フォーマットが原因で `codegen` 側でエラーが発生していた。
+    - `internal/pass1/pass1_inst_in.go` と `internal/pass1/pass1_inst_out.go` を修正し、Ocode を `emit` する際に元のオペランド文字列をカンマ区切りで結合するように変更。これにより `IN`/`OUT` 命令のエラーは解消。
 - **`test/day03_harib00g_test.go` の修正:**
     - 原因: Pass1 での 16bit モード `JMP immediate` のサイズ推定誤り (2byte 推定 -> 正しくは 3byte)。
     - 修正: `internal/pass1/pass1_inst_jmp.go` の `processCalcJcc` を修正し、16bit モードの `JMP immediate` を 3byte と推定するように変更。
@@ -61,7 +66,10 @@
         *   パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。
     *   `internal/pass1/eval_test.go` の `ADD CX, VAL2` ケースの失敗原因 (`ADD` ハンドラのサイズ計算) を調査・修正する。
     *   すべての `internal/pass1` テストが成功することを確認する。
-    *   `test/day03_harib00i_test.go` の失敗原因を調査し、修正する (相対ジャンプオフセット、メモリアドレス解決など)。
+    *   `test/day03_harib00i_test.go` の失敗原因を調査し、修正する。
+        *   `codegen` での `ADD ESI, EBX` 処理中の ModR/M 生成エラー (`unknown register: EBX`) を調査・修正する。(`internal/codegen/x86gen_utils.go` のレジスタ名解決ロジックを確認)
+        *   `codegen` での `JMP DWORD 16:27` 処理中の FAR JMP 形式処理エラーを調査・修正する。(`internal/codegen/x86gen_jmp.go` を確認)
+        *   バイナリ長の不一致 (`expected 293 actual 282`) の原因を特定・修正する。
 2.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 3.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 

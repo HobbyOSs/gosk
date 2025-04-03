@@ -1,6 +1,9 @@
 # Progress
 
 ## 実装済み (2025/04/03)
+- **`test/day03_harib00i_test.go` の `IN`/`OUT` 命令エラー修正:**
+    - `pass1` から `codegen` へ渡される Ocode のオペランド文字列フォーマットが原因で `codegen` 側でエラーが発生していた問題を修正。
+    - `internal/pass1/pass1_inst_in.go` と `internal/pass1/pass1_inst_out.go` を修正し、Ocode を `emit` する際に元のオペランド文字列をカンマ区切りで結合するように変更。
 - **`test/day03_harib00g_test.go` の修正:**
     - Pass1 での 16bit モード `JMP immediate` のサイズ推定誤りを修正。
 - **`internal/pass1/pass1_inst_jmp.go` のリファクタリング:**
@@ -34,12 +37,14 @@
 - **テストの修正と実行:**
     - `internal/pass1/eval_test.go` (`TestEvalProgramLOC`) の `INT 0x10` ケースが失敗する原因 (`*ast.SegmentExp` 問題) を調査・修正する。
         - パーサー (`internal/gen/grammar.peg`) または `TraverseAST` の評価ロジックを確認する。
+    - `internal/pass1/eval_test.go` の `ADD CX, VAL2` ケースの失敗原因 (`ADD` ハンドラのサイズ計算) を調査・修正する。
     - すべての `internal/pass1` テストが成功することを確認する。
-- **`test/day03_harib00i_test.go` の相対ジャンプオフセットずれ調査:**
-    - `CALL`, `JMP`, `Jcc` 命令の相対オフセットが期待値とずれている。
-    - オフセット計算ロジック (`ターゲットアドレス - (現在の命令のアドレス + 命令のサイズ)`) の見直しが必要 (命令ハンドラリファクタリング後に再検証)。 (ユーザー側でアセンブラダンプマスタを使用して調査予定)
+- **`test/day03_harib00i_test.go` の修正:**
+    - `codegen` での `ADD ESI, EBX` 処理中の ModR/M 生成エラー (`unknown register: EBX`) を調査・修正する。
+    - `codegen` での `JMP DWORD 16:27` 処理中の FAR JMP 形式処理エラーを調査・修正する。
+    - バイナリ長の不一致 (`expected 293 actual 282`) の原因を特定・修正する。
 - **`pkg/ng_operand` の改善 (TODOs):** (一部対応済み、残りは以下)
-    - パーサー: NEAR/FAR PTR, `ParseOperands` での各種フラグ考慮, 文字列リテラル内カンマ対応。
+    - パーサー: NEAR/FAR PTR, `ParseOperands` での各種フラグ考慮, 文字列リテラル内カンマ対応。 (一部 `internal/pass1` 側で対応中)
     - 実装: QWORD サポート, `CalcOffsetByteSize` / `DetectImmediateSize` の複数オペランド対応。
     - テスト: 複数オペランド, 未対応ケース, FAR/NEAR PTR, `ParseOperands` 拡充。
 - (保留) `internal/codegen` パッケージのリファクタリング (CodeGenContext 導入)
