@@ -28,14 +28,11 @@
 
 1. **asmdb JSONファイルの調査**
    ```bash
-   # 特定の命令のエンコーディング情報を取得 (直接ファイル指定)
-   jq '.instructions["INST_NAME"]' pkg/asmdb/json-x86-64/x86_64.json
-
-   # 特定の命令のエンコーディング情報を取得 (catとパイプを使用)
+   # 特定の命令のエンコーディング情報を取得
    cat pkg/asmdb/json-x86-64/x86_64.json | jq '.instructions["INST_NAME"]'
 
    # オペランドタイプの一覧を取得
-   jq '.instructions["INST_NAME"].forms[].operands[].type' pkg/asmdb/json-x86-64/x86_64.json
+   cat pkg/asmdb/json-x86-64/x86_64.json | jq '.instructions["INST_NAME"].forms[].operands[].type'
    ```
 
 2. **jqクエリのベストプラクティス**
@@ -118,3 +115,32 @@ cat pkg/asmdb/json-x86-64/x86_64.json | jq '.. | objects | select(.opcode? and .
    - 全テストの成功
    - lint エラーの解消
    - ドキュメントの更新確認
+
+### アセンブル結果の確認例 (PUSHF/POPFD)
+
+`PUSHF` (オペコード `0x9C`) と `POPFD` (オペコード `0x9D`) を含むアセンブリファイルを `gosk` でアセンブルし、`hexdump` で確認する手順の例です。
+
+1.  **アセンブリファイルの作成 (`test.asm`)**:
+    ```assembly
+    [BITS 32]
+    ORG 0x7c00
+
+    PUSHF
+    POPFD
+    ```
+
+2.  **アセンブルと hexdump**:
+    ```bash
+    # gosk でアセンブル (出力ファイルは2番目の引数で指定)
+    ./gosk test.asm test.bin
+
+    # hexdump でバイナリを確認
+    hexdump -C test.bin
+    ```
+
+3.  **期待される hexdump 出力**:
+    ```
+    00000000  9c 9d                                             |..|
+    00000002
+    ```
+    (アドレス `0x7c00` から `9c 9d` が出力されるはずですが、`hexdump` はファイル先頭からのオフセットを表示するため `00000000` から始まります。)
