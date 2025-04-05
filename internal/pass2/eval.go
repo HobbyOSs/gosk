@@ -56,21 +56,14 @@ func (p *Pass2) Eval(program ast.Prog) error { // Restored ast.Prog
 	}
 	p.Client.SetOcodes(ocodes)
 
-	// Client.Exec() を呼び出し、結果を CodeGenContext にセットする
-	// (Client.Exec() が []byte, error を返すと仮定)
-	// machineCode 変数は使わないので _ で受ける
+	// Client.Exec() を呼び出してコード生成を実行する。
+	// 生成された機械語 (MachineCode) は Client 内部の CodeGenContext にセットされる想定。
+	// frontend.go 側で最終的に CodeGenContext から MachineCode を取得するため、
+	// ここでは Exec の戻り値 (machineCode) は使用しない。
 	_, err := p.Client.Exec()
 	if err != nil {
 		return fmt.Errorf("codegen client execution failed: %w", err)
 	}
-	// CodeGenContext に MachineCode をセットする (Client 経由でアクセスする必要があるかもしれない)
-	// 現状の Client インターフェースでは直接 CodeGenContext を取得できないため、
-	// Client に SetMachineCode のようなメソッドを追加するか、
-	// Exec の戻り値を使わずに Client 内部でセットする設計にする必要がある。
-	// ここでは、Client が内部で CodeGenContext の MachineCode を更新すると仮定する。
-	// もし Client.Exec が []byte を返すなら、それを捨てるか、あるいは
-	// frontend 側で ctx.MachineCode = machineCode のようにセットする。
-	// frontend.go の修正で ctx.MachineCode を使うようにしたので、ここでは何もしない。
 
 	return nil // エラーがない場合は nil を返す
 }
