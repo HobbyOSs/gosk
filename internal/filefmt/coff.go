@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort" // sort パッケージをインポート
 
 	"github.com/HobbyOSs/gosk/internal/codegen"
 )
@@ -370,6 +371,24 @@ func (c *CoffFormat) generateSymbolEntries(ctx *codegen.CodeGenContext, textData
 			NumberOfAuxSymbols: 0,    // 補助シンボルなし
 		}
 		allEntries = append(allEntries, SymbolEntry{Main: symbol, Aux: nil}) // Aux は nil
+	}
+
+	// シンボルテーブルをアドレス順にソートする (.file とセクションシンボルを除く)
+	// .file シンボル (index 0) とセクションシンボル (index 1, 2, 3) は固定
+	if len(allEntries) > 4 { // ソート対象が存在する場合のみ
+		sort.SliceStable(allEntries[4:], func(i, j int) bool {
+			// SectionNumber が 0 (未定義/外部) のシンボルは最後に配置する
+			isExternI := allEntries[4+i].Main.SectionNumber == 0
+			isExternJ := allEntries[4+j].Main.SectionNumber == 0
+			if isExternI && !isExternJ {
+				return false // i (外部) は j より後
+			}
+			if !isExternI && isExternJ {
+				return true // i は j (外部) より前
+			}
+			// SectionNumber が同じか、両方とも外部でない場合は Value で比較
+			return allEntries[4+i].Main.Value < allEntries[4+j].Main.Value
+		})
 	}
 
 	return allEntries, stringTable.Bytes()
