@@ -120,6 +120,12 @@ cat pkg/asmdb/json-x86-64/x86_64.json | jq '.. | objects | select(.opcode? and .
 
 `PUSHF` (オペコード `0x9C`) と `POPFD` (オペコード `0x9D`) を含むアセンブリファイルを `gosk` でアセンブルし、`hexdump` で確認する手順の例です。
 
+### e2eテストケース作成の指示名 (2025/04/05)
+
+- **指示名:** `generate_e2e_test_case`
+- **目的:** 指定されたアセンブリコードに対するe2eテストケース（期待値生成、テストコード雛形作成を含む）を生成・実装する一連のプロセスを実行する。
+- **詳細プロセス:** `memory-bank/details/technical_notes.md` の「e2e テスト作成プロセスの標準化案」を参照。
+
 1.  **アセンブリファイルの作成 (`test.asm`)**:
     ```assembly
     [BITS 32]

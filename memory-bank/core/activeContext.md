@@ -1,6 +1,58 @@
 # 現在の状況 (Active Context) - 2025/04/05
 
-**状況:** day04 までの実装完了。`pass1` の LOC 計算問題と `TestHarib01f` の検証が完了。
+**状況:** opennaskとの互換性向上を目的としたe2eテストケースの拡充、およびテスト作成プロセスの標準化に着手。
+
+## 現在のタスク
+
+1.  **e2eテストケース拡充 (opennask互換性):**
+    *   **目標:** opennaskのアセンブル結果とgoskのアセンブル結果が一致するように、以下のテストケースを実装または修正する。
+    *   **対象テストケース (GitHub Issue #12 より):**
+        *   `Day03Suite/Harib00i` (naskfunc.nas)
+        *   `Day03Suite/Harib00j`
+        *   `Day04Suite/Harib01a` (完了済み - 2025/04/05)
+        *   `Day04Suite/Harib01f` (完了済み - 2025/04/05)
+        *   `Day05Suite/Harib02i`
+        *   `Day06Suite/Harib03e`
+        *   `Day09Suite/Harib06b` (新出命令なし)
+        *   `Day09Suite/Harib06c`
+        *   `Day12Suite/Harib09a`
+        *   `Day15Suite/Harib12a`
+        *   `Day15Suite/Harib12b` (新出命令なし)
+        *   `Day15Suite/Harib12c` (新出命令なし)
+        *   `Day20Suite/Harib17b` (新出命令なし)
+        *   `Day20Suite/Harib17c` (新出命令なし)
+        *   `Day20Suite/Harib17d` (新出命令なし)
+        *   `Day20Suite/Harib17e`
+        *   `Day20Suite/Harib17g`
+        *   `Day20Suite/Harib17h` (新出命令なし)
+        *   `Day21Suite/Harib18d` (新出命令なし)
+        *   `Day21Suite/Harib18e` (新出命令なし)
+        *   `Day21Suite/Harib18g` (新出命令なし)
+        *   `Day22Suite/Harib19b` (新出命令なし)
+        *   `Day22Suite/Harib19c` (新出命令なし)
+        *   `Day25Suite/Harib22f` (新出命令なし)
+    *   **注記:** "新出命令なし" のテストケースも、既存命令の組み合わせやアドレッシングモードの違いにより差分が生じる可能性があるため、検証対象とする。
+
+2.  **e2eテスト作成プロセスの標準化:**
+    *   **目標:** 今後のテストケース追加・修正を効率化し、一貫性を保つためのプロセスを確立する。
+    *   **検討項目:**
+        *   **テストファイル命名規則:** 例: `test/dayXX_haribYY<suffix>_test.go`
+        *   **テスト関数命名規則:** 例: `TestDayXXSuite/TestHaribYY<suffix>`
+        *   **テストコードテンプレート:**
+            *   `setup` / `teardown` 処理の共通化
+            *   アセンブル実行 (`gosk` / `naskwrap.sh`) のヘルパー関数化
+            *   バイナリ比較 (`hexdump`, `diff`) のヘルパー関数化
+            *   期待値 (`expected` バイト列) の生成・管理方法
+        *   **テスト実行手順:**
+            *   特定のテストケース/スイートを実行する `make` ターゲットの定義
+            *   差分が発生した場合のデバッグ手順
+
+## 次のステップ
+1.  `Day03Suite/Harib00i` (naskfunc.nas) のテストケース実装に着手する。
+    *   `test/day03_harib00i_test.go` ファイルを作成 (または既存ファイルを修正)。
+    *   `naskwrap.sh` を使用して `naskfunc.nas` をアセンブルし、期待値となるバイナリを生成する。
+    *   `gosk` で `naskfunc.nas` をアセンブルし、結果を期待値と比較するテストコードを記述する。
+2.  テスト作成プロセスの標準化案（上記検討項目）を具体化し、`memory-bank/details/technical_notes.md` に記録する。
 
 ## 持ち越し課題
 
