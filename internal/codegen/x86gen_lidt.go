@@ -8,10 +8,10 @@ import (
 	"github.com/HobbyOSs/gosk/pkg/ng_operand"
 )
 
-// handleLGDT handles the LGDT instruction and generates the appropriate machine code.
-// LGDT m -> 0F 01 /2
-func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
-	instName := "LGDT"
+// handleLIDT handles the LIDT instruction and generates the appropriate machine code.
+// LIDT m -> 0F 01 /3
+func handleLIDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
+	instName := "LIDT" // Change instruction name
 	if len(operands) != 1 {
 		return nil, fmt.Errorf("%s requires 1 operand, got %d", instName, len(operands))
 	}
@@ -33,7 +33,6 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 		opTypes[0] == ng_operand.CodeM64 ||
 		opTypes[0] == ng_operand.CodeMEM)
 	if !isMem {
-		// Use Serialize() for error message
 		// Use Serialize() for error message
 		return nil, fmt.Errorf("%s requires a memory operand, got %s", instName, op.Serialize())
 	}
@@ -68,7 +67,7 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 	machineCode := append(opcodeBytes, modrmSibDispBytes...)
 
 	// ログメッセージ改善: 元のオペランド文字列も表示
-	log.Printf("debug: Generated %s machine code: %x (operand: %s)", instName, machineCode, operands[0])
+	log.Printf("debug: Generated %s machine code: %x (operand: %s)", instName, machineCode, operands[0]) // Change log message
 
 	return machineCode, nil
 }

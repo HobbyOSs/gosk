@@ -89,7 +89,13 @@ func (v *Vex) getSize() int {
 }
 
 func (o *Opcode) getSize() int {
-	return 1 // Opcode size
+	// Calculate size based on the length of the Byte string (hex representation)
+	if len(o.Byte)%2 != 0 {
+		log.Printf("warn: Opcode byte string has odd length: %s", o.Byte)
+		// Handle error or return default? Returning length/2 might be misleading.
+		return 0 // Or perhaps return an error? For now, return 0 on odd length.
+	}
+	return len(o.Byte) / 2 // Each byte is represented by 2 hex characters
 }
 
 func (m *Modrm) getSize() int {
