@@ -1,6 +1,19 @@
 # 現在の状況 (Active Context)
 
-## 完了した作業 (2025/04/03)
+## 残作業・次のステップ
+
+1.  **Pass1 命令サイズ計算の修正 (最優先):**
+    *   **方針:** `internal/pass1` で命令サイズを計算する際に SIB バイトの必要性を正確に判定し、サイズに含めるように修正する。具体的には、`asmdb.FindMinOutputSize` または関連する `asmdb` や `ng_operand` のロジックを修正する。(`processMOV` 内でのアドホックな修正は行わない)
+    *   **次作業:** `FindMinOutputSize` または関連箇所の修正方針を検討し、SIB バイト計算ロジックを実装する。
+    *   **テスト:** SIB バイトが必要/不要なケースを含む `FindMinOutputSize` (または関連関数) の単体テストを追加し、修正を検証する。その後、`TestHarib01a` を再実行してバイナリ差分が解消されることを確認する。
+    * 上記が終了後、coff.goにあるデバッグコードや冗長な処理は削除する。
+2.  **`TestHarib01f` の機械語差異調査:** (Pass1 サイズ計算修正後に実施)
+3.  **EXTERN シンボルのテストケース追加:** (変更なし)
+4.  **`internal/filefmt/coff.go` の改善 (TODO):** (変更なし)
+5.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
+6.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
+
+## 完了した作業 (2025/04/05)
 
 - **COFFディレクティブ対応 (Pass1):** (変更なし)
 - **ファイルフォーマット層の導入準備:** (変更なし)
@@ -50,19 +63,13 @@
     - `make build` を再実行し、変更を確認。
 - **アセンブル再検証 (2025/04/05):**
     - 一時ファイルを用いてアセンブルを実行し、`hexdump` で結果を確認。
-
-## 残作業・次のステップ
-
-1.  **`test/day04_test.go` のテスト失敗原因調査と修正:**
-    *   COFFヘッダ/セクションヘッダの値の不一致 (`NumberOfSymbols`, `Characteristics` など) を修正する。(`internal/filefmt/coff.go` の再修正が必要。`TestHarib00j` とは異なる値になる可能性あり)
-    *   シンボルテーブルの内容/長さの不一致を修正する。(`internal/filefmt/coff.go` の `generateSymbolEntries` の再修正が必要。グローバルシンボルの `Type` など)
-    *   `TestHarib01f` での機械語の差異 (`PUSH`/`POP` など) の原因を調査し、`internal/codegen` または `internal/pass1` を修正する。(`asmdb` の確認も必要になる可能性あり)
-2.  **EXTERN シンボルのテストケース追加:**
-    *   `test/day04_test.go` に `EXTERN` シンボルを使用するテストケースを追加し、実装が正しく動作することを確認する。
-3.  **`internal/filefmt/coff.go` の改善 (TODO):**
-    *   `.data`, `.bss` セクションのデータサイズと内容の処理を実装する。
-    *   シンボルテーブル生成時に、シンボルの `SectionNumber` を正しく割り当てるロジックを実装する。
-4.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
-5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
+- **`internal/filefmt/coff.go` のデバッグ試行 (2025/04/05):**
+    - `TestHarib01a` のバイナリ差分（シンボルテーブルのずれ、文字列テーブル先頭のヌルバイト）解消のため、以下の修正を試行したが、いずれも失敗。
+        - シンボルテーブル書き込み方法の変更（`binary.Write` vs 手動書き込み）
+        - COFFヘッダ `NumberOfSymbols` の値の調整（補助シンボルを含む/含まない/期待値合わせ）
+        - 文字列テーブル書き込み処理の変更（先頭バイト削除など）
+        - デバッグログの追加と確認。
+- **根本原因の特定 (2025/04/05):**
+    - `TestHarib01a` のバイナリ差分 (2バイトずれ) の根本原因は、`internal/pass1/pass1_inst_mov.go` の `processMOV` における命令サイズ計算が、SIB バイトが必要なケースを考慮しておらず、実際の機械語サイズより小さく計算してしまうためであると特定。これにより、Pass1 で計算される LOC (Location Counter) がずれ、COFF ファイル全体のオフセット計算に影響が出ていた。
 
 (過去の完了作業: [activeContext_archive_202503.md](../archives/activeContext_archive_202503.md), [activeContext_archive_202504.md](../archives/activeContext_archive_202504.md))
