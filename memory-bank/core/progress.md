@@ -23,10 +23,16 @@
 - **`TestHarib01a` デバッグ完了 (2025/04/05):**
     - テスト期待値の誤りを修正。
     - COFF 生成ロジックの関連箇所を修正。
+- **`pass1` LOC 計算修正 & `TestHarib01f` 検証完了 (2025/04/05):**
+    - `asmdb` と `codegen` の `IN`/`OUT` プレフィックス処理を修正。
+    - `codegen` の `PUSH`/`POP` ハンドラ呼び出しを修正。
+    - `TestPass1EvalSuite/TestEvalProgramLOC` が PASS することを確認。
+    - `gosk` と `nask` の `harib01f` アセンブル結果が一致することを確認。
 
 ## まだ必要な実装
-- **Pass1 命令サイズ計算の修正 (SIB バイト考慮):** (最優先)
-- **`TestHarib01f` の機械語差異調査:** (Pass1 サイズ計算修正後に実施)
+- **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
+    - `ng_operand.CalcSibByteSize` のテスト追加
+    - `internal/filefmt/coff.go` のクリーンアップ
 - **`internal/filefmt/coff.go` の改善 (TODOs):**
     - `.data`, `.bss` セクションのデータサイズと内容の処理。
     - シンボルの `SectionNumber` 割り当てロジック。

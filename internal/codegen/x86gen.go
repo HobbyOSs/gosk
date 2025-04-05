@@ -101,6 +101,10 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleIN(params, ctx)
 	case ocode.OpOUT:
 		return handleOUT(params, ctx)
+	case ocode.OpPUSH: // Add PUSH case
+		return handlePUSH(params, ctx)
+	case ocode.OpPOP: // Add POP case
+		return handlePOP(params, ctx)
 	case ocode.OpCALL:
 		return handleCALL(params, ctx)
 	case ocode.OpLGDT:

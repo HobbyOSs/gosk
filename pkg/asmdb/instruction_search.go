@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/HobbyOSs/gosk/pkg/cpu" // cpu パッケージをインポート
 	"github.com/HobbyOSs/gosk/pkg/ng_operand"
 	"github.com/samber/lo"
 )
@@ -38,9 +39,12 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 	}
 
 	// オペランドにマッチするフォームをフィルタリング
-	filteredForms := filterForms(instr.Forms, operands, matchAnyImm) // matchAnyImm を渡す
+	// filterForms に opcode を渡すように修正
+	filteredForms := filterForms(opcode, instr.Forms, operands, matchAnyImm) // matchAnyImm を渡す
 
 	if len(filteredForms) == 0 {
+		// エラーメッセージ改善: どの命令とオペランドで失敗したかを示す
+		log.Printf("error: FindEncoding: 一致する命令フォームが見つかりません。opcode=%s, operands=%s", opcode, operands.InternalString())
 		return nil, errors.New("一致するエンコーディングが見つかりません")
 	}
 
@@ -51,7 +55,7 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 	})
 
 	if len(allEncodings) == 0 {
-		log.Printf("error: フィルタリング後、適切なエンコーディングが見つかりませんでした。opcode=%s, operands=%s", opcode, operands.InternalString())
+		log.Printf("error: FindEncoding: フィルタリング後、適切なエンコーディングが見つかりませんでした。opcode=%s, operands=%s", opcode, operands.InternalString())
 		return nil, errors.New("フィルタリング後、適切なエンコーディングが見つかりませんでした")
 	}
 
@@ -72,7 +76,7 @@ func (db *InstructionDB) FindEncoding(opcode string, operands ng_operand.Operand
 
 	// lo.MinBy が候補なしの場合に nil を返す可能性があるためチェック
 	if minEncoding == nil {
-		log.Printf("error: lo.MinBy が nil エンコーディングを返しました")
+		log.Printf("error: FindEncoding: lo.MinBy が nil エンコーディングを返しました。opcode=%s, operands=%s", opcode, operands.InternalString())
 		return nil, errors.New("最小エンコーディングの検索に失敗しました")
 	}
 
@@ -221,7 +225,8 @@ func filterEncodings(form InstructionForm, operands ng_operand.Operands) []*Enco
 
 // filterForms は、オペランドにマッチする命令フォームをフィルタリングします。
 // 優先順位: 1. アキュムレータ形式, 2. 厳密マッチ, 3. 緩和マッチ (sreg -> r16)
-func filterForms(forms []InstructionForm, operands ng_operand.Operands, matchAnyImm bool) []InstructionForm { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
+// opcode パラメータを追加
+func filterForms(opcode string, forms []InstructionForm, operands ng_operand.Operands, matchAnyImm bool) []InstructionForm { // opcode パラメータ追加, ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	// 1. アキュムレータレジスタを含む形式を優先的に検索
 	accForms := lo.Filter(forms, func(form InstructionForm, _ int) bool {
 		// form.Operands が nil の場合、安全に処理をスキップ
@@ -243,7 +248,8 @@ func filterForms(forms []InstructionForm, operands ng_operand.Operands, matchAny
 		if form.Operands == nil {
 			return false
 		}
-		match := matchOperandsStrict(*form.Operands, operands, matchAnyImm) // matchAnyImm を渡す
+		// opcode を matchOperandsStrict に渡すように修正
+		match := matchOperandsStrict(opcode, *form.Operands, operands, matchAnyImm) // matchAnyImm を渡す
 		// log.Printf("debug: [filterForms] strict check: form=%v, query=%s, match=%t", form.Operands, operands.OperandTypes(), match) // Detailed log if needed
 		return match
 	})
@@ -277,17 +283,87 @@ func isSignExtendable(opcode string) bool {
 	}
 }
 
-// GetPrefixSize は必要なプレフィックスバイト (現在はオペランドサイズプレフィックス 0x66 のみ) のサイズを計算します。
-func (db *InstructionDB) GetPrefixSize(operands ng_operand.Operands) int { // ng_operand.Operands を使用
-	size := 0
-	// 16/32ビットモード間でオペランドサイズが異なる場合に 0x66 が必要
-	if operands.Require66h() {
-		size += 1 // オペランドサイズプレフィックス
+// GetPrefixSize は必要なプレフィックスバイト (オペランドサイズ 0x66, アドレスサイズ 0x67) のサイズを計算します。
+// IN/OUT 命令の特殊な 0x66 プレフィックスルールを考慮します。
+func (db *InstructionDB) GetPrefixSize(opcode string, operands ng_operand.Operands) int { // opcode パラメータ追加, ng_operand.Operands を使用
+	prefix66Size := 0
+	prefix67Size := 0
+
+	upperOpcode := strings.ToUpper(opcode)
+	isInOut := upperOpcode == "IN" || upperOpcode == "OUT"
+
+	// 1. オペランドサイズプレフィックス (0x66) の計算
+	if isInOut {
+		// IN/OUT 命令の特殊ルール
+		bitMode := operands.GetBitMode()
+		opTypes := operands.OperandTypes()
+		// オペランドが1つ以上存在するか確認 (例: IN AL, DX)
+		if len(opTypes) > 0 {
+			// IN/OUT では、通常最初のオペランド (AL/AX/EAX) または2番目のオペランド(OUT DX, AL/AX/EAX) がサイズを決定する
+			var sizeDeterminingOpType ng_operand.OperandType // ng_operand.OperandType を使用
+			if upperOpcode == "IN" {
+				sizeDeterminingOpType = opTypes[0] // IN AL/AX/EAX, ...
+			} else if len(opTypes) > 1 && (opTypes[0] == ng_operand.CodeDX || opTypes[0] == ng_operand.CodeR16) { // Check if first operand is DX or r16 for OUT DX, ...
+				// Ensure the first operand is indeed DX by checking the string representation if type is r16
+				isFirstOpDX := false
+				if opTypes[0] == ng_operand.CodeDX {
+					isFirstOpDX = true
+				} else if opTypes[0] == ng_operand.CodeR16 {
+					opStrings := operands.InternalStrings()
+					if len(opStrings) > 0 && strings.ToUpper(opStrings[0]) == "DX" {
+						isFirstOpDX = true
+					}
+				}
+
+				if isFirstOpDX {
+					sizeDeterminingOpType = opTypes[1] // OUT DX, AL/AX/EAX
+				}
+			} else if len(opTypes) > 1 && strings.HasPrefix(string(opTypes[0]), "imm") {
+				sizeDeterminingOpType = opTypes[1] // OUT imm8, AL/AX/EAX
+			}
+
+			// is16BitRegType と is32BitRegType ヘルパー関数を使用
+			is16bitOp := is16BitRegType(sizeDeterminingOpType)
+			is32bitOp := is32BitRegType(sizeDeterminingOpType)
+
+			if bitMode == cpu.MODE_16BIT && is32bitOp { // 16bitモードで32bitオペランド (EAX)
+				prefix66Size = 1
+			} else if bitMode == cpu.MODE_32BIT && is16bitOp { // 32bitモードで16bitオペランド (AX)
+				prefix66Size = 1
+			}
+			// その他の組み合わせ (AL, 16bitモードのAX, 32bitモードのEAX) は 0x66 不要
+		}
+	} else {
+		// IN/OUT 以外の命令は従来のロジックを使用 (ng_operand 側の判定に任せる)
+		// 注意: Require66h はオペコードを知らないため、IN/OUT の特殊ケースは扱えない
+		if operands.Require66h() {
+			prefix66Size = 1
+		}
 	}
+
+	// 2. アドレスサイズプレフィックス (0x67) の計算
 	if operands.Require67h() {
-		size += 1 // アドレスサイズプレフィックス
+		prefix67Size = 1
 	}
-	return size
+
+	return prefix66Size + prefix67Size
+}
+
+// is16BitRegType は OperandType が 16 ビットレジスタを表すか判定します。
+func is16BitRegType(opType ng_operand.OperandType) bool {
+	// ng_operand の isR16Type 相当のチェックをここで行う
+	// (CodeAX など具体的なレジスタタイプも含む可能性があるため、それらもチェック)
+	return opType == ng_operand.CodeR16 || opType == ng_operand.CodeAX || opType == ng_operand.CodeBX ||
+		opType == ng_operand.CodeCX || opType == ng_operand.CodeDX || opType == ng_operand.CodeSI ||
+		opType == ng_operand.CodeDI || opType == ng_operand.CodeSP || opType == ng_operand.CodeBP
+}
+
+// is32BitRegType は OperandType が 32 ビットレジスタを表すか判定します。
+func is32BitRegType(opType ng_operand.OperandType) bool {
+	// ng_operand の isR32Type 相当のチェック
+	return opType == ng_operand.CodeR32 || opType == ng_operand.CodeEAX || opType == ng_operand.CodeEBX ||
+		opType == ng_operand.CodeECX || opType == ng_operand.CodeEDX || opType == ng_operand.CodeESI ||
+		opType == ng_operand.CodeEDI || opType == ng_operand.CodeESP || opType == ng_operand.CodeEBP
 }
 
 // FindMinOutputSize は、pass1 での LOC (Location Counter) 計算のために、
@@ -314,12 +390,15 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Op
 	size := encoding.GetOutputSize(nil) // オプションは不要
 
 	// 基本サイズにプレフィックス、オフセット、SIB バイトのサイズを加算
+	// GetPrefixSize に opcode を渡すように修正
+	prefixSize := db.GetPrefixSize(opcode, operands)
+	offsetSize := operands.CalcOffsetByteSize()
 	sibSize := operands.CalcSibByteSize() // Use the interface method
-	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize() + sibSize
+	minOutputSize := size + prefixSize + offsetSize + sibSize
 	// デバッグ用に計算結果をログ出力 (SIB サイズも含む)
 	log.Printf("debug: [pass1] %s %s = %d (base:%d, prefix:%d, offset:%d, sib:%d)\n",
 		opcode, operands.InternalString(), minOutputSize,
-		size, db.GetPrefixSize(operands), operands.CalcOffsetByteSize(), sibSize)
+		size, prefixSize, offsetSize, sibSize)
 	return minOutputSize, nil
 }
 
@@ -376,7 +455,8 @@ func hasAccumulator(queryOperands ng_operand.Operands) bool { // ng_operand.Oper
 // matchOperandsStrict は、命令フォームのオペランド (formOperands) と
 // 問い合わせオペランド (queryOperands) のタイプが厳密に一致するかどうかを判定します。
 // matchAnyImm が true の場合、imm* タイプ同士はサイズ違いでも一致とみなします。
-func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operands, matchAnyImm bool) bool { // ng_operand.Operands を使用, matchAnyImm パラメータ追加
+// opcode パラメータを追加し、IN/OUT 命令の特殊なマッチングに対応します。
+func matchOperandsStrict(opcode string, formOperands []Operand, queryOperands ng_operand.Operands, matchAnyImm bool) bool { // opcode パラメータ追加, ng_operand.Operands を使用, matchAnyImm パラメータ追加
 	queryTypes := queryOperands.OperandTypes() // 問い合わせオペランドのタイプを取得
 	// オペランド数が異なる場合は false
 	if formOperands == nil || len(formOperands) != len(queryTypes) {
@@ -393,7 +473,19 @@ func matchOperandsStrict(formOperands []Operand, queryOperands ng_operand.Operan
 		if formType == queryType {
 			return true
 		}
-		// 2. matchAnyImm が true で、両方が imm* タイプの場合
+
+		// 2. IN/OUT 命令の特殊なマッチング (大文字小文字無視)
+		upperOpcode := strings.ToUpper(opcode)
+		if upperOpcode == "IN" || upperOpcode == "OUT" {
+			if (formType == "al" && queryType == "r8") ||
+				(formType == "ax" && queryType == "r16") ||
+				(formType == "eax" && queryType == "r32") ||
+				(formType == "dx" && queryType == "r16") { // DX は常に r16 として扱う
+				return true
+			}
+		}
+
+		// 3. matchAnyImm が true で、両方が imm* タイプの場合
 		isFormImm := strings.HasPrefix(formType, "imm")
 		isQueryImm := strings.HasPrefix(queryType, "imm")
 		if matchAnyImm && isFormImm && isQueryImm {

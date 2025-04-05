@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/HobbyOSs/gosk/pkg/cpu"        // Import cpu package
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Add ng_operand import
 )
 
@@ -63,11 +64,27 @@ func handleIN(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
 	// Assemble the code
 	code := []byte{}
 
-	// Add prefixes if required
-	if opsInterface.Require66h() { // Check for operand size prefix
+	// --- Prefix Calculation (similar to asmdb.GetPrefixSize for IN) ---
+	prefix66Size := 0
+	bitMode := ctx.BitMode
+	opTypes := opsInterface.OperandTypes() // Get operand types from parsed interface
+
+	if len(opTypes) > 0 {
+		sizeDeterminingOpType := opTypes[0]                                                                     // For IN, the destination (AL/AX/EAX) determines size
+		is16bitOp := sizeDeterminingOpType == ng_operand.CodeAX || sizeDeterminingOpType == ng_operand.CodeR16  // Consider r16 as well
+		is32bitOp := sizeDeterminingOpType == ng_operand.CodeEAX || sizeDeterminingOpType == ng_operand.CodeR32 // Consider r32 as well
+
+		if bitMode == cpu.MODE_16BIT && is32bitOp { // 16bit mode with 32bit operand (EAX)
+			prefix66Size = 1
+		} else if bitMode == cpu.MODE_32BIT && is16bitOp { // 32bit mode with 16bit operand (AX)
+			prefix66Size = 1
+		}
+	}
+
+	if prefix66Size > 0 {
 		code = append(code, 0x66)
 	}
-	// Add address size prefix if needed (less common for IN)
+	// Address size prefix (0x67) is generally not needed for IN with DX or imm8
 	// if opsInterface.Require67h() {
 	// 	code = append(code, 0x67)
 	// }

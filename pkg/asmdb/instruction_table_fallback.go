@@ -388,7 +388,8 @@ func init() {
 	addOutFallbackEncodings()
 	addMovFallbackEncodings()
 	addLgdtFallbackEncodings()
-	addInFallbackEncodings() // Add call to the new function
+	addInFallbackEncodings()      // Add call to the new function
+	addPushPopFallbackEncodings() // Add call for PUSH/POP
 }
 
 // addPushPopFallbackEncodings adds fallback encodings for PUSH/POP r32 instructions.
@@ -439,13 +440,4 @@ func addPushPopFallbackEncodings() {
 		},
 	})
 	instructionData.Instructions["POP"] = popInst
-}
-
-func init() {
-	addImulFallbackEncodings()
-	addOutFallbackEncodings()
-	addMovFallbackEncodings()
-	addLgdtFallbackEncodings()
-	addInFallbackEncodings()      // Add call to the new function
-	addPushPopFallbackEncodings() // Add call for PUSH/POP
 }

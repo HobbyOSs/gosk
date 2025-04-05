@@ -1,40 +1,35 @@
 # 現在の状況 (Active Context) - 2025/04/05 セッション終了
 
+**状況:** day04 までの実装完了。`pass1` の LOC 計算問題と `TestHarib01f` の検証が完了。
+
 ## 持ち越し課題
 
-1.  **`pass1` の LOC 計算修正 (最優先):**
-    *   **状況:** `TestPass1EvalSuite/TestEvalProgramLOC` の `IN AX, DX` と `OUT DX, AX` テストが失敗する。期待される LOC (2) に対し、実際の LOC (1) となり、必要な 0x66 プレフィックスが計算されていない。
-    *   **原因:** `IN`/`OUT` 命令の 0x66 プレフィックス要否判定ロジック (`pkg/ng_operand/requires.go` の `Require66h` または関連箇所) が、32bit モードでの `AX` オペランドのケースを正しく扱えていない。
-    *   **課題:** 「オペランドはオペコードを知らない」設計原則を維持しつつ、`IN`/`OUT` 命令の特殊なプレフィックスルールをどこでどのように実装するのが最適か。
-    *   **試行錯誤の経緯:**
-        *   当初、`asmdb` のマッチングロジック (`matchOperandsStrict`) で特殊レジスタ (`AL`, `AX`, `DX` など) と汎用タイプ (`r8`, `r16`) の不一致を吸収しようとしたが、`MOV` 命令に影響が出た。
-        *   次に、`pass1` ハンドラ (`processIN`/`processOUT`) で `forceNoPrefix66` フラグを `ng_operand` に渡し、`Require66h` でチェックする案を試したが、`IN AX, DX` / `OUT DX, AX` で必要なプレフィックスまで無効化してしまい失敗。
-        *   `prefix66Override *bool` フラグを `ng_operand` に追加し、`pass1` でプレフィックス要否を判断して渡す案も検討したが、設計原則との兼ね合いで混乱が生じ、中断。
-    *   **次作業:** 次のセッションで、プレフィックス計算ロジック (`Require66h` または `asmdb.GetPrefixSize`) の修正方針を再検討し、実装する。`pass1` テストが全て成功することを確認する。
-2.  **`TestHarib01f` の再実行と修正:** 上記 LOC 計算修正後、`TestHarib01f` を再実行し、バイナリ差分やその他の問題があれば修正する。
-3.  **Pass1 命令サイズ計算の修正 (SIB バイト考慮):** (上記完了後)
-    *   **方針:** `internal/pass1` で命令サイズを計算する際に SIB バイトの必要性を正確に判定し、サイズに含めるように修正する。具体的には、`asmdb.FindMinOutputSize` または関連する `asmdb` や `ng_operand` のロジックを修正する。(`processMOV` 内でのアドホックな修正は行わない)
-    *   **テスト:** SIB バイトが必要/不要なケースを含む `FindMinOutputSize` (または関連関数) の単体テストを追加し、修正を検証する。
-    * 上記が終了後、coff.goにあるデバッグコードや冗長な処理は削除する。
-4.  **EXTERN シンボルのテストケース追加:** (変更なし)
-5.  **`internal/filefmt/coff.go` の改善 (TODO):** (変更なし)
-6.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
-7.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
+1.  **EXTERN シンボルのテストケース追加:** (変更なし)
+2.  **`internal/filefmt/coff.go` の改善 (TODO):** (変更なし)
+3.  **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
+    *   **状況:** `asmdb.FindMinOutputSize` で SIB バイトサイズを加算する修正は実施済み。
+    *   **残作業:**
+        *   `ng_operand.CalcSibByteSize` の正確性を検証するための単体テストを追加する。
+        *   `internal/filefmt/coff.go` 内の不要なデバッグコードや冗長な処理を削除する。
+4.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
+5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 
 ## このセッションで完了した作業 (2025/04/05)
 
-- **`TestHarib01f` 関連の単体テスト追加:**
-    - `internal/pass1/eval_test.go` に `IN`, `OUT`, `PUSH`, `POP` のテストケースを追加。
-    - `internal/codegen/x86gen_test.go` に `IN`, `OUT`, `PUSH`, `POP` のテストケースを追加。
-- **`asmdb` フォールバック定義の追加・修正:**
-    - `pkg/ocode/ocode.go` に `OpPUSH`, `OpPOP` を追加し、`go generate` を実行。
-    - `pkg/asmdb/instruction_table_fallback.go` に `IN EAX, DX`, `PUSH r32`, `POP r32` のフォールバック定義を追加。
-- **`asmdb` マッチングロジック修正:**
-    - `pkg/asmdb/instruction_search.go` の `matchOperandsStrict` を修正し、フォールバック定義 (`al`, `ax`, `eax`, `dx`) と `ng_operand` のパース結果 (`r8`, `r16`, `r32`) の不一致を吸収するようにした（ただし、後に `IN`/`OUT` 限定にする修正は取り消し）。
-- **`FindEncoding` エラーの解消:** 上記修正により、`IN`, `OUT`, `PUSH`, `POP` で発生していた `FindEncoding` エラーは解消された。
-
-(以下、変更なし)
-- **`TestHarib01a` デバッグ完了:**
+- **`pass1` の LOC 計算修正:**
+    - `pkg/asmdb/instruction_search.go` の `matchOperandsStrict` と `GetPrefixSize` を修正し、`IN`/`OUT` 命令の特殊なオペランドタイプとプレフィックスルールに対応。
+    - `internal/codegen/x86gen_in.go` と `internal/codegen/x86gen_out.go` のプレフィックス計算ロジックを修正。
+    - `TestPass1EvalSuite/TestEvalProgramLOC` が成功することを確認。
+- **`PUSH`/`POP` 命令の Codegen 実装:**
+    - `internal/codegen/x86gen.go` の `processOcode` に `OpPUSH`/`OpPOP` の case を追加。
+- **`TestHarib01f` の検証:**
+    - `gosk` と `naskwrap.sh` (nask) のアセンブル結果を hexdump で比較し、完全に一致することを確認。
+    - `test/day04_harib01f_test.go` の期待値を更新。
+- **`TestHarib01f` 関連の単体テスト追加:** (変更なし)
+- **`asmdb` フォールバック定義の追加・修正:** (変更なし)
+- **`asmdb` マッチングロジック修正:** (変更なし)
+- **`FindEncoding` エラーの解消:** (変更なし)
+- **`TestHarib01a` デバッグ完了:** (変更なし)
     - テスト失敗の原因が、テストコード内の `expected` バイト列が NASK の実際の出力と異なっていたためであることを特定。
     - NASK の正しい出力を基に `expected` を修正し、テストが PASS することを確認。
     - 関連して `internal/filefmt/coff.go` のシンボル名/文字列テーブル処理を修正。
