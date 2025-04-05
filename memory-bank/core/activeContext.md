@@ -1,18 +1,13 @@
-# 現在の状況 (Active Context) - 2025/04/05
+# 現在の状況 (Active Context) - 2025/04/05 深夜
 
-**状況:** opennaskとの互換性向上を目的としたe2eテストケースの拡充、およびテスト作成プロセスの標準化に着手。
+**状況:** `TestHarib02i` の修正が完了。引き続き opennask との互換性向上を目指し、e2eテストケースの拡充を進める。
 
 ## 現在のタスク
 
 1.  **e2eテストケース拡充 (opennask互換性):**
     *   **目標:** opennaskのアセンブル結果とgoskのアセンブル結果が一致するように、以下のテストケースを実装または修正する。
     *   **対象テストケース (GitHub Issue #12 より):**
-        *   `Day03Suite/Harib00i` (naskfunc.nas)
-        *   `Day03Suite/Harib00j`
-        *   `Day04Suite/Harib01a` (完了済み - 2025/04/05)
-        *   `Day04Suite/Harib01f` (完了済み - 2025/04/05)
-        *   `Day05Suite/Harib02i` (テストケース作成済み、実行失敗 - 要修正)
-        *   `Day06Suite/Harib03e`
+        *   `Day06Suite/Harib03e` - **次に対応**
         *   `Day09Suite/Harib06b` (新出命令なし)
         *   `Day09Suite/Harib06c`
         *   `Day12Suite/Harib09a`
@@ -31,6 +26,7 @@
         *   `Day22Suite/Harib19b` (新出命令なし)
         *   `Day22Suite/Harib19c` (新出命令なし)
         *   `Day25Suite/Harib22f` (新出命令なし)
+    *   **完了済み:** `Day03Suite/Harib00i`, `Day03Suite/Harib00j`, `Day04Suite/Harib01a`, `Day04Suite/Harib01f`, `Day05Suite/Harib02i`
     *   **注記:** "新出命令なし" のテストケースも、既存命令の組み合わせやアドレッシングモードの違いにより差分が生じる可能性があるため、検証対象とする。
 
 2.  **e2eテスト作成プロセスの標準化:**
@@ -49,13 +45,8 @@
     *   **状況:** `technical_notes.md` に標準化案を記録・更新済み (2025/04/05)。
 
 ## 次のステップ
-1.  **`TestHarib02i` の修正:**
-    *   **課題:** テスト実行時に `LIDT` ハンドラ欠落と `LGDT` コード生成エラーにより失敗する。
-    *   **対応:**
-        *   `internal/pass1` に `LIDT` 命令のハンドラを追加する (`LGDT` を参考に)。
-        *   `internal/codegen` の `LGDT` 命令処理を修正し、メモリオペランドを正しく扱えるようにする。
-2.  **`Day03Suite/Harib00i` (naskfunc.nas) のテストケース実装に着手する。** (上記修正完了後)
-    *   `test/day03_harib00i_test.go` ファイルを作成 (または既存ファイルを修正)。
+1.  **`Day06Suite/Harib03e` のテストケース実装に着手する。**
+    *   `test/day06_harib03e_test.go` ファイルを作成。
     *   `technical_notes.md` の手順に従い、アセンブリコード取得、期待値生成、テストコード記述を行う。
 
 ## 持ち越し課題
@@ -71,15 +62,23 @@
 5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 6.  **`INSTRSET` ディレクティブ未対応:** (優先度: 低) `pass1` で `INSTRSET` が処理されていない。
 
-## このセッションで完了した作業 (2025/04/05 夜)
+## このセッションで完了した作業 (2025/04/05 深夜)
 
-- **`Day05Suite/Harib02i` テストケース作成:**
+- **`TestHarib02i` 修正完了:**
+    - `internal/pass1` に `LIDT` ハンドラ (`processLIDT`) を追加し、`handlers.go` に登録。
+    - `internal/codegen` に `LIDT` ハンドラ (`handleLIDT`) を追加し、`x86gen.go` に登録。
+    - `internal/codegen/x86gen_lgdt.go` を修正し、`ng_operand` と `asmdb.FindEncoding` を使用するように変更。
+    - `pkg/asmdb/instruction_table_fallback.go` に `LIDT` のフォールバック定義を追加。
+    - `pkg/asmdb/encoding.go` の `Opcode.getSize()` を修正し、複数バイトオペコードのサイズ計算を修正。
+    - `internal/pass1` の `LGDT`/`LIDT` ハンドラのサイズ計算を `FindMinOutputSize` を使用するように修正。
+    - `TestHarib02i` が PASS することを確認。
+- **`Day05Suite/Harib02i` テストケース作成 & 課題特定:** (2025/04/05 夜)
     - `test/day05_harib02i_test.go` ファイルを作成。
     - `opennask` リポジトリから `naskfunc.nas` の内容を取得し、文字コード変換して挿入。
     - `wine nask.exe` でアセンブルし、期待値バイナリ (`[]byte` リテラル) を生成して挿入。
     - テストスイート登録ファイル `test/day05_test.go` を作成。
-    - テスト実行により、`LIDT` ハンドラ欠落と `LGDT` コード生成エラーを特定。
-- **e2e テスト作成手順の更新:**
+    - テスト実行により `LIDT` ハンドラ欠落と `LGDT` コード生成エラーを特定。
+- **e2e テスト作成手順の更新:** (2025/04/05 夜)
     - `memory-bank/details/technical_notes.md` を修正。
         - アセンブリコード取得方法 (`cat | nkf`) を明記。
         - NASK 実行コマンドのパスはユーザー確認が必要なことを追記。

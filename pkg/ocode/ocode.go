@@ -112,6 +112,7 @@ const (
 	OpCMP                       // CMP
 	OpCALL                      // CALL
 	OpLGDT                      // LGDT
+	OpLIDT                      // LIDT (Added)
 	OpJMP                       // JMP
 	OpJMP_FAR                   // JMP FAR (セグメント:オフセット)
 	OpJA                        // JA

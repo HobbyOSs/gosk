@@ -109,6 +109,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleCALL(params, ctx)
 	case ocode.OpLGDT:
 		return handleLGDT(params.Operands, ctx)
+	case ocode.OpLIDT: // Add LIDT case
+		return handleLIDT(params.Operands, ctx) // Call handleLIDT
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}
