@@ -12,7 +12,7 @@ all: build test
 
 build: dep gen compress
 	go build ./...
-	cd cmd/gosk && $(GOBUILD) -v
+	$(GOBUILD) -v -o $(BIN) ./cmd/gosk
 
 test:
 	go install -v github.com/rakyll/gotest@latest
