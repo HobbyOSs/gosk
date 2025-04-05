@@ -283,9 +283,52 @@ func isSignExtendable(opcode string) bool {
 	}
 }
 
+// getPrefix66SizeForInOut は IN/OUT 命令の特殊な 0x66 プレフィックスサイズを計算します。
+// lo パッケージを活用して条件分岐を整理します。
+func getPrefix66SizeForInOut(upperOpcode string, operands ng_operand.Operands) int {
+	bitMode := operands.GetBitMode()
+	opTypes := operands.OperandTypes()
+	opStrings := operands.InternalStrings() // 文字列表現も取得
+
+	// オペランドが存在しない場合はプレフィックス不要
+	if len(opTypes) == 0 {
+		return 0
+	}
+
+	// サイズを決定するオペランドタイプを特定
+	var sizeDeterminingOpType ng_operand.OperandType
+	if upperOpcode == "IN" {
+		sizeDeterminingOpType = opTypes[0]
+	} else if upperOpcode == "OUT" && len(opTypes) > 1 {
+		firstOpType := opTypes[0]
+		// 最初のオペランドが DX かどうかを判定 (型と文字列表現の両方を確認)
+		isFirstOpDX := firstOpType == ng_operand.CodeDX ||
+			(firstOpType == ng_operand.CodeR16 && len(opStrings) > 0 && strings.ToUpper(opStrings[0]) == "DX")
+		// 最初のオペランドが imm かどうかを判定
+		isFirstOpImm := strings.HasPrefix(string(firstOpType), "imm")
+		if isFirstOpDX || isFirstOpImm {
+			sizeDeterminingOpType = opTypes[1] // 条件を満たせば2番目のオペランド
+		}
+	}
+
+	// サイズ決定オペランドが特定できない場合はプレフィックス不要
+	if sizeDeterminingOpType == "" {
+		return 0
+	}
+
+	// プレフィックスが必要かどうかを判定 (lo.Switch を使用)
+	// Case の第2引数には評価済みの bool 値を渡す
+	needsPrefix66 := lo.Switch[cpu.BitMode, bool](bitMode).
+		Case(cpu.MODE_16BIT, sizeDeterminingOpType.IsR32Type()). // 16bitモード: 32bitオペランドの場合に必要
+		Case(cpu.MODE_32BIT, sizeDeterminingOpType.IsR16Type()). // 32bitモード: 16bitオペランドの場合に必要
+		Default(false)                                           // その他のモードでは不要
+
+	return lo.Ternary(needsPrefix66, 1, 0) // 条件に応じて 1 または 0 を返す
+}
+
 // GetPrefixSize は必要なプレフィックスバイト (オペランドサイズ 0x66, アドレスサイズ 0x67) のサイズを計算します。
 // IN/OUT 命令の特殊な 0x66 プレフィックスルールを考慮します。
-func (db *InstructionDB) GetPrefixSize(opcode string, operands ng_operand.Operands) int { // opcode パラメータ追加, ng_operand.Operands を使用
+func (db *InstructionDB) GetPrefixSize(opcode string, operands ng_operand.Operands) int {
 	prefix66Size := 0
 	prefix67Size := 0
 
@@ -294,48 +337,9 @@ func (db *InstructionDB) GetPrefixSize(opcode string, operands ng_operand.Operan
 
 	// 1. オペランドサイズプレフィックス (0x66) の計算
 	if isInOut {
-		// IN/OUT 命令の特殊ルール
-		bitMode := operands.GetBitMode()
-		opTypes := operands.OperandTypes()
-		// オペランドが1つ以上存在するか確認 (例: IN AL, DX)
-		if len(opTypes) > 0 {
-			// IN/OUT では、通常最初のオペランド (AL/AX/EAX) または2番目のオペランド(OUT DX, AL/AX/EAX) がサイズを決定する
-			var sizeDeterminingOpType ng_operand.OperandType // ng_operand.OperandType を使用
-			if upperOpcode == "IN" {
-				sizeDeterminingOpType = opTypes[0] // IN AL/AX/EAX, ...
-			} else if len(opTypes) > 1 && (opTypes[0] == ng_operand.CodeDX || opTypes[0] == ng_operand.CodeR16) { // Check if first operand is DX or r16 for OUT DX, ...
-				// Ensure the first operand is indeed DX by checking the string representation if type is r16
-				isFirstOpDX := false
-				if opTypes[0] == ng_operand.CodeDX {
-					isFirstOpDX = true
-				} else if opTypes[0] == ng_operand.CodeR16 {
-					opStrings := operands.InternalStrings()
-					if len(opStrings) > 0 && strings.ToUpper(opStrings[0]) == "DX" {
-						isFirstOpDX = true
-					}
-				}
-
-				if isFirstOpDX {
-					sizeDeterminingOpType = opTypes[1] // OUT DX, AL/AX/EAX
-				}
-			} else if len(opTypes) > 1 && strings.HasPrefix(string(opTypes[0]), "imm") {
-				sizeDeterminingOpType = opTypes[1] // OUT imm8, AL/AX/EAX
-			}
-
-			// is16BitRegType と is32BitRegType ヘルパー関数を使用
-			is16bitOp := is16BitRegType(sizeDeterminingOpType)
-			is32bitOp := is32BitRegType(sizeDeterminingOpType)
-
-			if bitMode == cpu.MODE_16BIT && is32bitOp { // 16bitモードで32bitオペランド (EAX)
-				prefix66Size = 1
-			} else if bitMode == cpu.MODE_32BIT && is16bitOp { // 32bitモードで16bitオペランド (AX)
-				prefix66Size = 1
-			}
-			// その他の組み合わせ (AL, 16bitモードのAX, 32bitモードのEAX) は 0x66 不要
-		}
+		prefix66Size = getPrefix66SizeForInOut(upperOpcode, operands) // ヘルパー関数を呼び出し
 	} else {
-		// IN/OUT 以外の命令は従来のロジックを使用 (ng_operand 側の判定に任せる)
-		// 注意: Require66h はオペコードを知らないため、IN/OUT の特殊ケースは扱えない
+		// IN/OUT 以外の命令は従来のロジックを使用
 		if operands.Require66h() {
 			prefix66Size = 1
 		}
@@ -347,23 +351,6 @@ func (db *InstructionDB) GetPrefixSize(opcode string, operands ng_operand.Operan
 	}
 
 	return prefix66Size + prefix67Size
-}
-
-// is16BitRegType は OperandType が 16 ビットレジスタを表すか判定します。
-func is16BitRegType(opType ng_operand.OperandType) bool {
-	// ng_operand の isR16Type 相当のチェックをここで行う
-	// (CodeAX など具体的なレジスタタイプも含む可能性があるため、それらもチェック)
-	return opType == ng_operand.CodeR16 || opType == ng_operand.CodeAX || opType == ng_operand.CodeBX ||
-		opType == ng_operand.CodeCX || opType == ng_operand.CodeDX || opType == ng_operand.CodeSI ||
-		opType == ng_operand.CodeDI || opType == ng_operand.CodeSP || opType == ng_operand.CodeBP
-}
-
-// is32BitRegType は OperandType が 32 ビットレジスタを表すか判定します。
-func is32BitRegType(opType ng_operand.OperandType) bool {
-	// ng_operand の isR32Type 相当のチェック
-	return opType == ng_operand.CodeR32 || opType == ng_operand.CodeEAX || opType == ng_operand.CodeEBX ||
-		opType == ng_operand.CodeECX || opType == ng_operand.CodeEDX || opType == ng_operand.CodeESI ||
-		opType == ng_operand.CodeEDI || opType == ng_operand.CodeESP || opType == ng_operand.CodeEBP
 }
 
 // FindMinOutputSize は、pass1 での LOC (Location Counter) 計算のために、

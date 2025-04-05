@@ -117,6 +117,22 @@ const (
 	CodeUNKNOWN OperandType = "unknown" // 不明
 )
 
+// IsR16Type は OperandType が 16 ビットレジスタを表すか判定します。
+func (ot OperandType) IsR16Type() bool {
+	// isR16Type 関数のロジックをここに移動
+	return ot == CodeR16 || ot == CodeAX || ot == CodeBX ||
+		ot == CodeCX || ot == CodeDX || ot == CodeSI ||
+		ot == CodeDI || ot == CodeSP || ot == CodeBP
+}
+
+// IsR32Type は OperandType が 32 ビットレジスタを表すか判定します。
+func (ot OperandType) IsR32Type() bool {
+	// isR32Type 関数のロジックをここに移動
+	return ot == CodeR32 || ot == CodeEAX || ot == CodeEBX ||
+		ot == CodeECX || ot == CodeEDX || ot == CodeESI ||
+		ot == CodeEDI || ot == CodeESP || ot == CodeEBP
+}
+
 // ParsedOperandPeg は、PEGパーサーによってパースされた単一のオペランド情報を格納する構造体です。
 type ParsedOperandPeg struct {
 	Type      OperandType  // オペランドの種類 (例: CodeR32, CodeM, CodeIMM8)
