@@ -156,6 +156,55 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			`,
 			expectedLOC: 3, // 0x83 /0 ib | ADD r/m16, imm8 (VAL2 = 20)
 		},
+		// --- TestHarib01f related instructions (32-bit mode) ---
+		{
+			name:        "IN_AL_DX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "IN AL, DX",
+			expectedLOC: 1, // EC
+		},
+		{
+			name:        "IN_AX_DX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "IN AX, DX",
+			expectedLOC: 2, // 66 ED
+		},
+		{
+			name:        "IN_EAX_DX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "IN EAX, DX",
+			expectedLOC: 1, // ED
+		},
+		{
+			name:        "OUT_DX_AL",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "OUT DX, AL",
+			expectedLOC: 1, // EE
+		},
+		{
+			name:        "OUT_DX_AX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "OUT DX, AX",
+			expectedLOC: 2, // 66 EF
+		},
+		{
+			name:        "OUT_DX_EAX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "OUT DX, EAX",
+			expectedLOC: 1, // EF
+		},
+		{
+			name:        "POP_EAX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "POP EAX",
+			expectedLOC: 1, // 58
+		},
+		{
+			name:        "PUSH_EAX",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "PUSH EAX",
+			expectedLOC: 1, // 50
+		},
 	}
 
 	for _, tt := range tests {

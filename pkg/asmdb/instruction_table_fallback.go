@@ -1,5 +1,9 @@
 package asmdb
 
+import (
+	"github.com/samber/lo" // Add import for lo package
+)
+
 // Bool is a helper function that returns a pointer to a boolean value.
 func Bool(b bool) *bool {
 	return &b
@@ -342,7 +346,18 @@ func addInFallbackEncodings() {
 					},
 				},
 			},
-			// Note: EAX form might exist for 32-bit
+			// Add IN EAX, DX form (Opcode ED, same as AX but no 66h prefix in 32bit)
+			{
+				Operands: &[]Operand{
+					{Type: "eax", Input: Bool(false), Output: Bool(true)}, // Destination
+					{Type: "dx", Input: Bool(true), Output: Bool(false)},  // Source (Port)
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "ED"},
+					},
+				},
+			},
 		},
 	}
 }
@@ -374,4 +389,63 @@ func init() {
 	addMovFallbackEncodings()
 	addLgdtFallbackEncodings()
 	addInFallbackEncodings() // Add call to the new function
+}
+
+// addPushPopFallbackEncodings adds fallback encodings for PUSH/POP r32 instructions.
+// JSON data seems to be missing r32 forms.
+func addPushPopFallbackEncodings() {
+	// PUSH r32 (Opcode 50+rd)
+	// Check if PUSH already exists, if so append, otherwise create
+	pushInst, pushExists := instructionData.Instructions["PUSH"]
+	if !pushExists {
+		pushInst = Instruction{Summary: "Push Word, Doubleword or Quadword Onto the Stack"}
+	}
+	pushInst.Forms = append(pushInst.Forms, InstructionForm{
+		Operands: &[]Operand{
+			{Type: "r32", Input: Bool(true), Output: Bool(false)},
+		},
+		Encodings: []Encoding{
+			{
+				Opcode: Opcode{Byte: "50", Addend: lo.ToPtr("#0")}, // 50 + register number
+			},
+			// Also add FF /6 form for r/m32? JSON has it for r/m16, r/m64
+			// {
+			// 	Opcode: Opcode{Byte: "FF"},
+			// 	ModRM:  &Modrm{Mode: "11", Rm: "#0", Reg: "6"},
+			// },
+		},
+	})
+	instructionData.Instructions["PUSH"] = pushInst
+
+	// POP r32 (Opcode 58+rd)
+	// Check if POP already exists, if so append, otherwise create
+	popInst, popExists := instructionData.Instructions["POP"]
+	if !popExists {
+		popInst = Instruction{Summary: "Pop a Value from the Stack"}
+	}
+	popInst.Forms = append(popInst.Forms, InstructionForm{
+		Operands: &[]Operand{
+			{Type: "r32", Input: Bool(false), Output: Bool(true)},
+		},
+		Encodings: []Encoding{
+			{
+				Opcode: Opcode{Byte: "58", Addend: lo.ToPtr("#0")}, // 58 + register number
+			},
+			// Also add 8F /0 form for r/m32? JSON has it for r/m16, r/m64
+			// {
+			// 	Opcode: Opcode{Byte: "8F"},
+			// 	ModRM:  &Modrm{Mode: "11", Rm: "#0", Reg: "0"},
+			// },
+		},
+	})
+	instructionData.Instructions["POP"] = popInst
+}
+
+func init() {
+	addImulFallbackEncodings()
+	addOutFallbackEncodings()
+	addMovFallbackEncodings()
+	addLgdtFallbackEncodings()
+	addInFallbackEncodings()      // Add call to the new function
+	addPushPopFallbackEncodings() // Add call for PUSH/POP
 }

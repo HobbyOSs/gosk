@@ -332,6 +332,71 @@ func TestGenerateX86(t *testing.T) {
 			// Machine code: E9 FD 45
 			expected: []byte{0xe9, 0xfd, 0x45}, // Corrected expected value
 		},
+		// --- TestHarib01f related instructions (32-bit mode) ---
+		{
+			name:    "IN_AL_DX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpIN, Operands: []string{"AL", "DX"}},
+			},
+			expected: []byte{0xec}, // IN AL, DX
+		},
+		{
+			name:    "IN_AX_DX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpIN, Operands: []string{"AX", "DX"}},
+			},
+			expected: []byte{0x66, 0xed}, // 66h + IN AX, DX
+		},
+		{
+			name:    "IN_EAX_DX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpIN, Operands: []string{"EAX", "DX"}},
+			},
+			expected: []byte{0xed}, // IN EAX, DX
+		},
+		{
+			name:    "OUT_DX_AL_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOUT, Operands: []string{"DX", "AL"}},
+			},
+			expected: []byte{0xee}, // OUT DX, AL
+		},
+		{
+			name:    "OUT_DX_AX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOUT, Operands: []string{"DX", "AX"}},
+			},
+			expected: []byte{0x66, 0xef}, // 66h + OUT DX, AX
+		},
+		{
+			name:    "OUT_DX_EAX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpOUT, Operands: []string{"DX", "EAX"}},
+			},
+			expected: []byte{0xef}, // OUT DX, EAX
+		},
+		{
+			name:    "POP_EAX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpPOP, Operands: []string{"EAX"}},
+			},
+			expected: []byte{0x58}, // POP EAX
+		},
+		{
+			name:    "PUSH_EAX_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpPUSH, Operands: []string{"EAX"}},
+			},
+			expected: []byte{0x50}, // PUSH EAX
+		},
 	}
 
 	for _, tt := range tests {

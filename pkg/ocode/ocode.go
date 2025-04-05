@@ -162,11 +162,13 @@ const (
 	OpNOP                       // NOP
 	OpNTAKEN                    // NTAKEN
 	OpPAUSE                     // PAUSE
+	OpPOP                       // POP (Added)
 	OpPOPA                      // POPA
 	OpPOPAD                     // POPAD
 	OpPOPF                      // POPF
 	OpPOPFD                     // POPFD
 	OpPOPFQ                     // POPFQ
+	OpPUSH                      // PUSH (Added)
 	OpPUSHA                     // PUSHA
 	OpPUSHAD                    // PUSHAD
 	OpPUSHF                     // PUSHF
