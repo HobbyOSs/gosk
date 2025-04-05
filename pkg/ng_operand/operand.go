@@ -52,4 +52,6 @@ type Operands interface {
 	// IsType は、指定されたインデックスのオペランドが指定されたタイプと一致するかどうかを返します。
 	// 汎用的なタイプチェック (例: R32, IMM, M8) に使用できます。
 	IsType(index int, targetType OperandType) bool
+	// CalcSibByteSize は、SIB バイトが必要な場合に 1 を、不要な場合に 0 を返します。
+	CalcSibByteSize() int
 }

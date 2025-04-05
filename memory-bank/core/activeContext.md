@@ -5,7 +5,7 @@
 1.  **Pass1 命令サイズ計算の修正 (最優先):**
     *   **方針:** `internal/pass1` で命令サイズを計算する際に SIB バイトの必要性を正確に判定し、サイズに含めるように修正する。具体的には、`asmdb.FindMinOutputSize` または関連する `asmdb` や `ng_operand` のロジックを修正する。(`processMOV` 内でのアドホックな修正は行わない)
     *   **次作業:** `FindMinOutputSize` または関連箇所の修正方針を検討し、SIB バイト計算ロジックを実装する。
-    *   **テスト:** SIB バイトが必要/不要なケースを含む `FindMinOutputSize` (または関連関数) の単体テストを追加し、修正を検証する。その後、`TestHarib01a` を再実行してバイナリ差分が解消されることを確認する。
+    *   **テスト:** SIB バイトが必要/不要なケースを含む `FindMinOutputSize` (または関連関数) の単体テストを追加し、修正を検証する。
     * 上記が終了後、coff.goにあるデバッグコードや冗長な処理は削除する。
 2.  **`TestHarib01f` の機械語差異調査:** (Pass1 サイズ計算修正後に実施)
 3.  **EXTERN シンボルのテストケース追加:** (変更なし)
@@ -15,6 +15,11 @@
 
 ## 完了した作業 (2025/04/05)
 
+- **`TestHarib01a` デバッグ完了:**
+    - テスト失敗の原因が、テストコード内の `expected` バイト列が NASK の実際の出力と異なっていたためであることを特定。
+    - NASK の正しい出力を基に `expected` を修正し、テストが PASS することを確認。
+    - 関連して `internal/filefmt/coff.go` のシンボル名/文字列テーブル処理を修正。
+    - テスト期待値の生成プロセスを `technical_notes.md` に記録。
 - **COFFディレクティブ対応 (Pass1):** (変更なし)
 - **ファイルフォーマット層の導入準備:** (変更なし)
 - **COFFファイル出力実装 (filefmt):** (変更なし)
@@ -70,6 +75,6 @@
         - 文字列テーブル書き込み処理の変更（先頭バイト削除など）
         - デバッグログの追加と確認。
 - **根本原因の特定 (2025/04/05):**
-    - `TestHarib01a` のバイナリ差分 (2バイトずれ) の根本原因は、`internal/pass1/pass1_inst_mov.go` の `processMOV` における命令サイズ計算が、SIB バイトが必要なケースを考慮しておらず、実際の機械語サイズより小さく計算してしまうためであると特定。これにより、Pass1 で計算される LOC (Location Counter) がずれ、COFF ファイル全体のオフセット計算に影響が出ていた。
+    - ~~`TestHarib01a` のバイナリ差分 (2バイトずれ) の根本原因は、`internal/pass1/pass1_inst_mov.go` の `processMOV` における命令サイズ計算が、SIB バイトが必要なケースを考慮しておらず、実際の機械語サイズより小さく計算してしまうためであると特定。これにより、Pass1 で計算される LOC (Location Counter) がずれ、COFF ファイル全体のオフセット計算に影響が出ていた。~~ **(誤り)** -> 正しくはテスト期待値の誤りと COFF 生成ロジックの問題。
 
 (過去の完了作業: [activeContext_archive_202503.md](../archives/activeContext_archive_202503.md), [activeContext_archive_202504.md](../archives/activeContext_archive_202504.md))

@@ -515,3 +515,21 @@ func (o *OperandPegImpl) IsType(index int, targetType OperandType) bool {
 
 // ヘルパー関数 (isR32Type, isR16Type, isRegisterType, needsResolution) は operand_util.go に移動しました。
 // isR8Type と isR64Type も operand_util.go に追加しました。
+
+// CalcSibByteSize は、SIB バイトが必要な場合に 1 を、不要な場合に 0 を返します。
+func (o *OperandPegImpl) CalcSibByteSize() int {
+	memInfo, found := o.GetMemoryInfo()
+	// 32ビットモードでメモリオペランドがある場合のみ SIB の可能性を考慮
+	if found && memInfo != nil && o.GetBitMode() == cpu.MODE_32BIT {
+		// ModR/M rm=100 になる条件をチェック (calculateModRM のロジックを参考)
+		isDirectAddr := memInfo.BaseReg == "" && memInfo.IndexReg == ""
+		isEBPBasedNoIndex := memInfo.BaseReg == "EBP" && memInfo.IndexReg == ""
+
+		// 直接アドレス ([disp32]) や [EBP+disp] 形式 (rm=101) ではなく、
+		// かつ ベースが ESP または インデックスが存在する場合に SIB が必要
+		if !isDirectAddr && !isEBPBasedNoIndex && (memInfo.BaseReg == "ESP" || memInfo.IndexReg != "") {
+			return 1 // SIB バイトが必要
+		}
+	}
+	return 0 // SIB バイトは不要
+}

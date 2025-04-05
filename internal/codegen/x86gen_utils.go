@@ -366,10 +366,9 @@ calculate_32bit_addressing: // Label for the 32-bit logic start
 		}
 	}
 
-	// Generate SIB byte if needed (TODO: Implement fully based on Table 2-3)
+	// Generate SIB byte if needed (Implement fully based on Table 2-3)
 	if needsSIB {
-		log.Printf("WARN: SIB byte generation not fully implemented for Base=%s, Index=%s", mem.BaseReg, mem.IndexReg)
-		// Placeholder SIB calculation (likely incorrect for many cases)
+
 		var scale byte
 		switch mem.Scale {
 		case 1:
@@ -381,36 +380,69 @@ calculate_32bit_addressing: // Label for the 32-bit logic start
 		case 8:
 			scale = 0b11000000
 		default:
-			scale = 0b00000000 // Default to scale 1 if not specified or invalid
+			if mem.Scale != 0 { // Allow scale 0 if index is not present
+				return 0, 0, nil, fmt.Errorf("invalid SIB scale: %d", mem.Scale)
+			}
+			scale = 0b00000000 // Default to scale 1 if scale is 0 or index is empty
 		}
 
-		var indexNum int = 4                             // Default to index=none (ESP)
-		if mem.IndexReg != "" && mem.IndexReg != "ESP" { // ESP cannot be index
+		var indexNum int = 4 // Default to index=none (ESP encoding)
+		if mem.IndexReg != "" {
+			if mem.IndexReg == "ESP" {
+				return 0, 0, nil, fmt.Errorf("ESP cannot be used as an index register in SIB")
+			}
 			indexNum, err = GetRegisterNumber(mem.IndexReg)
 			if err != nil {
 				return 0, 0, nil, fmt.Errorf("invalid index register in SIB: %s", mem.IndexReg)
 			}
 		}
 
-		var baseNum int = 5 // Default to base=none ([disp32] or [EBP+disp])
+		var baseNum int = 5 // Default to base=none ([disp32] or [EBP+disp] if mod=00)
 		if mem.BaseReg != "" {
 			baseNum, err = GetRegisterNumber(mem.BaseReg)
 			if err != nil {
 				return 0, 0, nil, fmt.Errorf("invalid base register in SIB: %s", mem.BaseReg)
 			}
-			// Special case for mod=00, base=EBP
-			if mod == 0b00000000 && baseNum == 5 {
-				mod = 0b01000000 // Use disp8=0
-				disp = 0
-				hasDisp = true
+		}
+
+		// Handle special case: mod=00 and base=EBP ([EBP+index*scale+disp32])
+		// In this case, base field must be 5 (EBP), and a disp32 is always present.
+		if mod == 0b00000000 && baseNum == 5 { // baseNum 5 corresponds to EBP
+			// Base field remains 5, mod remains 00.
+			// Ensure disp32 is handled correctly later.
+			hasDisp = true // This combination always requires disp32
+		} else if mem.BaseReg == "" { // No base register specified, implies base=EBP if mod=00
+			// If there's no base register explicitly, and mod is 00,
+			// the base field in SIB must be 5 (meaning disp32 follows).
+			if mod == 0b00000000 {
+				baseNum = 5
+				hasDisp = true // Requires disp32
 			}
-		} else if mod == 0b00000000 { // No base register and mod=00 -> [disp32] or [index*scale+disp32]
-			baseNum = 5      // Use base=none encoding
-			mod = 0b00000000 // Ensure mod is 00 for disp32
-			hasDisp = true   // Requires disp32
+			// If mod is 01 or 10, baseNum should reflect the actual base register (or lack thereof).
+			// If BaseReg is truly empty, baseNum should technically be 5,
+			// but the ModRM calculation logic might have already set mod to 01/10 based on displacement.
+			// Let's stick with baseNum=5 if BaseReg is empty for SIB calculation.
+			if mem.BaseReg == "" {
+				baseNum = 5
+			}
 		}
 
 		sibByte = scale | (byte(indexNum) << 3) | byte(baseNum)
+
+		// Re-evaluate displacement requirement based on SIB base encoding
+		// If base is EBP (5) and mod is 00, disp32 is required.
+		// If base is EBP (5) and mod is 01, disp8 is required.
+		// If base is EBP (5) and mod is 10, disp32 is required.
+		if baseNum == 5 { // EBP or disp32 base
+			if mod == 0b00000000 { // [disp32+index*scale]
+				mod = 0b00000000 // Keep mod 00
+				hasDisp = true   // Force disp32
+			} else if mod == 0b01000000 { // [EBP+index*scale+disp8]
+				hasDisp = true // Requires disp8
+			} else { // [EBP+index*scale+disp32]
+				hasDisp = true // Requires disp32
+			}
+		}
 	}
 
 	// Generate displacement bytes

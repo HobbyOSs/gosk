@@ -50,3 +50,43 @@
 - `internal/filefmt/coff.go` の `generateSymbolEntries` で `CoffSymbol` を生成する際、`Value` フィールドには `pass1` で計算されたシンボルのアドレス（LOC）を正しく設定する必要がある。現在の実装では `ctx.SymTable[globalName]` から取得しており、これは正しいはずだが、ずれの原因調査においてこの値の正確性も確認する必要がある。
 
 (過去の技術ノートは `memory-bank/archives/technical_notes_archive_YYYYMM.md` にアーカイブされています。)
+
+## テスト期待値 (expected) の生成方法 (2025/04/05)
+
+`go test` で使用するバイナリ期待値 (`expected []byte`) は、基準となるアセンブラ (現在は NASK) の出力を元に生成する。これにより、`gosk` の出力が基準アセンブラと一致するかどうかを正確に検証できる。
+
+**手順:**
+
+1.  **NASK バイナリ生成**: テスト対象のアセンブリコード (`.asm`) を NASK でアセンブルし、バイナリファイル (`.bin`) を生成する。
+    ```bash
+    # (NASK の実行コマンド例 - 環境に合わせてパス等を調整)
+    # wine /path/to/nask.exe input.asm output.bin output.lst
+    ```
+    *注意*: NASK の実行環境やパスはプロジェクト外の情報であるため、具体的なパスは記録しない。
+
+2.  **Go リテラル生成**: 生成されたバイナリファイルを読み込み、Go の `[]byte` リテラル形式 (`[]byte{0x.., 0x.., ...}`) に変換する Go プログラム (`generate_expected.go` など) を作成・実行する。
+    ```go
+    // generate_expected.go (抜粋)
+    package main
+    import ("fmt"; "os"; "strings")
+    func main() {
+        data, _ := os.ReadFile("output.bin") // NASK が生成したバイナリ
+        var builder strings.Builder
+        builder.WriteString("[]byte{\n")
+        for i, b := range data {
+            if i%16 == 0 { builder.WriteString("\t\t") }
+            builder.WriteString(fmt.Sprintf("0x%02x,", b))
+            if (i+1)%16 == 0 { builder.WriteString(" //\n") } else { builder.WriteString(" ") }
+        }
+        if len(data)%16 != 0 { builder.WriteString("\n") }
+        builder.WriteString("\t}")
+        fmt.Println(builder.String())
+    }
+    ```
+    ```bash
+    go run generate_expected.go > expected_literal.txt
+    ```
+
+3.  **テストコード更新**: 生成された `[]byte` リテラルをコピーし、該当するテストケース (`*_test.go`) 内の `expected` 変数に貼り付ける。
+
+このプロセスにより、`expected` データが常に基準アセンブラの最新の正しい出力を反映するようになり、テストの信頼性が向上する。

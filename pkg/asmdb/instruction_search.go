@@ -313,10 +313,13 @@ func (db *InstructionDB) FindMinOutputSize(opcode string, operands ng_operand.Op
 	// (例: imm8 なら即値1バイト、imm16/32 なら即値2/4バイトとして計算される)
 	size := encoding.GetOutputSize(nil) // オプションは不要
 
-	// 基本サイズにプレフィックスとオフセットのサイズを加算
-	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize()
-	// デバッグ用に計算結果をログ出力
-	log.Printf("debug: [pass1] %s %s = %d\n", opcode, operands.InternalString(), minOutputSize)
+	// 基本サイズにプレフィックス、オフセット、SIB バイトのサイズを加算
+	sibSize := operands.CalcSibByteSize() // Use the interface method
+	minOutputSize := size + db.GetPrefixSize(operands) + operands.CalcOffsetByteSize() + sibSize
+	// デバッグ用に計算結果をログ出力 (SIB サイズも含む)
+	log.Printf("debug: [pass1] %s %s = %d (base:%d, prefix:%d, offset:%d, sib:%d)\n",
+		opcode, operands.InternalString(), minOutputSize,
+		size, db.GetPrefixSize(operands), operands.CalcOffsetByteSize(), sibSize)
 	return minOutputSize, nil
 }
 
