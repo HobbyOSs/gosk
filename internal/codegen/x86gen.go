@@ -106,6 +106,8 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleCALL(params, ctx)
 	case ocode.OpLGDT:
 		return handleLGDT(params.Operands, ctx)
+	case ocode.OpLIDT:
+		return handleLIDT(params.Operands, ctx)
 	case ocode.OpALIGNB:
 		return handleALIGNB(params, ctx)
 	default:
