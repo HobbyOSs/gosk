@@ -4,49 +4,54 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	// "io" // 不要になったため削除
 	"log"
 	"os"
 	"sort" // sort パッケージをインポート
 
 	"github.com/HobbyOSs/gosk/internal/codegen"
+	"github.com/lunixbochs/struc" // struc パッケージをインポート
 )
 
 // COFF ファイルヘッダ構造体
 type CoffHeader struct {
-	Machine              uint16 // ターゲットマシン (0x014c for i386)
-	NumberOfSections     uint16 // セクション数
-	TimeDateStamp        uint32 // ファイル作成日時 (Unix timestamp)
-	PointerToSymbolTable uint32 // シンボルテーブルへのファイルオフセット
-	NumberOfSymbols      uint32 // シンボルテーブル内のエントリ数 (補助シンボル含む)
-	SizeOfOptionalHeader uint16 // オプショナルヘッダのサイズ (オブジェクトファイルでは通常0)
-	Characteristics      uint16 // ファイル特性フラグ
+	Machine              uint16 `struc:",little"` // ターゲットマシン (0x014c for i386)
+	NumberOfSections     uint16 `struc:",little"` // セクション数
+	TimeDateStamp        uint32 `struc:",little"` // ファイル作成日時 (Unix timestamp)
+	PointerToSymbolTable uint32 `struc:",little"` // シンボルテーブルへのファイルオフセット
+	NumberOfSymbols      uint32 `struc:",little"` // シンボルテーブル内のエントリ数 (補助シンボル含む)
+	SizeOfOptionalHeader uint16 `struc:",little"` // オプショナルヘッダのサイズ (オブジェクトファイルでは通常0)
+	Characteristics      uint16 `struc:",little"` // ファイル特性フラグ
 }
 
 // COFF セクションヘッダ構造体
 type CoffSectionHeader struct {
-	Name                 [8]byte // セクション名 (NULL終端)
-	VirtualSize          uint32  // (未使用)
-	VirtualAddress       uint32  // (未使用)
-	SizeOfRawData        uint32  // セクションのデータサイズ (バイト単位)
-	PointerToRawData     uint32  // セクションデータへのファイルオフセット
-	PointerToRelocations uint32  // 再配置情報へのファイルオフセット (今回は0)
-	PointerToLinenumbers uint32  // 行番号情報へのファイルオフセット (今回は0)
-	NumberOfRelocations  uint16  // 再配置エントリ数 (今回は0)
-	NumberOfLinenumbers  uint16  // 行番号エントリ数 (今回は0)
-	Characteristics      uint32  // セクション特性フラグ
+	Name                 [8]byte // タグ不要 (struc はバイト配列をそのまま扱う)
+	VirtualSize          uint32  `struc:",little"` // (未使用)
+	VirtualAddress       uint32  `struc:",little"` // (未使用)
+	SizeOfRawData        uint32  `struc:",little"` // セクションのデータサイズ (バイト単位)
+	PointerToRawData     uint32  `struc:",little"` // セクションデータへのファイルオフセット
+	PointerToRelocations uint32  `struc:",little"` // 再配置情報へのファイルオフセット (今回は0)
+	PointerToLinenumbers uint32  `struc:",little"` // 行番号情報へのファイルオフセット (今回は0)
+	NumberOfRelocations  uint16  `struc:",little"` // 再配置エントリ数 (今回は0)
+	NumberOfLinenumbers  uint16  `struc:",little"` // 行番号エントリ数 (今回は0)
+	Characteristics      uint32  `struc:",little"` // セクション特性フラグ
 }
 
 // COFF シンボルテーブルエントリ構造体
 type CoffSymbol struct {
-	Name               [8]byte // シンボル名 (短い場合) または文字列テーブルへのオフセット
-	Value              uint32  // シンボルの値 (アドレスなど)
-	SectionNumber      int16   // 関連セクション番号 (1ベース、0=未定義, -1=絶対, -2=デバッグ)
-	Type               uint16  // シンボル型 (基本型と派生型)
-	StorageClass       uint8   // 格納クラス (スコープ、型など)
-	NumberOfAuxSymbols uint8   // 補助シンボルエントリ数
+	Name               [8]byte // タグ不要
+	Value              uint32  `struc:",little"` // シンボルの値 (アドレスなど)
+	SectionNumber      int16   `struc:",little"` // 関連セクション番号 (1ベース、0=未定義, -1=絶対, -2=デバッグ)
+	Type               uint16  `struc:",little"` // シンボル型 (基本型と派生型)
+	StorageClass       uint8   `struc:",little"` // 格納クラス (スコープ、型など)
+	NumberOfAuxSymbols uint8   `struc:",little"` // 補助シンボルエントリ数
 }
 
 // COFF 補助セクションシンボルエントリ構造体
+// 注意: この構造体は直接 Pack/Unpack されないため、タグは不要。
+//
+//	補助シンボルは []byte として扱われる。
 type CoffAuxSectionSymbol struct {
 	Length           uint32  // セクション長
 	NumberOfRelocs   uint16  // 再配置エントリ数
@@ -136,34 +141,15 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 			entryName = string(entry.Main.Name[:nullIdx])
 		}
 
-		// 手動で CoffSymbol の各フィールドを書き込む
-		// Name [8]byte
-		if _, err := symbolTableResultBytes.Write(entry.Main.Name[:]); err != nil {
-			return fmt.Errorf("failed to write symbol name for %s: %w", entryName, err)
-		}
-		// Value uint32
-		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main.Value); err != nil {
-			return fmt.Errorf("failed to write symbol value for %s: %w", entryName, err)
-		}
-		// SectionNumber int16
-		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main.SectionNumber); err != nil {
-			return fmt.Errorf("failed to write symbol section number for %s: %w", entryName, err)
-		}
-		// Type uint16
-		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main.Type); err != nil {
-			return fmt.Errorf("failed to write symbol type for %s: %w", entryName, err)
-		}
-		// StorageClass uint8
-		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main.StorageClass); err != nil {
-			return fmt.Errorf("failed to write symbol storage class for %s: %w", entryName, err)
-		}
-		// NumberOfAuxSymbols uint8
-		if err := binary.Write(symbolTableResultBytes, binary.LittleEndian, entry.Main.NumberOfAuxSymbols); err != nil {
-			return fmt.Errorf("failed to write symbol number of aux symbols for %s: %w", entryName, err)
+		// struc を使ってメインシンボルを書き込む (リトルエンディアン指定)
+		// PackWithOptions を使うことで、デフォルトのビッグエンディアンではなくリトルエンディアンを指定できる
+		// (struc タグでも指定しているが、明示的に Options で指定する方が確実)
+		if err := struc.PackWithOptions(symbolTableResultBytes, &entry.Main, &struc.Options{Order: binary.LittleEndian}); err != nil {
+			return fmt.Errorf("failed to pack symbol %s: %w", entryName, err)
 		}
 		numSymbolsWritten++ // メインシンボルをカウント
 
-		// 補助シンボルの書き込み
+		// 補助シンボルの書き込み (ここは変更なし、[]byte を直接書き込む)
 		if entry.Aux != nil {
 			if len(entry.Aux) != coffSymbolSize {
 				symbolName := string(entry.Main.Name[:bytes.IndexByte(entry.Main.Name[:], 0)])
@@ -213,17 +199,29 @@ func (c *CoffFormat) Write(ctx *codegen.CodeGenContext, filePath string) error {
 
 	// ヘッダを上書き
 	headerBuf := new(bytes.Buffer)
-	if err := binary.Write(headerBuf, binary.LittleEndian, &header); err != nil {
-		return fmt.Errorf("failed to serialize final header: %w", err)
+	// struc を使ってヘッダを書き込む (リトルエンディアン指定)
+	if err := struc.PackWithOptions(headerBuf, &header, &struc.Options{Order: binary.LittleEndian}); err != nil {
+		return fmt.Errorf("failed to pack final header: %w", err)
+	}
+	if headerBuf.Len() != coffHeaderSize {
+		return fmt.Errorf("packed header size mismatch: expected %d, got %d", coffHeaderSize, headerBuf.Len())
 	}
 	copy(finalBytes[0:coffHeaderSize], headerBuf.Bytes())
 
-	// セクションヘッダを上書き
-	sectionHeadersBuf := new(bytes.Buffer)
-	if err := binary.Write(sectionHeadersBuf, binary.LittleEndian, sectionHeaders); err != nil {
-		return fmt.Errorf("failed to serialize final section headers: %w", err)
+	// セクションヘッダを上書き (ループで各ヘッダをパック)
+	currentOffset := coffHeaderSize
+	for i := range sectionHeaders {
+		sectionHeaderBuf := new(bytes.Buffer)
+		// struc を使ってセクションヘッダを書き込む (リトルエンディアン指定)
+		if err := struc.PackWithOptions(sectionHeaderBuf, &sectionHeaders[i], &struc.Options{Order: binary.LittleEndian}); err != nil {
+			return fmt.Errorf("failed to pack final section header %d: %w", i, err)
+		}
+		if sectionHeaderBuf.Len() != coffSectionHeaderSize {
+			return fmt.Errorf("packed section header %d size mismatch: expected %d, got %d", i, coffSectionHeaderSize, sectionHeaderBuf.Len())
+		}
+		copy(finalBytes[currentOffset:currentOffset+coffSectionHeaderSize], sectionHeaderBuf.Bytes())
+		currentOffset += coffSectionHeaderSize
 	}
-	copy(finalBytes[coffHeaderSize:coffHeaderSize+int(numSections)*coffSectionHeaderSize], sectionHeadersBuf.Bytes())
 
 	// --- ファイルへの書き込み ---
 	_, err = file.Write(finalBytes)
