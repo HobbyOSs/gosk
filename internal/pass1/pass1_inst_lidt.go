@@ -1,16 +1,18 @@
 package pass1
 
 import (
-	"fmt" // Keep only one fmt import
+	"fmt"
 	"log" // Add log import
 
 	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 
-// processLGDT handles the LGDT instruction.
-func processLGDT(env *Pass1, operands []ast.Exp) {
-	instName := "LGDT"
+// processLIDT handles the LIDT instruction.
+// LIDT m16&32
+// オペランドはメモリアドレスのみ
+func processLIDT(env *Pass1, operands []ast.Exp) {
+	instName := "LIDT"
 	if len(operands) != 1 {
 		log.Printf("Error: %s instruction requires exactly one operand.", instName)
 		return
