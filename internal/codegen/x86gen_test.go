@@ -397,6 +397,39 @@ func TestGenerateX86(t *testing.T) {
 			},
 			expected: []byte{0x50}, // PUSH EAX
 		},
+		// --- LGDT テストケース ---
+		{
+			name:    "LGDT_mem_disp16_16bit",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpLGDT, Operands: []string{"[0x1234]"}}, // ラベルはアドレスに解決されている想定
+			},
+			expected: []byte{0x0f, 0x01, 0x16, 0x34, 0x12}, // 0F 01 /2 m16&32 -> Mod=00, Reg=010, R/M=110, disp16
+		},
+		{
+			name:    "LGDT_mem_disp32_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpLGDT, Operands: []string{"[0x12345678]"}}, // ラベルはアドレスに解決されている想定
+			},
+			expected: []byte{0x0f, 0x01, 0x15, 0x78, 0x56, 0x34, 0x12}, // 0F 01 /2 m16&32 -> Mod=00, Reg=010, R/M=101, disp32
+		},
+		{
+			name:    "LGDT_mem_reg_disp_16bit",
+			bitMode: cpu.MODE_16BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpLGDT, Operands: []string{"[ESP+6]"}},
+			},
+			expected: []byte{0x67, 0x0f, 0x01, 0x54, 0x24, 0x06}, // 67h + 0F 01 /2 m16&32 -> SIB + disp8
+		},
+		{
+			name:    "LGDT_mem_reg_disp_32bit",
+			bitMode: cpu.MODE_32BIT,
+			ocodes: []ocode.Ocode{
+				{Kind: ocode.OpLGDT, Operands: []string{"[ESP+6]"}},
+			},
+			expected: []byte{0x0f, 0x01, 0x54, 0x24, 0x06}, // 0F 01 /2 m16&32 -> SIB + disp8
+		},
 	}
 
 	for _, tt := range tests {
