@@ -205,6 +205,37 @@ func (s *Pass1EvalSuite) TestEvalProgramLOC() {
 			text:        "PUSH EAX",
 			expectedLOC: 1, // 50
 		},
+		// --- LGDT テストケース ---
+		{
+			name:    "LGDT_mem_label_16bit",
+			bitMode: cpu.MODE_16BIT,
+			text: `
+				GDTR0: DW 0, 0, 0
+				LGDT [GDTR0]
+			`,
+			expectedLOC: 5, // 0F 01 /2 m16&32 -> 0F 01 16 disp16
+		},
+		{
+			name:    "LGDT_mem_label_32bit",
+			bitMode: cpu.MODE_32BIT,
+			text: `
+				GDTR0: DW 0, 0, 0
+				LGDT [GDTR0]
+			`,
+			expectedLOC: 7, // 0F 01 /2 m16&32 -> 0F 01 15 disp32
+		},
+		{
+			name:        "LGDT_mem_reg_disp_16bit",
+			bitMode:     cpu.MODE_16BIT,
+			text:        "LGDT [ESP+6]",
+			expectedLOC: 6, // 67h + 0F 01 /2 m16&32 -> 67 0F 01 54 24 06
+		},
+		{
+			name:        "LGDT_mem_reg_disp_32bit",
+			bitMode:     cpu.MODE_32BIT,
+			text:        "LGDT [ESP+6]",
+			expectedLOC: 5, // 0F 01 /2 m16&32 -> 0F 01 54 24 06
+		},
 	}
 
 	for _, tt := range tests {
