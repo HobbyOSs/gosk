@@ -369,13 +369,41 @@ func addLgdtFallbackEncodings() {
 		Summary: "Load Global Descriptor Table Register",
 		Forms: []InstructionForm{
 			{
+				// LGDT m (m = m16&32 or m16&64 depending on REX.W)
+				// Use generic 'm' type, representing any memory operand.
+				// The specific addressing mode (16/32 bit) and resulting
+				// ModRM/SIB/displacement bytes are handled by FindEncoding/codegen
+				// based on the BitMode context.
 				Operands: &[]Operand{
-					{Type: "mem", Input: Bool(true), Output: Bool(false)}, // Change type from "m" to "mem"
+					{Type: "m", Input: Bool(true), Output: Bool(false)},
 				},
 				Encodings: []Encoding{
 					{
 						Opcode: Opcode{Byte: "0F01"},
-						ModRM:  &Modrm{Mode: "#0", Reg: "02", Rm: "#0"}, // Reg: 02 (/2)
+						// /2 indicates the ModRM reg field must be 2.
+						// The mod and r/m fields depend on the memory operand.
+						ModRM:  &Modrm{Reg: "2"},
+					},
+				},
+			},
+		},
+	}
+}
+
+// addLidtFallbackEncodings adds fallback encodings for LIDT instruction.
+// This function is called from instruction_table.go:init().
+func addLidtFallbackEncodings() {
+	instructionData.Instructions["LIDT"] = Instruction{
+		Summary: "Load Interrupt Descriptor Table Register",
+		Forms: []InstructionForm{
+			{
+				Operands: &[]Operand{
+					{Type: "m32", Input: Bool(true), Output: Bool(false)}, // Change type from "mem" to "m32"
+				},
+				Encodings: []Encoding{
+					{
+						Opcode: Opcode{Byte: "0F01"},
+						ModRM:  &Modrm{Mode: "#0", Reg: "3", Rm: "#0"}, // Reg: 3 (/3)
 					},
 				},
 			},
@@ -388,6 +416,7 @@ func init() {
 	addOutFallbackEncodings()
 	addMovFallbackEncodings()
 	addLgdtFallbackEncodings()
+	addLidtFallbackEncodings()    // Add call for LIDT
 	addInFallbackEncodings()      // Add call to the new function
 	addPushPopFallbackEncodings() // Add call for PUSH/POP
 }
