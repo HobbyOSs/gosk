@@ -1,18 +1,15 @@
 package asmdb
 
 import (
-	_ "embed"
-
 	"bytes"
 	"compress/gzip"
 	"io"
+
+	jsonx86 "github.com/HobbyOSs/json-x86-64-go-mod"
 )
 
-//go:embed json-x86-64/x86_64.json.gz
-var compressedJSON []byte
-
-func decompressGzip(data []byte) ([]byte, error) {
-	reader, err := gzip.NewReader(bytes.NewReader(data))
+func decompressGzip() ([]byte, error) {
+	reader, err := gzip.NewReader(bytes.NewReader(jsonx86.X86JSONGZ))
 	if err != nil {
 		return nil, err
 	}

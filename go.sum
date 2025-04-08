@@ -1,3 +1,5 @@
+github.com/HobbyOSs/json-x86-64-go-mod v0.1.0 h1:unjZs575NXg/4SWAEge6v42D4dc+nSg6er7s+CVIueQ=
+github.com/HobbyOSs/json-x86-64-go-mod v0.1.0/go.mod h1:YJio7I4XwHHgYPF7p+KsprgrVjVuJaX9dwyBaHOPJfI=
 github.com/akedrou/textdiff v0.1.0 h1:K7nbOVQju7/coCXnJRJ2fsltTwbSvC+M4hKBUJRBRGY=
 github.com/akedrou/textdiff v0.1.0/go.mod h1:a9CCC49AKtFTmVDNFHDlCg7V/M7C7QExDAhb2SkL6DQ=
 github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c h1:bzYQ6WpR+t35/y19HUkolcg7SYeWZ15IclC9Z4naGHI=

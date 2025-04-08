@@ -3,6 +3,7 @@ module github.com/HobbyOSs/gosk
 go 1.22.0
 
 require (
+	github.com/HobbyOSs/json-x86-64-go-mod v0.1.0
 	github.com/akedrou/textdiff v0.1.0
 	github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c
 	github.com/google/go-cmp v0.7.0

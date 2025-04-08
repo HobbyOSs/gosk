@@ -15,7 +15,8 @@ var jsonData []byte
 
 func init() {
 	var err error
-	jsonData, err = decompressGzip(compressedJSON)
+	// decompressGzip は引数なしで呼び出すように変更
+	jsonData, err = decompressGzip()
 	if err != nil {
 		log.Fatalf("JSONの解凍に失敗しました: %v", err)
 	}

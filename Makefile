@@ -6,11 +6,11 @@ BIN=gosk
 NASK=wine nask.exe
 KILL_DEAD_CODE = find . -type f -name "*.go" -exec sed -i -E '/^\s*\/\/.*(remove|delete|unnecessary|dead code|no longer needed)/Id' {} +
 
-.PHONY: all test gen compress
+.PHONY: all test gen
 
 all: build test
 
-build: dep gen compress
+build: dep gen
 	go build ./...
 	$(GOBUILD) -v -o $(BIN) ./cmd/gosk
 
@@ -38,11 +38,6 @@ dep:
 	go install -v github.com/dmarkham/enumer@latest
 	go mod download
 	go mod tidy
-
-compress:
-	if [ ! -f pkg/asmdb/json-x86-64/x86_64.json.gz ] || [ pkg/asmdb/json-x86-64/x86_64.json -nt pkg/asmdb/json-x86-64/x86_64.json.gz ]; then \
-		gzip -c pkg/asmdb/json-x86-64/x86_64.json > pkg/asmdb/json-x86-64/x86_64.json.gz; \
-	fi
 
 tool:
 	go install -v golang.org/x/tools/gopls@latest

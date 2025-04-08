@@ -103,7 +103,8 @@ type InstructionData struct {
 var instructionData InstructionData
 
 func init() {
-	data, err := decompressGzip(compressedJSON)
+	// decompressGzip は引数なしで呼び出すように変更
+	data, err := decompressGzip()
 	if err != nil {
 		log.Fatalf("Failed to decompress JSON: %v", err)
 	}

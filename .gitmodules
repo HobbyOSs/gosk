@@ -1,5 +1,2 @@
 [submodule "https://github.com/mazegen/x86reference.git"]
 	url = pkg/asmdb/x86reference
-[submodule "pkg/asmdb/json-x86-64"]
-	path = pkg/asmdb/json-x86-64
-	url = https://github.com/astocko/json-x86-64.git
