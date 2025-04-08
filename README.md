@@ -21,7 +21,8 @@ Requires Go and Make installed.
 make build
 
 # Or install directly (might require setting up GOPATH/GOBIN)
-# go install github.com/HobbyOSs/gosk@latest
+# Note: This installs the command to your $GOPATH/bin or $GOBIN
+go install github.com/HobbyOSs/gosk/cmd/gosk@latest
 ```
 
 ## Usage

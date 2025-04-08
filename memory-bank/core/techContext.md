@@ -18,5 +18,6 @@
 
 ## 依存関係
 - Go標準ライブラリ
+- `github.com/HobbyOSs/json-x86-64-go-mod`: x86命令セットデータを提供 (以前は Git Submodule で管理)
 
 (さらに詳しい依存ライブラリや特記事項は [technical_notes.md](../details/technical_notes.md))

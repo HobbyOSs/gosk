@@ -77,7 +77,7 @@
 ## コンポーネント間の関係
 - フロントエンドはASTを生成し、バックエンドに渡す
 - バックエンドはASTを基に中間表現を生成し、最終コードを出力
-- `pkg/asmdb` はx86命令の情報をJSONファイルから取得し、オペコード、オペランド、エンコーディングなどの情報を提供する
+- `pkg/asmdb` はx86命令の情報を `github.com/HobbyOSs/json-x86-64-go-mod` モジュールから取得し、オペコード、オペランド、エンコーディングなどの情報を提供する (以前は Git Submodule 内の JSON ファイルから取得)
 - **オペランド受け渡し:** `pass1` は解析したオペランド情報を `ocode_client` を介して `codegen` に渡す。`CodegenClient` インターフェース (`internal/client/client.go`) がこの受け渡しを定義する。
 
 (詳細: [implementation_details.md](../details/implementation_details.md) および [technical_notes.md](../details/technical_notes.md))

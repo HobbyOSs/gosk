@@ -86,4 +86,17 @@
         - 期待値生成に `generate_expected.go` スクリプトの使用を推奨 (必須化)。
         - テスト実行コマンドを `go test -run ...` に修正。
 
+## このセッションで完了した作業 (2025/04/08 夜)
+
+- **`go install` の問題修正:**
+    - `pkg/asmdb` が Git Submodule 内のデータファイル (`x86_64.json.gz`) を `go:embed` で埋め込めず `go install` が失敗する問題を修正。
+    - データファイルを提供する専用 Go モジュール (`github.com/HobbyOSs/json-x86-64-go-mod`) を使用するように `pkg/asmdb/loader.go` および関連コードを修正。
+    - `go mod tidy` で依存関係を更新。
+- **Submodule の削除:**
+    - 不要になった `pkg/asmdb/json-x86-64` Submodule をリポジトリから削除。
+- **ルート `main.go` の削除:**
+    - リポジトリルートにあった空の `main.go` を削除。
+- **`README.md` の更新:**
+    - `go install` コマンドのパスを正しいもの (`cmd/gosk`) に修正。
+
 (過去の完了作業: [../archives/2025/04/activeContext_archive_202504.md](../archives/2025/04/activeContext_archive_202504.md), [../archives/activeContext_archive_202503.md](../archives/activeContext_archive_202503.md))

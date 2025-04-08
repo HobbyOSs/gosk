@@ -16,7 +16,6 @@ build: dep gen
 
 test:
 	go install -v github.com/rakyll/gotest@latest
-	go test -cv ./...
 	$(GOTEST) -v ./...
 
 clean:

@@ -15,6 +15,12 @@
     - `codegen` の `PUSH`/`POP` ハンドラ呼び出しを修正。
     - `TestPass1EvalSuite/TestEvalProgramLOC` が PASS することを確認。
     - `gosk` と `nask` の `harib01f` アセンブル結果が一致することを確認。
+- **`go install` の問題修正 (2025/04/08 夜):**
+    - `pkg/asmdb` が Git Submodule 内のデータファイルを `go:embed` で埋め込めない問題を修正。
+    - データ提供用の専用 Go モジュール (`github.com/HobbyOSs/json-x86-64-go-mod`) を導入。
+    - 不要になった Submodule (`pkg/asmdb/json-x86-64`) を削除。
+    - ルートの不要な `main.go` を削除。
+    - `README.md` のインストール手順を更新。
 
 ## まだ必要な実装
 - **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
