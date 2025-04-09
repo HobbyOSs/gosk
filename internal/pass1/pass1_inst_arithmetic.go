@@ -116,12 +116,26 @@ func processIMUL(env *Pass1, operands []ast.Exp) {
 
 	var size int = calculatedSize // デフォルトで計算されたサイズを使用します
 
-	// ★★★ IMUL ECX, 4608 (16bit mode) のサイズを強制的に7に修正 ★★★
-	// FindMinOutputSize が 4 を返す問題を回避するための暫定対応
-	// 生成されたオペランド文字列に基づいてチェックします
-	if env.BitMode == cpu.MODE_16BIT && operandString == "ECX,4608" {
-		log.Printf("debug: [pass1] Forcing size to 7 for IMUL ECX, 4608 in 16-bit mode.\n")
-		size = 7
+	// ★★★ IMUL r32, imm16/32 (16bit mode) のサイズ上書き処理 ★★★
+	// FindMinOutputSize が特定のケースで不正なサイズを返す問題への暫定対応。
+	// TODO: FindMinOutputSize または依存関係 (asmdb, ng_operand) を修正し、この暫定対応を削除する。
+	if env.BitMode == cpu.MODE_16BIT && len(ngOperands.OperandTypes()) == 2 {
+		// オペランドが r32 と imm16/imm32 の組み合わせかチェック
+		isR32 := ngOperands.IsType(0, ng_operand.CodeR32)
+		isImm16 := ngOperands.IsType(1, ng_operand.CodeIMM16)
+		isImm32 := ngOperands.IsType(1, ng_operand.CodeIMM32)
+
+		if isR32 && (isImm16 || isImm32) {
+			expectedSize := 7 // 16bitモードでの IMUL r32, imm16/32 の期待サイズ
+			if calculatedSize < expectedSize {
+				// FindMinOutputSize が期待より小さい不正な値を返した場合のみ上書き
+				log.Printf("debug: [pass1] Overriding calculated size %d with %d for IMUL r32, imm16/32 (%s) in 16-bit mode.\n",
+					calculatedSize, expectedSize, operandString)
+				size = expectedSize
+			}
+			// calculatedSize >= expectedSize の場合は、FindMinOutputSize が正しいか、
+			// より大きいサイズを返した可能性があるので、そのまま使う。
+		}
 	}
 
 	// LOC を加算
