@@ -1,6 +1,7 @@
 module github.com/HobbyOSs/gosk
 
 go 1.22.0
+toolchain go1.24.1
 
 require (
 	github.com/HobbyOSs/json-x86-64-go-mod v0.1.0
@@ -14,8 +15,8 @@ require (
 	github.com/sergi/go-diff v1.3.1
 	github.com/stretchr/testify v1.10.0
 	github.com/zeroflucs-given/generics v0.0.0-20250113082619-4aa2a59e718f
-	golang.org/x/net v0.33.0
-	golang.org/x/text v0.21.0
+	golang.org/x/net v0.38.0
+	golang.org/x/text v0.23.0
 )
 
 require (
