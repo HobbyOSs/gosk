@@ -10,6 +10,7 @@ const (
 	OpDW                        // DW n_1,n_2,n_3,..,n_k
 	OpDD                        // DD n_1,n_2,n_3,..,n_k
 	OpRESB                      // RESB n または RESB n-$
+	OpALIGNB                    // ALIGNB n (Added)
 	OpMOV                       // MOV dst, src
 	OpADD                       // ADD
 	OpSUB                       // SUB (Added)

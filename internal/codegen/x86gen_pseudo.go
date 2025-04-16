@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 )
@@ -56,4 +57,34 @@ func handleRESB(args []string, params x86genParams, ctx *CodeGenContext) []byte 
 
 	// 指定されたサイズの 0 バイトスライスを作成して返します
 	return make([]byte, reserveSize)
+}
+
+// handleALIGNB は ALIGNB ディレクティブを処理します。
+// 現在のバイトコード長を次のアライメント境界までヌルバイトでパディングします。
+func handleALIGNB(params x86genParams, ctx *CodeGenContext) ([]byte, error) {
+	if len(params.Operands) != 1 {
+		return nil, fmt.Errorf("handleALIGNB: expected 1 operand, got %d", len(params.Operands))
+	}
+
+	alignBoundary, err := strconv.Atoi(params.Operands[0])
+	if err != nil {
+		return nil, fmt.Errorf("handleALIGNB: failed to parse alignment boundary '%s': %w", params.Operands[0], err)
+	}
+
+	if alignBoundary <= 0 || (alignBoundary&(alignBoundary-1)) != 0 {
+		// 境界値が0以下、または2のべき乗でない場合はエラー (より厳密なチェックも可能)
+		return nil, fmt.Errorf("handleALIGNB: invalid alignment boundary %d, must be a positive power of 2", alignBoundary)
+	}
+
+	// x86genParams から現在のバイトコード長を取得
+	currentLength := params.MachineCodeLen
+	paddingSize := (alignBoundary - (currentLength % alignBoundary)) % alignBoundary
+
+	if paddingSize > 0 {
+		log.Printf("debug: [codegen] Applying alignment padding for ALIGNB %d: size=%d, currentLength=%d\n", alignBoundary, paddingSize, currentLength)
+		return make([]byte, paddingSize), nil // ヌルバイトで初期化されたスライスを返す
+	}
+
+	// パディング不要の場合
+	return []byte{}, nil
 }

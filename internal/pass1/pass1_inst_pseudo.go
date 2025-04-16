@@ -32,7 +32,7 @@ func processALIGNB(env *Pass1, operands []ast.Exp) {
 		padding = nearestSize*unit - env.LOC
 	}
 	env.LOC += padding
-	// ALIGNB は ocode を発行しない (LOC調整のみ)
+	emitCommand(env, "ALIGNB", []int32{unit})
 }
 
 // processDB handles the DB pseudo-instruction.

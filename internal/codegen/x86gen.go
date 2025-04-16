@@ -78,7 +78,6 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleIMUL(params, ctx)
 	case ocode.OpSUB:
 		return handleSUB(params, ctx)
-	// Logical Instructions
 	case ocode.OpAND:
 		return handleAND(params, ctx)
 	case ocode.OpOR:
@@ -93,22 +92,22 @@ func processOcode(oc ocode.Ocode, ctx *CodeGenContext, machineCode *[]byte) ([]b
 		return handleSHL(params, ctx)
 	case ocode.OpSAR:
 		return handleSAR(params, ctx)
-	// case ocode.OpHLT, ocode.OpNOP, ocode.OpRETN: // Moved to the check before switch
-	// 	return handleNoParamOpcode(oc), nil
 	case ocode.OpRET:
 		return handleRET(oc)
 	case ocode.OpIN:
 		return handleIN(params, ctx)
 	case ocode.OpOUT:
 		return handleOUT(params, ctx)
-	case ocode.OpPUSH: // Add PUSH case
+	case ocode.OpPUSH:
 		return handlePUSH(params, ctx)
-	case ocode.OpPOP: // Add POP case
+	case ocode.OpPOP:
 		return handlePOP(params, ctx)
 	case ocode.OpCALL:
 		return handleCALL(params, ctx)
 	case ocode.OpLGDT:
 		return handleLGDT(params.Operands, ctx)
+	case ocode.OpALIGNB:
+		return handleALIGNB(params, ctx)
 	default:
 		return nil, fmt.Errorf("not implemented: %v", oc.Kind)
 	}

@@ -1,6 +1,6 @@
-# 現在の状況 (Active Context) - 2025/04/05
+# 現在の状況 (Active Context) - 2025/04/16
 
-**状況:** opennaskとの互換性向上を目的としたe2eテストケースの拡充、およびテスト作成プロセスの標準化に着手。
+**状況:** opennaskとの互換性向上を目的としたe2eテストケースの拡充、およびテスト作成プロセスの標準化を継続中。`ALIGNB` ディレクティブの処理に関する問題を修正。
 
 ## 現在のタスク
 
@@ -35,21 +35,22 @@
 
 2.  **e2eテスト作成プロセスの標準化:**
     *   **目標:** 今後のテストケース追加・修正を効率化し、一貫性を保つためのプロセスを確立する。
-    *   **検討項目:**
-        *   **テストファイル命名規則:** 例: `test/dayXX_haribYY<suffix>_test.go`
-        *   **テスト関数命名規則:** 例: `TestDayXXSuite/TestHaribYY<suffix>`
-        *   **テストコードテンプレート:**
-            *   `setup` / `teardown` 処理の共通化
-            *   アセンブル実行 (`gosk` / `naskwrap.sh`) のヘルパー関数化
-            *   バイナリ比較 (`hexdump`, `diff`) のヘルパー関数化
-            *   期待値 (`expected` バイト列) の生成・管理方法
-        *   **テスト実行手順:**
-            *   特定のテストケース/スイートを実行する `make` ターゲットの定義
-            *   差分が発生した場合のデバッグ手順
+    *   **検討項目:** (変更なし)
     *   **状況:** `technical_notes.md` に標準化案を記録・更新済み (2025/04/05)。
+3.  **`Day03Suite/Harib00i` (asmhead.nas) のアセンブル結果差分調査 (完了 - 2025/04/16):**
+    *   **課題:** `opennask` プロジェクトの `interactive_debug.sh` で `03_day_harib00i_asmhead_od` を実行した結果、`gosk` と `wine nask.exe` のアセンブル結果 (`od` 出力) に差分が発生していた。
+    *   **差分詳細:** アドレス `0x400` 以降のバイナリデータが異なり、特に `0x420` 付近のデータ配置にずれが見られた (`ALIGNB` によるパディング欠落が原因)。
+    *   **対応:**
+        *   `test/day03_harib00i_test.go` の期待値バイナリを NASK の出力に基づいて更新。
+        *   テスト実行により、`ALIGNB` ディレクティブによるアライメントパディングが `gosk` の出力に欠落していることを特定。
+        *   `internal/pass1/pass1_inst_pseudo.go` の `processALIGNB` 関数を修正し、`emitCommand` を使用して `ALIGNB` の `ocode` を Emit するように変更。
+        *   `internal/codegen/x86gen_pseudo.go` に `handleALIGNB` 関数を追加し、`ocode` を受け取ってパディングバイトを生成するように実装。
+        *   `internal/codegen/x86gen.go` の `processOcode` に `OpALIGNB` の case を追加。
+        *   `pkg/ocode/ocode.go` に `OpALIGNB` 定数を追加し、`make gen` を実行して `ocodekind_enumer.go` を再生成。
+        *   再テストにより `TestHarib00i` が成功することを確認。
 
 ## 次のステップ
-1.  **`TestHarib02i` の修正:**
+1.  **`TestHarib02i` の修正:** (優先度: 高)
     *   **課題:** テスト実行時に `LIDT` ハンドラ欠落と `LGDT` コード生成エラーにより失敗する。
     *   **対応:**
         *   `internal/pass1` に `LIDT` 命令のハンドラを追加する (`LGDT` を参考に)。
@@ -70,6 +71,15 @@
 4.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 6.  **`INSTRSET` ディレクティブ未対応:** (優先度: 低) `pass1` で `INSTRSET` が処理されていない。
+
+## このセッションで完了した作業 (2025/04/16 夜)
+
+- **`Day03Suite/Harib00i` (asmhead.nas) 差分修正:**
+    - `test/day03_harib00i_test.go` の期待値バイナリを NASK 出力で更新。
+    - `ALIGNB` ディレクティブが `pass1` で `ocode` を Emit していなかった問題を修正 (`internal/pass1/pass1_inst_pseudo.go`)。
+    - `codegen` 側で `ALIGNB` の `ocode` を処理し、パディングバイトを生成するように修正 (`internal/codegen/x86gen_pseudo.go`, `internal/codegen/x86gen.go`)。
+    - `pkg/ocode/ocode.go` に `OpALIGNB` 定数を追加し、`make gen` を実行。
+    - テスト (`TestHarib00i`) が成功することを確認。
 
 ## このセッションで完了した作業 (2025/04/05 夜)
 

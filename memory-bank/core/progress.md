@@ -21,6 +21,12 @@
     - 不要になった Submodule (`pkg/asmdb/json-x86-64`) を削除。
     - ルートの不要な `main.go` を削除。
     - `README.md` のインストール手順を更新。
+- **`Day03Suite/Harib00i` (asmhead.nas) 差分修正 (2025/04/16 夜):**
+    - `test/day03_harib00i_test.go` の期待値バイナリを NASK 出力で更新。
+    - `ALIGNB` ディレクティブが `pass1` で `ocode` を Emit していなかった問題を修正 (`internal/pass1/pass1_inst_pseudo.go`)。
+    - `codegen` 側で `ALIGNB` の `ocode` を処理し、パディングバイトを生成するように修正 (`internal/codegen/x86gen_pseudo.go`, `internal/codegen/x86gen.go`)。
+    - `pkg/ocode/ocode.go` に `OpALIGNB` 定数を追加し、`make gen` を実行。
+    - テスト (`TestHarib00i`) が成功することを確認。
 
 ## まだ必要な実装
 - **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
@@ -44,6 +50,7 @@
     - **内容:** 命名規則（ファイル、関数）、テストコードテンプレート（ヘルパー関数、期待値管理）、実行手順（`go test -run`）、デバッグ手順の確立。
     - **状況:** `technical_notes.md` に記録・更新済み (2025/04/05)。
 - **`INSTRSET` ディレクティブ未対応:** (優先度: 低) `pass1` で `INSTRSET` が処理されていない。
+# (削除) Day03Suite/Harib00i (asmhead.nas) アセンブル結果差分: (完了 - 2025/04/16)
 
 ## 関連情報
 (技術的な詳細メモは `memory-bank/archives/technical_notes_archive_202503.md` にアーカイブ済み)
