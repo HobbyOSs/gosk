@@ -4,7 +4,7 @@ import (
 	"fmt" // Keep only one fmt import
 	"log" // Add log import
 
-	"github.com/HobbyOSs/gosk/internal/ast" // Add ast import
+	"github.com/HobbyOSs/gosk/internal/ast"   // Add ast import
 	"github.com/HobbyOSs/gosk/pkg/ng_operand" // Use ng_operand
 )
 

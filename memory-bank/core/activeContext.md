@@ -46,12 +46,10 @@
         *   再テストにより `TestHarib00i` が成功することを確認。
 
 ## 次のステップ
-1.  **`TestHarib02i` の修正:** (優先度: 高)
-    *   **課題:** テスト実行時に `LIDT` ハンドラ欠落と `LGDT` コード生成エラーにより失敗する。
-    *   **対応:**
-        *   `internal/pass1` に `LIDT` 命令のハンドラを追加する (`LGDT` を参考に)。
-        *   `internal/codegen` の `LGDT` 命令処理を修正し、メモリオペランドを正しく扱えるようにする。
-2.  **`Day03Suite/Harib00i` (naskfunc.nas) のテストケース実装に着手する。** (上記修正完了後)
+1.  **`TestHarib02i` の修正:** (完了 - 2025/04/05 深夜 & 2025/04/23)
+    *   `LIDT` ハンドラ追加済み。
+    *   `LGDT` コード生成修正済み。
+2.  **`Day03Suite/Harib00i` (naskfunc.nas) のテストケース実装に着手する。**
     *   `test/day03_harib00i_test.go` ファイルを作成 (または既存ファイルを修正)。
 3.  **`Day06Suite/Harib03e` のテストケース実装に着手する。**
     *   `test/day06_harib03e_test.go` ファイルを作成。
@@ -69,6 +67,14 @@
 4.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 6.  **`INSTRSET` ディレクティブ未対応:** (優先度: 低) `pass1` で `INSTRSET` が処理されていない。
+
+## このセッションで完了した作業 (2025/04/23)
+
+- **`LGDT` コード生成修正 & テストパス:**
+    - `internal/codegen/x86gen_lgdt.go` の `handleLGDT` を修正。
+        - `asmdb.FindEncoding` の使用をやめ、`asmdb.X86Instructions()` で命令定義を直接取得するように変更。
+        - `ng_operand` の `Require67h` メソッドを使用してアドレスサイズプレフィックス (`0x67`) の要否を判定するように修正。
+    - `internal/codegen/x86gen_test.go` 内の `LGDT` 関連テストケースがすべてパスすることを確認。
 
 ## このセッションで完了した作業 (2025/04/16 夜)
 

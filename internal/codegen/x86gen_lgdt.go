@@ -38,18 +38,17 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 		return nil, fmt.Errorf("%s requires a memory operand, got %s", instName, op.Serialize())
 	}
 
-	// Create a local InstructionDB instance and find the encoding, similar to x86gen_mov.go
-	db := asmdb.NewInstructionDB()
-	// Use the Operands interface directly. matchAnyImm=false for codegen.
-	encoding, err := db.FindEncoding(instName, op, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find encoding for %s with operand %s: %w", instName, op.Serialize(), err)
+	// Get all instructions using the exported function
+	allInstructions := asmdb.X86Instructions()
+	lgdtInst, ok := allInstructions[instName]
+	if !ok || len(lgdtInst.Forms) == 0 || len(lgdtInst.Forms[0].Encodings) == 0 {
+		// Fallback or error if LGDT definition is missing in asmdb (should not happen with fallback)
+		return nil, fmt.Errorf("internal error: LGDT instruction definition not found via asmdb.X86Instructions()")
 	}
-	if encoding == nil { // Check if encoding is nil after FindEncoding
-		return nil, fmt.Errorf("could not find valid encoding form for %s with operand %s", instName, op.Serialize())
-	}
+	// Use the first encoding form defined in the fallback table
+	encoding := lgdtInst.Forms[0].Encodings[0] // Get the base encoding (Opcode 0F01, ModRM Reg 2)
 
-	// Generate base opcode bytes (0F 01)
+	// Generate base opcode bytes (0F 01) using the retrieved encoding info
 	opcodeBytes, err := ResolveOpcode(encoding.Opcode, -1) // -1 indicates no register addend
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve opcode for %s: %w", instName, err)
@@ -57,18 +56,29 @@ func handleLGDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 
 	// Generate ModR/M, SIB, Displacement using the utility function
 	// Pass the original serialized operand string from pass1 to GenerateModRM
-	// Pass the encoding found via FindEncoding
-	modrmSibDispBytes, err := GenerateModRM([]string{operands[0]}, encoding, ctx.BitMode) // Pass original string and found encoding
+	// Pass the encoding retrieved directly from asmdb
+	modrmSibDispBytes, err := GenerateModRM([]string{operands[0]}, &encoding, ctx.BitMode) // Pass the retrieved encoding
 	if err != nil {
 		// エラーハンドリング改善: GenerateModRM が失敗した場合のエラーメッセージ
 		return nil, fmt.Errorf("failed to generate ModR/M for %s operand %s: %w", instName, operands[0], err) // Use original string in error
 	}
 
 	// Combine opcode and ModR/M bytes
-	machineCode := append(opcodeBytes, modrmSibDispBytes...)
+	baseMachineCode := append(opcodeBytes, modrmSibDispBytes...)
+
+	// Add address-size prefix (0x67) if needed
+	prefixBytes := []byte{}
+	// Check if address size prefix (0x67) is needed using the Require67h method
+	if op.Require67h() { // Use the correct method from ng_operand
+		prefixBytes = append(prefixBytes, 0x67)
+		// Use %v for ctx.BitMode as it might not be a string
+		log.Printf("debug: Added address-size prefix (0x67) for %s in %v mode (operand: %s)", instName, ctx.BitMode, op.Serialize())
+	}
+
+	machineCode := append(prefixBytes, baseMachineCode...)
 
 	// ログメッセージ改善: 元のオペランド文字列も表示
-	log.Printf("debug: Generated %s machine code: %x (operand: %s)", instName, machineCode, operands[0])
+	log.Printf("debug: Generated %s machine code: %x (operand: %s, prefixes: %x)", instName, machineCode, operands[0], prefixBytes)
 
 	return machineCode, nil
 }

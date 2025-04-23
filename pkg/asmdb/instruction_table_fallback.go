@@ -382,7 +382,8 @@ func addLgdtFallbackEncodings() {
 						Opcode: Opcode{Byte: "0F01"},
 						// /2 indicates the ModRM reg field must be 2.
 						// The mod and r/m fields depend on the memory operand.
-						ModRM:  &Modrm{Reg: "2"},
+						// Add Mode="#0" and Rm="#0" placeholders similar to LIDT, keeping Reg="2".
+						ModRM: &Modrm{Mode: "#0", Reg: "2", Rm: "#0"},
 					},
 				},
 			},

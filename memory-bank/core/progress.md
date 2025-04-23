@@ -35,6 +35,11 @@
     - `codegen` 側で `ALIGNB` の `ocode` を処理し、パディングバイトを生成するように修正 (`internal/codegen/x86gen_pseudo.go`, `internal/codegen/x86gen.go`)。
     - `pkg/ocode/ocode.go` に `OpALIGNB` 定数を追加し、`make gen` を実行。
     - テスト (`TestHarib00i`) が成功することを確認。
+- **`LGDT` コード生成修正 & テストパス (2025/04/23):**
+    - `internal/codegen/x86gen_lgdt.go` の `handleLGDT` を修正。
+        - `asmdb.FindEncoding` の使用をやめ、`asmdb.X86Instructions()` で命令定義を直接取得するように変更。
+        - `ng_operand` の `Require67h` メソッドを使用してアドレスサイズプレフィックス (`0x67`) の要否を判定するように修正。
+    - `internal/codegen/x86gen_test.go` 内の `LGDT` 関連テストケースがすべてパスすることを確認。
 
 ## まだ必要な実装
 - **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
