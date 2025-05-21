@@ -1,4 +1,4 @@
-# 現在の状況 (Active Context) - 2025/04/16
+# 現在の状況 (Active Context) - 2025/05/21
 
 **状況:** opennaskとの互換性向上を目的としたe2eテストケースの拡充、およびテスト作成プロセスの標準化を継続中。`ALIGNB` ディレクティブの処理に関する問題を修正。
 
@@ -62,11 +62,17 @@
 3.  **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
     *   **状況:** `asmdb.FindMinOutputSize` で SIB バイトサイズを加算する修正は実施済み。
     *   **残作業:**
-        *   `ng_operand.CalcSibByteSize` の正確性を検証するための単体テストを追加する。
         *   `internal/filefmt/coff.go` 内の不要なデバッグコードや冗長な処理を削除する。
 4.  **(保留) `internal/codegen` パッケージのリファクタリング:** (変更なし)
 5.  **(保留) `internal/codegen` パッケージの不要パラメータ削除:** (変更なし)
 6.  **`INSTRSET` ディレクティブ未対応:** (優先度: 低) `pass1` で `INSTRSET` が処理されていない。
+
+## このセッションで完了した作業 (2025/05/21)
+
+- **`CalcSibByteSize`関数の単体テスト追加とパースエラー修正:**
+    - `pkg/ng_operand/calc_sib_byte_size_test.go`に`CalcSibByteSize`関数の単体テストを追加。
+    - `[EBX*4]`のようなオペランドのパースエラーを修正するため、`pkg/ng_operand/operand_grammar.peg`に`IndexScaleOnly`ルールを追加し、`MemoryBody`の選択肢を更新。
+    - `make gen`でパーサーコードを再生成後、テストが成功することを確認。
 
 ## このセッションで完了した作業 (2025/04/23)
 

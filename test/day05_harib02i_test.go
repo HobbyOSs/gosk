@@ -127,34 +127,23 @@ _load_idtr:		; void load_idtr(int limit int addr);
 	s.Require().True(ok, "Parsed result is not ast.Prog")
 
 	// Create temp file
-<<<<<<< HEAD
-	temp, err := os.CreateTemp("", "harib02i_*.img")
-=======
 	temp, err := os.CreateTemp("", "harib02i_*.img") // プレフィックスを変更
->>>>>>> fd2e486 (up: add harib02i)
 	s.Require().NoError(err)
 	defer os.Remove(temp.Name()) // clean up
 
 	// Execute frontend
-<<<<<<< HEAD
-	_, _ = frontend.Exec(prog, temp.Name())
-=======
 	_, _ = frontend.Exec(prog, temp.Name()) // Ignore both return values as error is handled by os.Exit within Exec
->>>>>>> fd2e486 (up: add harib02i)
 
 	// Read actual result from temp file
 	actual, err := ReadFileAsBytes(temp.Name()) // Use ReadFileAsBytes from test_helper.go
 	s.Require().NoError(err)
 
-<<<<<<< HEAD
-=======
 	// TODO: ユーザーに harib02i の期待値 (defineHEX DSL形式) を提供してもらう
 	// expected := defineHEX([]string{
 	// 	// ここに defineHEX DSL 形式の期待値を貼り付ける
 	// 	"DATA 0x90", // Placeholder for NOP
 	// })
 	// Use []byte literal directly as requested by user
->>>>>>> fd2e486 (up: add harib02i)
 	expected := []byte{
 		0x4c, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfb, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, //
 		0x00, 0x00, 0x00, 0x00, 0x2e, 0x74, 0x65, 0x78, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //

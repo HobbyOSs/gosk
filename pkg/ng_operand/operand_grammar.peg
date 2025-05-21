@@ -149,7 +149,7 @@ SegmentedNonMemOperand <- seg:SegmentRegisterName _ ':' _ op:(Register / Label /
 }
 
 // MemoryBody のルールをより網羅的に修正
-MemoryBody <- _ (BaseIndexScaleDisp / BaseIndexDisp / BaseScaleDisp / IndexScaleDisp / BaseDisp / IndexDisp / BaseIndex / BaseOnly / IndexOnly / DispOnly) _ // Added leading/trailing _
+MemoryBody <- _ (BaseIndexScaleDisp / BaseIndexDisp / BaseScaleDisp / IndexScaleDisp / IndexScaleOnly / BaseDisp / IndexDisp / BaseIndex / BaseOnly / IndexOnly / DispOnly) _
 
 // 各 MemoryBody ルールの詳細定義とアクション
 BaseIndexScaleDisp <- base:RegisterName op1:AddOp index:RegisterName scale:Scale op2:AddOp disp:ImmediateValue { // Removed internal _
@@ -189,6 +189,11 @@ IndexScaleDisp <- index:RegisterName scale:Scale op1:AddOp disp:ImmediateValue {
     if string(op1.([]byte)) == "-" { dispVal = -dispVal }
     return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal, Displacement: dispVal, IsHexDisp: isHex}, nil
 }
+IndexScaleOnly <- index:RegisterName scale:Scale { // Indexのみ、Scaleあり、Dispなし
+    indexReg := string(index.([]byte))
+    scaleVal, _ := strconv.Atoi(string(scale.([]byte)))
+    return &MemoryInfo{IndexReg: indexReg, Scale: scaleVal}, nil
+}
 BaseDisp <- base:RegisterName op1:AddOp disp:ImmediateValue { // op1 is AddOp // Removed internal _
     baseReg := string(base.([]byte))
     dispVal := toInt(string(disp.([]byte)))
@@ -215,7 +220,7 @@ BaseOnly <- base:RegisterName { // Removed internal _
     // base is []byte
     return &MemoryInfo{BaseReg: string(base.([]byte))}, nil
 }
-IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプショナル // Removed internal _
+IndexOnly <- index:RegisterName scale:Scale? { // Indexのみ、Scaleはオプショナル
     // index is []byte
     indexReg := string(index.([]byte))
     scaleVal := 1
