@@ -40,10 +40,13 @@
         - `asmdb.FindEncoding` の使用をやめ、`asmdb.X86Instructions()` で命令定義を直接取得するように変更。
         - `ng_operand` の `Require67h` メソッドを使用してアドレスサイズプレフィックス (`0x67`) の要否を判定するように修正。
     - `internal/codegen/x86gen_test.go` 内の `LGDT` 関連テストケースがすべてパスすることを確認。
+- **`CalcSibByteSize`関数の単体テスト追加とパースエラー修正 (2025/05/21):**
+    - `pkg/ng_operand/calc_sib_byte_size_test.go`に`CalcSibByteSize`関数の単体テストを追加。
+    - `[EBX*4]`のようなオペランドのパースエラーを修正するため、`pkg/ng_operand/operand_grammar.peg`に`IndexScaleOnly`ルールを追加し、`MemoryBody`の選択肢を更新。
+    - `make gen`でパーサーコードを再生成後、テストが成功することを確認。
 
 ## まだ必要な実装
 - **SIB バイト計算の検証と coff.go クリーンアップ:** (優先度: 中)
-    - `ng_operand.CalcSibByteSize` のテスト追加
     - `internal/filefmt/coff.go` のクリーンアップ
 - **`internal/filefmt/coff.go` の改善 (TODOs):**
     - `.data`, `.bss` セクションのデータサイズと内容の処理。
