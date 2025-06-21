@@ -10,12 +10,12 @@ KILL_DEAD_CODE = find . -type f -name "*.go" -exec sed -i -E '/^\s*\/\/.*(remove
 
 all: build test
 
-build: dep gen
+build: gen
 	go build ./...
 	$(GOBUILD) -v -o $(BIN) ./cmd/gosk
 
-test:
-	go install -v github.com/rakyll/gotest@latest
+test: dep
+	export PATH=$(shell go env GOPATH)/bin:$(shell go env GOROOT)/bin:$$PATH; \
 	$(GOTEST) -v ./...
 
 clean:
@@ -24,7 +24,8 @@ clean:
 run: build
 	./$(BIN)
 
-gen:
+gen: dep
+	export PATH=$(shell go env GOPATH)/bin:$(shell go env GOROOT)/bin:$$PATH; \
 	go generate ./...
 
 fmt:
