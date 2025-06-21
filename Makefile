@@ -36,6 +36,7 @@ dep:
 	go install -v github.com/mna/pigeon@latest
 	go install -v github.com/Bin-Huang/newc@latest
 	go install -v github.com/dmarkham/enumer@latest
+	go install -v github.com/rakyll/gotest@latest
 	go mod download
 	go mod tidy
 
