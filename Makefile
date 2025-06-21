@@ -1,6 +1,6 @@
 # Go parameters
 GOBUILD=go build
-GOTEST=gotest
+GOTEST=$(shell go env GOPATH)/bin/gotest
 
 BIN=gosk
 NASK=wine nask.exe
