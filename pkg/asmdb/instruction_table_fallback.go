@@ -375,7 +375,7 @@ func addLgdtFallbackEncodings() {
 				// ModRM/SIB/displacement bytes are handled by FindEncoding/codegen
 				// based on the BitMode context.
 				Operands: &[]Operand{
-					{Type: "m", Input: Bool(true), Output: Bool(false)},
+					{Type: "m32", Input: Bool(true), Output: Bool(false)}, // Changed from "m" to "m32" like LIDT
 				},
 				Encodings: []Encoding{
 					{
