@@ -64,10 +64,21 @@ func handleLIDT(operands []string, ctx *CodeGenContext) ([]byte, error) {
 	}
 
 	// Combine opcode and ModR/M bytes
-	machineCode := append(opcodeBytes, modrmSibDispBytes...)
+	baseMachineCode := append(opcodeBytes, modrmSibDispBytes...) // baseMachineCodeという変数名に変更
+
+	// Add address-size prefix (0x67) if needed
+	prefixBytes := []byte{}
+	// Check if address size prefix (0x67) is needed using the Require67h method
+	if op.Require67h() { // Use the correct method from ng_operand
+		prefixBytes = append(prefixBytes, 0x67)
+		// Use %v for ctx.BitMode as it might not be a string
+		log.Printf("debug: Added address-size prefix (0x67) for %s in %v mode (operand: %s)", instName, ctx.BitMode, op.Serialize())
+	}
+
+	machineCode := append(prefixBytes, baseMachineCode...) // prefixBytes と baseMachineCode を結合
 
 	// ログメッセージ改善: 元のオペランド文字列も表示
-	log.Printf("debug: Generated %s machine code: %x (operand: %s)", instName, machineCode, operands[0]) // Change log message
+	log.Printf("debug: Generated %s machine code: %x (operand: %s, prefixes: %x)", instName, machineCode, operands[0], prefixBytes) // Add prefixes to log
 
 	return machineCode, nil
 }

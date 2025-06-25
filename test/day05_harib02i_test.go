@@ -28,7 +28,7 @@ func (s *Day05Suite) TearDownSuite() {
 
 // TestHarib02i tests the assembly of harib02i (bootpack.nas).
 func (s *Day05Suite) TestHarib02i() {
-	s.T().Skip("未実装命令があるのでskip")
+	// s.T().Skip("未実装命令があるのでskip") // Skipをコメントアウト
 	const naskStatements = `
 ; TAB=4
 
