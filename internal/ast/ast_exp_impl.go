@@ -47,7 +47,7 @@ func NewJumpType(s string) (JumpType, bool) {
 	return c, ok
 }
 
-//go:generate newc
+//go:generate go tool newc
 type SegmentExp struct {
 	BaseExp
 	DataType DataType
@@ -145,7 +145,7 @@ func wrapExpInAddExp(exp Exp) *AddExp {
 	return addExp
 }
 
-//go:generate newc
+//go:generate go tool newc
 type MemoryAddrExp struct {
 	BaseExp
 	DataType DataType
@@ -212,7 +212,7 @@ func (m *MemoryAddrExp) TokenLiteral() string {
 	return str
 }
 
-//go:generate newc
+//go:generate go tool newc
 type AddExp struct {
 	BaseExp
 	HeadExp   *MultExp
@@ -409,7 +409,7 @@ func (a *AddExp) TokenLiteral() string {
 	return buf.String()
 }
 
-//go:generate newc
+//go:generate go tool newc
 type MultExp struct {
 	BaseExp
 	HeadExp   Exp // Exp インターフェースに戻しました
@@ -502,7 +502,7 @@ func (m *MultExp) TokenLiteral() string {
 	return buf.String()
 }
 
-//go:generate newc
+//go:generate go tool newc
 type ImmExp struct {
 	BaseExp
 	Factor Factor

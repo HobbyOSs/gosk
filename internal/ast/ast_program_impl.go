@@ -6,7 +6,7 @@ import (
 	"github.com/samber/lo"
 )
 
-//go:generate newc
+//go:generate go tool newc
 type Program struct {
 	Statements []Statement
 }

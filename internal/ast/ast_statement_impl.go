@@ -6,14 +6,14 @@ import (
 	"github.com/samber/lo"
 )
 
-//go:generate newc
+//go:generate go tool newc
 type DeclareStmt struct {
 	BaseStatement
 	Id    *IdentFactor
 	Value Exp // interfaceはポインタにしない
 }
 
-//go:generate newc
+//go:generate go tool newc
 type OpcodeStmt struct {
 	BaseStatement
 	Opcode *IdentFactor
@@ -29,7 +29,7 @@ func (d DeclareStmt) TokenLiteral() string {
 	return d.Id.TokenLiteral() + " EQU " + d.Value.TokenLiteral()
 }
 
-//go:generate newc
+//go:generate go tool newc
 type LabelStmt struct {
 	BaseStatement
 	Label *IdentFactor
@@ -40,7 +40,7 @@ func (l LabelStmt) TokenLiteral() string {
 	return l.Label.TokenLiteral()
 }
 
-//go:generate newc
+//go:generate go tool newc
 type ExportSymStmt struct {
 	BaseStatement
 	Symbols []*IdentFactor
@@ -54,7 +54,7 @@ func (es ExportSymStmt) TokenLiteral() string {
 	return "GLOBAL " + strings.Join(symbols, ",")
 }
 
-//go:generate newc
+//go:generate go tool newc
 type ExternSymStmt struct {
 	BaseStatement
 	Symbols []*IdentFactor
@@ -68,7 +68,7 @@ func (es ExternSymStmt) TokenLiteral() string {
 	return "EXTERN " + strings.Join(symbols, ",")
 }
 
-//go:generate newc
+//go:generate go tool newc
 type ConfigStmt struct {
 	BaseStatement
 	ConfigType ConfigType
@@ -112,7 +112,7 @@ func NewConfigType(s string) (ConfigType, bool) {
 	return c, ok
 }
 
-//go:generate newc
+//go:generate go tool newc
 type MnemonicStmt struct {
 	BaseStatement
 	Opcode   *IdentFactor

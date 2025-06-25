@@ -1,6 +1,6 @@
 package ocode
 
-//go:generate enumer -type=OcodeKind -json -text
+//go:generate go tool enumer -type=OcodeKind -json -text
 type OcodeKind int
 
 const (
