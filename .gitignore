@@ -29,6 +29,4 @@ _testmain.go
 *.obj
 *.img
 
-.idea/
 gosk
-.aider.*.history*
