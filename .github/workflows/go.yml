@@ -34,13 +34,30 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Test with Coverage
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@v1.12.3 # Using specific version
+
+      - name: Test with gotestsum (generate JUnit report)
+        run: make test-ci
+
+      - name: Upload test results (JUnit XML)
+        uses: actions/upload-artifact@v4
+        if: always() # テストが失敗してもレポートをアップロードする
+        with:
+          name: test-results
+          path: report.xml
+
+      - name: Generate coverage report
         run: |
-          go test -v -coverprofile=coverage.out ./...
+          # It's good practice to ensure tests pass before generating coverage,
+          # but make test-ci already ran tests. If needed, run simple tests again for coverage.
+          # For now, assuming `go test` for coverage is separate and intentional.
+          go test -coverprofile=coverage.out ./...
           go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
+        if: always() # カバレッジ生成が失敗してもアーティファクトをアップロードする
         with:
           name: coverage-report
           path: coverage.html

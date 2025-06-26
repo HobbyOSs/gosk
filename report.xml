@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="449" failures="0" errors="0" time="0.371257">
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/cmd/codegen" timestamp="2025-06-25T14:52:24Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/cmd/gosk" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="10" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/ast" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/ImmExp_with_NumberFactor" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/ImmExp_with_HexFactor" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/ImmExp_with_IdentFactor" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/MemoryAddrExp_with_AddExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/MemoryAddrExp_with_SegmentExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/AddExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/MultExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/MemoryAddrExp_with_DataType" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString/SegmentExp_with_DataType" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ast" name="TestExpToString" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/client" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="192" failures="0" time="0.009000" name="github.com/HobbyOSs/gosk/internal/codegen" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDL2T" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpGETSEC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpHLT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpEMMS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNSETPM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPUSHAD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCLD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFPREM1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpMWAIT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFDIVP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLD1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpLFENCE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCOM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpGS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPOPA" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpREPNE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCPUID" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpF2XM1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFRSTOR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPUSHFQ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpXRSTOR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCLEX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFDISI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDLN2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFUCOMPP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpINTO" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpMFENCE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSYSEXIT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpIRETD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpUD2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpWAIT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpXSETBV" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCOMP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNCLEX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFPATAN" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSUBP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpENTER" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFADDP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNDISI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpNOP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpREP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRSM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSTI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpAAA" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDL2E" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFPREM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPOPFQ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpDS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFUCOM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpIDIV" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRDMSR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpWRMSR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSQRT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCDQE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCLC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFINCSTP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFYL2X" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpICEBP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpLAHF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFENI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFUCOMP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSYSRET" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpTAKEN" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCQO" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFDECSTP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpIRET" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpREPE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpVMLAUNCH" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpVMXOFF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpWBINVD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFRNDINT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFYL2XP1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRDTSCP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSYSENTER" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCOS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDZ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNOP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpLEAVE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpLOADALL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSTD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCOMPP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFXCH" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpMUL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPOPF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPUSHF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpXGETBV" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpAAS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpDAS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFINIT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNENI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRDTSC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSFENCE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSWAPGS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCBW" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDLG2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSIN" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSINCOS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpDIV" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpES" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFNINIT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpLOCK" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpAAD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpDAA" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFABS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSETALC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCMC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFPTAN" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPOPFD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRDPMC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpINVD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPUSHA" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSTC" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpAAM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFXTRACT" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRETN" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCWD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFLDPI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSCALE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSETPM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFSUBRP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFTST" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFXRSTOR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpMONITOR" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCWDE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpVMCALL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpVMRESUME" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCDQ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCLTS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFXAM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpIRETQ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPUSHFD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpRETF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFMULP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPOPAD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSAHF" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpCLI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFCHS" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpPAUSE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpSYSCALL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpFDIVRP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam/OpJMPE" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86NoParam" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestHandleRET/RET_instruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestHandleRET" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/DB" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/DW" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/DD" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/RESB" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/RESB_large" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/RESB_zero" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_AX_0" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_SS_AX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_DS_AX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_SP_0x7c00" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_SI_0x0000" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_AL_SI" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_mem_0x0ff0_CH" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_mem_0x0ff1_AL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_BYTE_mem_0x0ff2_8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_WORD_mem_0x0ff4_320" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_DWORD_mem_0x0ff8_0x000a0000" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/ADD_SI_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/CMP_AL_0" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/ADD_AX_0x0020" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OUT_0x21_AL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OUT_0xa1_AL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/CALL_0x1234" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_ECX_EBX_plus_16_16bit" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_EAX_ESI_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_EAX_CR0_16bit" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_CR0_EAX_16bit" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/AND_EAX_0x7fffffff_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OR_EAX_0x00000001_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/IMUL_ECX_4608_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/SUB_ECX_128_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_EAX_CR0_16bit_second" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OR_EAX_1_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/MOV_AL_imm8_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/JMP_FAR_16_27" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/JMP_ORG_7C00_to_C200" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/IN_AL_DX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/IN_AX_DX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/IN_EAX_DX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OUT_DX_AL_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OUT_DX_AX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/OUT_DX_EAX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/POP_EAX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86/PUSH_EAX_32bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/codegen" name="TestGenerateX86" time="0.070000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/filefmt" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/frontend" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="46" failures="0" time="0.003000" name="github.com/HobbyOSs/gosk/internal/gen" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/+int" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/-int" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/hex" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/char" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/string" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/ident" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/+int#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/-int#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/hex#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/char#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/string#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/ident#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/label" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/label_with_space" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/line_comment1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/line_comment2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/line_comment1#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/line_comment2#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/simple_exp1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/simple_exp2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/complex_exp1_(SegmentExp)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/complex_exp2_(AddExp)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/memory_address_direct" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/memory_address_direct_(complex)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/memory_address_register_indirect" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/memory_address_register_indirect_(complex)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/memory_address_based" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/segment_exp_(dword_far)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/equ_macro" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/label#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/single_symtable" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/single_export" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/multiple_export" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/config1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/opcode_only" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/1_operand_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/1_operand_2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/1_operand_3" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/opcode_simple_mnemonic" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/1_operand_program" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/cfg_program1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/cfg_program2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/cfg_program3" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/cfg_program4" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse/cfg_program5" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/gen" name="TestParse" time="0.010000"></testcase>
+	</testsuite>
+	<testsuite tests="4" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/ocode_client" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ocode_client" name="TestNewCodegenClient" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ocode_client" name="TestEmit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ocode_client" name="TestEmitAll" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/ocode_client" name="TestExec" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="56" failures="0" time="0.004000" name="github.com/HobbyOSs/gosk/internal/pass1" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/ADD_mem_reg" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/INT_imm" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_reg_mem" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_reg_imm" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_imm16" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_imm32" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_reg8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/IMUL_reg_imm16" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_reg8_byte" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_reg_seg" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_mem_reg8_addr" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/MOV_reg_mem_disp_16bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/EQU_simple_mov" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/EQU_addr_mov" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/EQU_offset_mov" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/EQU_calc_add" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/IN_AL_DX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/IN_AX_DX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/IN_EAX_DX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/OUT_DX_AL" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/OUT_DX_AX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/OUT_DX_EAX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/POP_EAX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC/PUSH_EAX" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite/TestEvalProgramLOC" time="0.030000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1EvalSuite" time="0.030000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/+int" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/-int" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/hex" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/simple_math_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/simple_math_2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/simple_math_3" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/complex_math_1_(fully_evaluated)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/label_+_constant_(fully_evaluated)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/label_-_constant_(fully_evaluated)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/ident_(not_evaluable)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/displacement_1_(not_evaluable,_constant_folding)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp/displacement_2_(not_evaluable,_constant_folding)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestAddExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestEQUExpansionInExpression/Simple_EQU_constant_evaluation" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestEQUExpansionInExpression/EQU_constant_+_number_evaluation" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestEQUExpansionInExpression/EQU_constant_used_in_another_EQU" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestEQUExpansionInExpression/EQU_constant_in_multiplication" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestEQUExpansionInExpression" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp/simple_math_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp/simple_math_2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp/simple_math_3" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp/scale_1_(not_evaluable)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp/scale_2_(not_evaluable)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestMultExp" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestResbExpression/RESB_with_$" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestResbExpression/RESB_with_simple_number" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestResbExpression/RESB_with_label_+_$" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite/TestResbExpression" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/internal/pass1" name="TestPass1TraverseSuite" time="0.010000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/pass2" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/internal/token" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="11" failures="0" skipped="1" time="0.000000" name="github.com/HobbyOSs/gosk/pkg/asmdb" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindMinOutputSize/MOV_with_prefix_and_offset" time="0.000000">
+			<skipped message="=== RUN   TestFindMinOutputSize/MOV_with_prefix_and_offset&#xA;    instruction_search_test.go:113: Memory operand with WORD prefix needs to be fixed&#xA;--- SKIP: TestFindMinOutputSize/MOV_with_prefix_and_offset (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestGetOutputSize" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindEncoding" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindEncoding_ModRM" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindMinOutputSize/MOV_AX,_0" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindMinOutputSize/MOV_r16,_imm16_should_use_B8+rw_form" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestFindMinOutputSize" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestX86Instructions" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestGetInstructionByOpcode" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/asmdb" name="TestSegmentRegisterLookup" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/pkg/cpu" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="80" failures="0" time="0.002000" name="github.com/HobbyOSs/gosk/pkg/ng_operand" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_DetectImmediateSize/Immediate_8_bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_DetectImmediateSize/Immediate_16_bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_DetectImmediateSize/Immediate_32_bit" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_DetectImmediateSize/No_Immediate" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_DetectImmediateSize" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Zero" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Positive_Max" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Positive_Out_of_Range" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Negative_Min" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Negative_Out_of_Range" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Large_Positive" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/Large_Negative" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/NoImmediateOperand" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits/NilParsedOperands" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestImmediateValueFitsIn8Bits" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/16bit_mode_with_32bit_register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/16bit_mode_with_16bit_register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/32bit_mode_with_16bit_register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/32bit_mode_with_32bit_register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/16bit_mode_with_32bit_immediate" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h/16bit_mode_with_16bit_immediate" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire66h" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire67h/16bit_mode_with_32bit_memory_access" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire67h/16bit_mode_with_16bit_memory_access" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire67h/32bit_mode_with_16bit_memory_access" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire67h/32bit_mode_with_32bit_memory_access" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestRequire67h" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Multiple_Operands" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Multiple_Operands_with_Memory" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Multiple_Operands_with_Immediate" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Multiple_Operands_with_Different_Types" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/General_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Memory_Address" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Memory_Address#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Immediate_Value" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Segment_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Segmented_Address" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Segmented_Address#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Segmented_Address#02" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Segmented_Address#03" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Relative_Offset" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Relative_Offset#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Direct_Address_(with_imm_and_size_prefix)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/8-bit_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/16-bit_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/SP_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/BP_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/CL_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Complex_Memory" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Memory_with_SP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Memory_with_BP" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Immediate_10" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Immediate_Hex" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Negative_Immediate" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Control_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Control_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Control_Register#02" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Debug_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Debug_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Debug_Register#02" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Test_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Test_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Test_Register#02" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MMX_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MMX_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MMX_Register#02" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/XMM_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/XMM_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/YMM_Register" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/YMM_Register#01" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MOV_r32,_label" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MOV_r32,_imm32" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/MOV_r32,_m_(no_size_prefix)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/ADD_r32,_r32" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/ADD_r32,_imm_(small)" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Far_Pointer" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Pointer_+_Direct_Address" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType/Far_Pointer_+_Direct_Address" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestOperandPegImpl_OperandType" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/ng_operand" name="TestParseOperands_FromString" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="0" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/pkg/ocode" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+	</testsuite>
+	<testsuite tests="2" failures="0" time="0.000000" name="github.com/HobbyOSs/gosk/pkg/variantstack" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/variantstack" name="TestVariantStack_PushPop" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/pkg/variantstack" name="TestVariantStack_Clear" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="48" failures="0" skipped="3" time="0.024000" name="github.com/HobbyOSs/gosk/test" timestamp="2025-06-25T14:52:25Z">
+		<properties>
+			<property name="go.version" value="go1.24.4 linux/amd64"></property>
+		</properties>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestArithmeticSuite/TestArithmeticInstructions" time="0.000000">
+			<skipped message="=== RUN   TestArithmeticSuite/TestArithmeticInstructions&#xA;    arithmetic_test.go:49: 算術命令の実装が完了するまでスキップ&#xA;--- SKIP: TestArithmeticSuite/TestArithmeticInstructions (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay05Suite/TestHarib02i" time="0.000000">
+			<skipped message="=== RUN   TestDay05Suite/TestHarib02i&#xA;    day05_harib02i_test.go:31: 未実装命令があるのでskip&#xA;--- SKIP: TestDay05Suite/TestHarib02i (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestANDInstruction" time="0.000000">
+			<skipped message="=== RUN   TestLogicalSuite/TestANDInstruction&#xA;    logical_test.go:20: 未実装命令があるのでskip&#xA;--- SKIP: TestLogicalSuite/TestANDInstruction (0.00s)&#xA;"></skipped>
+		</testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestArithmeticSuite" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay01Suite/TestHelloos1" time="2.430000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay01Suite/TestHelloos2" time="1.930000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay01Suite" time="4.370000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay02Suite/TestHelloos3" time="2.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay02Suite" time="2.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00a" time="0.040000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00b" time="0.060000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00c" time="0.070000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00d" time="0.080000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00g" time="0.080000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00h" time="0.020000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00i" time="0.120000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite/TestHarib00j" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay03Suite" time="0.490000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay04Suite/TestHarib01a" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay04Suite/TestHarib01f" time="0.040000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay04Suite" time="0.050000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestDay05Suite" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestNOTInstruction/NOT_r8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestNOTInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestORInstruction/OR_AL,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestORInstruction/OR_r8,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestORInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSARInstruction/SAR_r/m8,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSARInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSHLInstruction/SHL_r/m8,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSHLInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSHRInstruction/SHR_r/m8,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestSHRInstruction" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestXORInstruction/XOR_AL,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestXORInstruction/XOR_r8,_imm8" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite/TestXORInstruction" time="0.010000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestLogicalSuite" time="0.020000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/config" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/equ" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/DB_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/DB_2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/ORG" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/RESB_1" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/RESB_2" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/Label" time="0.000000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize/integration_test_for_pass1" time="0.020000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite/TestStatementToMachineCodeSize" time="0.020000"></testcase>
+		<testcase classname="github.com/HobbyOSs/gosk/test" name="TestPass1Suite" time="0.020000"></testcase>
+	</testsuite>
+</testsuites>
